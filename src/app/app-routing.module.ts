@@ -10,7 +10,7 @@ const routes: Routes = [
     path: 'main',
     loadChildren: () => import('./main/main.module').then(m => m.MainModule)
   }, {
-    path: 'oauth2',
+    path: 'oauth',
     loadChildren: () => import('./oauth/oauth.module').then(m => m.OauthModule)
   }
 ];

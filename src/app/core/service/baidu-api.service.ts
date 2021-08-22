@@ -7,7 +7,7 @@ export class BaiduAPIService {
     secretKey = 'mgTiuNldCNxeKhCxHboO5LrXXq7sElye'
 
     oauth() {
-        const redirectUri = encodeURIComponent('http://www.example1.com/oauth2');
+        const redirectUri = encodeURIComponent('http://www.example.com/oauth');
         // const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=token&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=popup&state=xxx`;
         const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=popup`;
         location.href = url;
