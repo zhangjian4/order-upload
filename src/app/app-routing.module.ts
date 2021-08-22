@@ -4,7 +4,14 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
+    redirectTo: '/main',
+    pathMatch: 'full'
+  }, {
+    path: 'main',
+    loadChildren: () => import('./main/main.module').then(m => m.MainModule)
+  }, {
+    path: 'oauth2',
+    loadChildren: () => import('./oauth/oauth.module').then(m => m.OauthModule)
   }
 ];
 @NgModule({
@@ -13,4 +20,4 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule {}
+export class AppRoutingModule { }
