@@ -1,5 +1,7 @@
 {
   "name": "order-upload",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }

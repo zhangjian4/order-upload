@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BaiduAPIService } from '../core/service/baidu-api.service';
 
 @Component({
   selector: 'app-oauth',
@@ -7,23 +8,23 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./oauth.component.scss'],
 })
 export class OauthComponent implements OnInit {
-
-  type:string;
-  code:string;
-  constructor(route: ActivatedRoute) {
-    route.params.subscribe((params)=>{
-      this.type=params.type;
-      console.log('type:',this.type)
-    })
-    route.queryParams.subscribe(params => {
-      this.code=params.code;
-      console.log('code:',this.code);
-    })
+  code: string;
+  constructor(
+    route: ActivatedRoute,
+    private baiduAPIService: BaiduAPIService,
+    private router: Router
+  ) {
+    route.queryParams.subscribe((params) => {
+      this.code = params.code;
+      console.log('code:', this.code);
+      this.getToken(this.code);
+    });
   }
 
-  ngOnInit() { }
+  ngOnInit() {}
 
-  getToken(code: string) {
-    console.log(code);
+  async getToken(code: string) {
+    await this.baiduAPIService.getToken(code);
+    this.router.navigateByUrl('/');
   }
 }
