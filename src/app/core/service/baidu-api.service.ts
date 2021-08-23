@@ -90,9 +90,11 @@ export class BaiduAPIService {
   }
 
   oauth() {
-    const redirectUri = encodeURIComponent(this.redirectUri);
-    const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=mobile&force_login=1`;
-    location.href = url;
+    if(this.platform.is('cordova')){
+      const redirectUri = encodeURIComponent(this.redirectUri);
+      const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=mobile&force_login=1`;
+      location.href = url;
+    }
   }
 
   getUserInfo() {
