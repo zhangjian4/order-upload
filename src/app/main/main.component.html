@@ -44,7 +44,7 @@
         </ion-label>
       </ion-item>
     </ion-list>
-    <ion-infinite-scroll #infiniteScroll threshold="100px" (ionInfinite)="loadData($event)">
+    <ion-infinite-scroll #infiniteScroll threshold="100px" [disabled]="loadEnd" (ionInfinite)="loadData($event)">
       <ion-infinite-scroll-content
         loadingSpinner="bubbles"
         loadingText="正在加载...">
