@@ -1,7 +1,8 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HTTP } from '@ionic-native/http/ngx';
-import { Platform } from '@ionic/angular';
+import { Platform, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
+import { HttpService } from './http.service';
 const ErrorMessage = {
   0: '成功',
   '-1': '用户名和密码验证失败',
@@ -58,6 +59,7 @@ const ErrorMessage = {
   407: 'fileModify接口返回错误，未返回requestid rapidupload 错误码',
   31080: '服务器出错',
   31021: '网络连接失败，请检查网络或稍候再试',
+  31034: '操作过于频繁，请稍后再试',
   31075: '一次支持操作999个',
   31116: '你的空间不足',
   112: '页面已过期，请刷新后重试',
@@ -73,10 +75,11 @@ export class BaiduAPIService {
   defaultDir = '/票据上传';
 
   constructor(
-    private http: HTTP,
+    private http: HttpService,
     private platform: Platform,
     private zone: NgZone,
-    private storage: Storage
+    private storage: Storage,
+    public toastController: ToastController
   ) {}
 
   get redirectUri() {
@@ -90,16 +93,26 @@ export class BaiduAPIService {
   }
 
   oauth() {
-    if(this.platform.is('cordova')){
-      const redirectUri = encodeURIComponent(this.redirectUri);
-      const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=mobile&force_login=1`;
-      location.href = url;
-    }
+    const redirectUri = encodeURIComponent(this.redirectUri);
+    const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=mobile&force_login=1`;
+    location.href = url;
   }
 
   getUserInfo() {
     return this.get('https://pan.baidu.com/rest/2.0/xpan/nas', {
       method: 'uinfo',
+    });
+  }
+
+  search(key: string, page: number, num: number) {
+    return this.get('https://pan.baidu.com/rest/2.0/xpan/file', {
+      method: 'search',
+      key,
+      dir: this.defaultDir,
+      recursion: '1',
+      page: page.toString(),
+      num: num.toString(),
+      web: '1',
     });
   }
 
@@ -110,7 +123,7 @@ export class BaiduAPIService {
         {
           method: 'list',
           dir: this.defaultDir,
-          web:'1',
+          web: '1',
           start: start + '',
           limit: limit + '',
         },
@@ -145,7 +158,7 @@ export class BaiduAPIService {
       url = url + '?access_token=' + token;
     }
     console.log('[HTTP] post', url, body);
-    const response = await this.http.post(url, body, null);
+    const response = await this.http.post(url, body);
     return this.handleResponse(response);
   }
 
@@ -158,28 +171,52 @@ export class BaiduAPIService {
       params.access_token = await this.getAccessToken();
     }
     console.log('[HTTP] get', url, params);
-    const response = await this.http.get(url, params, null);
-    return this.handleResponse(response, showError);
-  }
-
-  handleResponse(response: any, showError = true) {
-    console.log('[HTTP] response', response);
-    if (response.status === 200) {
-      const data = JSON.parse(response.data);
-      if (data.errno != null && data.errno !== 0) {
-        if (showError) {
-          this.showError(data.errno);
-        }
-        throw data;
-      }
-      return this.resolve(JSON.parse(response.data));
-    } else {
-      throw response;
+    try {
+      const response = await this.http.get(url, params);
+      return this.handleResponse(response, showError);
+    } catch (e) {
+      this.handleError(e);
     }
   }
 
-  showError(errno: number) {
+  handleError(e: any) {
+    console.error(e);
+    throw e;
+  }
+
+  handleResponse(response: any, showError = true) {
+    if (response.errno != null && response.errno !== 0) {
+      if (showError) {
+        this.showError(response.errno);
+      }
+      throw response;
+    }
+    return response;
+    // console.log('[HTTP] response', response);
+    // if (response.status === 200) {
+    //   const data = JSON.parse(response.data);
+    //   if (data.errno != null && data.errno !== 0) {
+    //     if (showError) {
+    //       this.showError(data.errno);
+    //     }
+    //     throw data;
+    //   }
+    //   return this.resolve(JSON.parse(response.data));
+    // } else {
+    //   throw response;
+    // }
+  }
+
+  async showError(errno: number) {
     const error = ErrorMessage[errno.toString()];
+    if (error) {
+      const toast = await this.toastController.create({
+        message: error,
+        position: 'top',
+        duration: 2000,
+      });
+      toast.present();
+    }
     console.log(error);
   }
 

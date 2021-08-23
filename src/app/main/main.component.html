@@ -25,30 +25,62 @@
           </ion-avatar>
         </ion-button>
       </ion-buttons>
-      <!-- <ion-title>Left side menu toggle</ion-title> -->
+      <ion-title>
+        <ion-searchbar
+          (ionChange)="search($event)"
+          [debounce]="500"
+          placeholder="搜索"
+        ></ion-searchbar>
+      </ion-title>
+      <ion-buttons slot="end">
+        <ion-button>
+          <ion-icon slot="end" name="camera"></ion-icon>
+        </ion-button>
+      </ion-buttons>
     </ion-toolbar>
-    <ion-searchbar></ion-searchbar>
   </ion-header>
-  <ion-content class="ion-padding">
-    <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
-      <ion-refresher-content></ion-refresher-content>
-    </ion-refresher>
-    <ion-list>
-      <ion-item *ngFor="let item of fileList">
-        <ion-avatar *ngIf="item.thumbs" slot="start">
-          <img [src]="item.thumbs.icon" />
-        </ion-avatar>
+  <ion-content #content class="ion-padding">
+    <ion-list *ngIf="loading">
+      <ion-item *ngFor="let skeleton of skeletons">
+        <ion-thumbnail slot="start">
+          <ion-skeleton-text></ion-skeleton-text>
+        </ion-thumbnail>
         <ion-label>
-          <h3>{{ item.server_filename }}</h3>
-          <p>{{ item.server_mtime | myDate }}</p>
+          <h3>
+            <ion-skeleton-text animated style="width: 80%"></ion-skeleton-text>
+          </h3>
+          <p>
+            <ion-skeleton-text animated style="width: 60%"></ion-skeleton-text>
+          </p>
         </ion-label>
       </ion-item>
     </ion-list>
-    <ion-infinite-scroll #infiniteScroll threshold="100px" [disabled]="loadEnd" (ionInfinite)="loadData($event)">
-      <ion-infinite-scroll-content
-        loadingSpinner="bubbles"
-        loadingText="正在加载...">
-      </ion-infinite-scroll-content>
-    </ion-infinite-scroll>
+    <ng-container *ngIf="!loading">
+      <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+        <ion-refresher-content></ion-refresher-content>
+      </ion-refresher>
+      <ion-list>
+        <ion-item *ngFor="let item of fileList">
+          <ion-thumbnail *ngIf="item.thumbs" slot="start">
+            <img [src]="item.thumbs.icon" />
+          </ion-thumbnail>
+          <ion-label>
+            <h3>{{ item.server_filename }}</h3>
+            <p>{{ item.server_mtime | myDate }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+      <ion-infinite-scroll
+        *ngIf="!loadEnd"
+        threshold="100px"
+        (ionInfinite)="loadData($event)"
+      >
+        <ion-infinite-scroll-content
+          loadingSpinner="bubbles"
+          loadingText="正在加载..."
+        >
+        </ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </ng-container>
   </ion-content>
 </div>
