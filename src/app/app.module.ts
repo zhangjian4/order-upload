@@ -13,37 +13,46 @@ import { HttpService } from './core/service/http.service';
 import { BrowserHttpService } from './core/service/browser-http.service';
 import { HttpClientModule } from '@angular/common/http';
 import { CordovaHttpService } from './core/service/cordova-http.service';
-export function StartupServiceFactory(startupService: StartupService) {
-  return () => startupService.load();
-}
+const startupServiceFactory = (startupService: StartupService) => () =>
+  startupService.load();
 
-export function HttpServiceFactory(platform: Platform, browserHttpService: BrowserHttpService, cordovaHttpService: CordovaHttpService) {
+const httpServiceFactory = (
+  platform: Platform,
+  browserHttpService: BrowserHttpService,
+  cordovaHttpService: CordovaHttpService
+) => {
   if (platform.is('cordova')) {
     return cordovaHttpService;
   } else {
     return browserHttpService;
   }
-}
+};
 
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
-  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, IonicStorageModule.forRoot(), HttpClientModule],
+  imports: [
+    BrowserModule,
+    IonicModule.forRoot(),
+    AppRoutingModule,
+    IonicStorageModule.forRoot(),
+    HttpClientModule,
+  ],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     HTTP,
     {
       provide: APP_INITIALIZER,
-      useFactory: StartupServiceFactory,
+      useFactory: startupServiceFactory,
       deps: [StartupService],
       multi: true,
     },
     {
       provide: HttpService,
-      useFactory: HttpServiceFactory,
+      useFactory: httpServiceFactory,
       deps: [Platform, BrowserHttpService, CordovaHttpService],
-    }
+    },
   ],
   bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

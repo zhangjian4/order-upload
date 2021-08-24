@@ -8,12 +8,14 @@
     "start": "ng serve --port=80 --proxy-config=proxy.conf.js",
     "build": "ng build",
     "run:android": "ionic cordova run android -l --external",
+    "build:android": "ionic cordova build android --prod --release --buildConfig=build.json",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
+    "@angular-devkit/schematics": "^12.2.2",
     "@angular/common": "~12.1.1",
     "@angular/compiler": "~12.1.1",
     "@angular/core": "~12.1.1",
@@ -21,16 +23,20 @@
     "@angular/platform-browser": "~12.1.1",
     "@angular/platform-browser-dynamic": "~12.1.1",
     "@angular/router": "~12.1.1",
+    "@ionic-native/camera-preview": "^5.36.0",
     "@ionic-native/core": "^5.36.0",
     "@ionic-native/http": "^5.36.0",
+    "@ionic-native/ionic-webview": "^5.36.0",
     "@ionic/angular": "^5.5.2",
     "@ionic/storage": "^3.0.6",
     "@ionic/storage-angular": "^3.0.6",
     "cordova-android": "8.1.0",
     "cordova-plugin-advanced-http": "^3.2.0",
+    "cordova-plugin-camera-preview": "^0.12.3",
     "cordova-plugin-file": "^6.0.2",
     "date-fns": "^2.23.0",
     "rxjs": "~6.6.0",
+    "spark-md5": "^3.0.1",
     "tslib": "^2.2.0",
     "zone.js": "~0.11.4"
   },
@@ -86,7 +92,8 @@
       "cordova-plugin-ionic-keyboard": {},
       "cordova-plugin-advanced-http": {
         "ANDROIDBLACKLISTSECURESOCKETPROTOCOLS": "SSLv3,TLSv1"
-      }
+      },
+      "cordova-plugin-camera-preview": {}
     },
     "platforms": [
       "android"

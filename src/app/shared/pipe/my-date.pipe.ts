@@ -8,7 +8,7 @@ export class MyDatePipe implements PipeTransform {
   transform(value: number): string {
     if (value) {
       const date = new Date(value * 1000);
-      return format(date, 'yyyy-MM-dd HH:mm:ss');
+      return format(date, 'yyyy-MM-dd HH:mm');
     }
     return null;
   }

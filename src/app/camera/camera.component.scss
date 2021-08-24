@@ -1,0 +1,45 @@
+:host:not(.camera-opened) {
+  background-color: #000;
+}
+.header {
+  padding-top: var(--ion-safe-area-top, 0);
+}
+
+.img-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  img {
+    max-height: 100%;
+  }
+}
+
+.camera-touch {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  margin: 0 auto;
+  padding: 5px;
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+
+  .camera-touch-inner {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 1);
+    border-radius: 50%;
+    top: 0.2rem;
+    left: 0.2rem;
+  }
+}
+ion-content {
+  --overflow: hidden;
+}
+
+ion-footer {
+  background: #fff;
+}

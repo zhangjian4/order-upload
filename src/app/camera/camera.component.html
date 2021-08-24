@@ -1,0 +1,68 @@
+<ng-container *ngIf="!preview">
+  <div class="header">
+    <ion-button (click)="back()" fill="clear">
+      <ion-icon
+        style="color: #fff"
+        slot="icon-only"
+        name="close-circle"
+      ></ion-icon>
+    </ion-button>
+  </div>
+  <div class="camera-options" (click)="takePicture()">
+    <div class="camera-touch">
+      <div class="camera-touch-inner"></div>
+    </div>
+  </div>
+</ng-container>
+<ng-container *ngIf="preview">
+  <ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button (click)="back()">
+          <ion-icon slot="icon-only" name="close"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <div class="img-container">
+      <img *ngIf="imageSrc" [src]="imageSrc" />
+    </div>
+  </ion-content>
+  <ion-footer>
+    <ion-buttons>
+      <ion-button fill="solid" color="primary" (click)="uploadAndContinue()">
+        保存并继续
+        <ion-icon slot="end" name="save"></ion-icon>
+      </ion-button>
+      <ion-button fill="solid" (click)="uploadAndExit()">
+        保存并退出
+        <ion-icon slot="end" name="exit"></ion-icon>
+      </ion-button>
+      <ion-button fill="solid" color="danger" (click)="continue()">
+        重拍
+        <ion-icon slot="end" name="camera"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-footer>
+</ng-container>
+
+<!-- <img *ngIf="image" [src]="image"> -->
+<!-- <ion-header>
+  <ion-toolbar color="dark">
+    <ion-buttons slot="start">
+      <ion-button (click)="back()">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header> -->
+<!-- <ion-content></ion-content> -->
+
+<!-- <ion-footer>
+  <div class="camera-options" >
+    <div class="camera-touch">
+      <div class="camera-touch-inner"></div>
+    </div>
+  </div>
+</ion-footer> -->

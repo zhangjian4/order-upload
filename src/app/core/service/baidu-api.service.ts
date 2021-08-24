@@ -3,6 +3,7 @@ import { HTTP } from '@ionic-native/http/ngx';
 import { Platform, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { HttpService } from './http.service';
+import * as SparkMD5 from 'spark-md5';
 const ErrorMessage = {
   0: '成功',
   '-1': '用户名和密码验证失败',
@@ -10,7 +11,7 @@ const ErrorMessage = {
   '-3': '用户未激活（调用init接口）',
   '-4': 'COOKIE中未找到host_key&user_key（或BDUSS）',
   '-5': 'host_key和user_key无效',
-  '-6': 'bduss无效',
+  '-6': '身份验证失败',
   '-7': '文件或目录名错误或无权访问',
   '-8': '该目录下已存在此文件',
   '-9': '文件被所有者删除，操作失败',
@@ -26,7 +27,7 @@ const ErrorMessage = {
   '-25': '非公测用户',
   '-26': '邀请码失效',
   1: '服务器错误 ',
-  2: '该文件夹不可以移动',
+  2: '参数错误',
   3: '一次操作文件不可超过100个',
   4: '新文件名错误',
   5: '目标目录非法',
@@ -62,6 +63,8 @@ const ErrorMessage = {
   31034: '操作过于频繁，请稍后再试',
   31075: '一次支持操作999个',
   31116: '你的空间不足',
+  42000: '访问过于频繁',
+  42001: 'rand校验失败',
   112: '页面已过期，请刷新后重试',
   111: '当前还有任务未完成,请等待当前任务结束后再进行操作',
   '-32': '你的空间不足',
@@ -124,6 +127,8 @@ export class BaiduAPIService {
           method: 'list',
           dir: this.defaultDir,
           web: '1',
+          order:'time',
+          desc:'1',
           start: start + '',
           limit: limit + '',
         },
@@ -139,6 +144,8 @@ export class BaiduAPIService {
         return await this.get('https://pan.baidu.com/rest/2.0/xpan/file', {
           method: 'list',
           dir: this.defaultDir,
+          order:'time',
+          desc:'1',
           start: start + '',
           limit: limit + '',
         });
@@ -157,7 +164,6 @@ export class BaiduAPIService {
     } else {
       url = url + '?access_token=' + token;
     }
-    console.log('[HTTP] post', url, body);
     const response = await this.http.post(url, body);
     return this.handleResponse(response);
   }
@@ -208,7 +214,10 @@ export class BaiduAPIService {
   }
 
   async showError(errno: number) {
-    const error = ErrorMessage[errno.toString()];
+    let error = ErrorMessage[errno.toString()];
+    if (error == null) {
+      error = '错误码:' + errno;
+    }
     if (error) {
       const toast = await this.toastController.create({
         message: error,
@@ -252,6 +261,58 @@ export class BaiduAPIService {
     // );
     // const url = `https://openapi.baidu.com/oauth/2.0/token?grant_type=authorization_code&code=${code}&client_id=${this.appKey}&client_secret=${this.secretKey}&redirect_uri=${redirectUri}`;
     // location.href = url;
+  }
+
+  async upload(fileName: string, file: Blob) {
+    // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
+    const path = this.defaultDir + '/' + fileName;
+    const size = file.size;
+    const spark = new SparkMD5.ArrayBuffer();
+    const arrayBuffer = await file.arrayBuffer();
+    spark.append(arrayBuffer);
+    const md5 = spark.end();
+    const blockList = [md5];
+    const result = await this.precreate(path, size, blockList);
+    const uploadid = result.uploadid;
+    const result2 = await this.superfile(path, uploadid, file);
+    const blockList2 = [result2.md5];
+    const result3 = await this.create(path, size, uploadid, blockList2);
+  }
+
+  precreate(path: string, size: number, blockList: string[]) {
+    const form = new FormData();
+    form.append('path', path);
+    form.append('size', size.toString());
+    form.append('isdir', '0');
+    form.append('autoinit', '1');
+    form.append('block_list', JSON.stringify(blockList));
+    return this.post(
+      'https://pan.baidu.com/rest/2.0/xpan/file?method=precreate',
+      form
+    );
+  }
+
+  superfile(path: string, uploadid: string, file: Blob) {
+    path = encodeURIComponent('path');
+    const form = new FormData();
+    form.append('file', file);
+    return this.post(
+      `https://d.pcs.baidu.com/rest/2.0/pcs/superfile2?method=upload&type=tmpfile&path=${path}&uploadid=${uploadid}&partseq=0`,
+      form
+    );
+  }
+
+  create(path: string, size: number, uploadid: string, blockList: string[]) {
+    const form = new FormData();
+    form.append('path', path);
+    form.append('size', size.toString());
+    form.append('isdir', '0');
+    form.append('uploadid', uploadid);
+    form.append('block_list', JSON.stringify(blockList));
+    return this.post(
+      'https://pan.baidu.com/rest/2.0/xpan/file?method=create',
+      form
+    );
   }
 
   async getAccessToken() {

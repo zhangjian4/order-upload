@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { IonContent, IonInfiniteScroll, MenuController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
@@ -18,13 +19,14 @@ export class MainComponent implements OnInit {
   num = 10;
   loading: boolean;
   loadEnd: boolean;
-  syncObj: Object;
+  syncObj: any;
   searchValue: string;
   skeletons = new Array(10);
 
   constructor(
     private menu: MenuController,
-    private baiduAPIService: BaiduAPIService
+    private baiduAPIService: BaiduAPIService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -32,7 +34,7 @@ export class MainComponent implements OnInit {
     this.initLoading();
   }
 
-  async initLoading(){
+  async initLoading() {
     this.page = 0;
     this.loadEnd = false;
     this.loading = true;
@@ -114,12 +116,7 @@ export class MainComponent implements OnInit {
     this.baiduAPIService.logout();
   }
 
-  openEnd() {
-    this.menu.open('end');
-  }
-
-  openCustom() {
-    this.menu.enable(true, 'custom');
-    this.menu.open('custom');
+  takePhoto() {
+    this.router.navigateByUrl('/camera');
   }
 }

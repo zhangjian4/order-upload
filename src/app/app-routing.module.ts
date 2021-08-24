@@ -12,6 +12,9 @@ const routes: Routes = [
   }, {
     path: 'oauth',
     loadChildren: () => import('./oauth/oauth.module').then(m => m.OauthModule)
+  }, {
+    path: 'camera',
+    loadChildren: () => import('./camera/camera.module').then(m => m.CameraModule)
   }
 ];
 @NgModule({
