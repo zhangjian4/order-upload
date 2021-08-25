@@ -11,5 +11,17 @@ ion-searchbar {
 }
 
 ion-thumbnail {
-  --border-radius: 10px;
+  --border-radius: 5px;
+  height: 40px;
+  width: 40px;
+}
+
+.sc-ion-label-md-s > p {
+  color: #999;
+}
+
+:host::ng-deep {
+  .font-highlight {
+    color: #ff4d4f;
+  }
 }

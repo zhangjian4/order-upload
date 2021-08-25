@@ -4,6 +4,7 @@ import { Platform, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { HttpService } from './http.service';
 import * as SparkMD5 from 'spark-md5';
+import { Subject } from 'rxjs';
 const ErrorMessage = {
   0: '成功',
   '-1': '用户名和密码验证失败',
@@ -76,6 +77,7 @@ export class BaiduAPIService {
   appKey = 'GwSU34r2Ni23OEObLFU637VipOlhzh5r';
   secretKey = 'U6z8Z3FOLQnFyYANZMdtPgxcfNHwLMhj';
   defaultDir = '/票据上传';
+  fileChange=new Subject();
 
   constructor(
     private http: HttpService,
@@ -127,8 +129,8 @@ export class BaiduAPIService {
           method: 'list',
           dir: this.defaultDir,
           web: '1',
-          order:'time',
-          desc:'1',
+          order: 'time',
+          desc: '1',
           start: start + '',
           limit: limit + '',
         },
@@ -144,8 +146,8 @@ export class BaiduAPIService {
         return await this.get('https://pan.baidu.com/rest/2.0/xpan/file', {
           method: 'list',
           dir: this.defaultDir,
-          order:'time',
-          desc:'1',
+          order: 'time',
+          desc: '1',
           start: start + '',
           limit: limit + '',
         });
@@ -264,6 +266,7 @@ export class BaiduAPIService {
   }
 
   async upload(fileName: string, file: Blob) {
+
     // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
     const path = this.defaultDir + '/' + fileName;
     const size = file.size;
@@ -277,6 +280,7 @@ export class BaiduAPIService {
     const result2 = await this.superfile(path, uploadid, file);
     const blockList2 = [result2.md5];
     const result3 = await this.create(path, size, uploadid, blockList2);
+    this.fileChange.next();
   }
 
   precreate(path: string, size: number, blockList: string[]) {
@@ -325,9 +329,9 @@ export class BaiduAPIService {
     }
   }
 
-  private resolve<T>(result: T): Promise<T> {
-    return new Promise((resolve) => {
-      this.zone.run(() => resolve(result));
-    });
-  }
+  // private resolve<T>(result: T): Promise<T> {
+  //   return new Promise((resolve) => {
+  //     this.zone.run(() => resolve(result));
+  //   });
+  // }
 }

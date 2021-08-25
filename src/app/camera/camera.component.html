@@ -30,21 +30,32 @@
     </div>
   </ion-content>
   <ion-footer>
-    <ion-buttons>
-      <ion-button fill="solid" color="primary" (click)="uploadAndContinue()">
-        保存并继续
-        <ion-icon slot="end" name="save"></ion-icon>
-      </ion-button>
-      <ion-button fill="solid" (click)="uploadAndExit()">
-        保存并退出
-        <ion-icon slot="end" name="exit"></ion-icon>
-      </ion-button>
-      <ion-button fill="solid" color="danger" (click)="continue()">
-        重拍
-        <ion-icon slot="end" name="camera"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-footer>
+  
+      <div>
+        <ion-input
+          [(ngModel)]="fileName"
+          [clearInput]="true"
+          (ionFocus)="onInputFocus($event)"
+          class="file-name"
+        ></ion-input>
+      </div>
+      <div class="buttons">
+        <ion-button fill="solid" color="primary" (click)="uploadAndContinue()">
+          保存并继续
+          <!-- <ion-icon slot="end" name="save"></ion-icon> -->
+          <ion-spinner *ngIf="uploading === 1" name="crescent"></ion-spinner>
+        </ion-button>
+        <ion-button fill="solid" (click)="uploadAndExit()">
+          保存并退出
+          <!-- <ion-icon slot="end" name="exit"></ion-icon> -->
+          <ion-spinner *ngIf="uploading === 2" name="crescent"></ion-spinner>
+        </ion-button>
+        <ion-button fill="solid" color="danger" (click)="continue()">
+          重拍
+          <!-- <ion-icon slot="end" name="camera"></ion-icon> -->
+        </ion-button>
+      </div>
+    </ion-footer>
 </ng-container>
 
 <!-- <img *ngIf="image" [src]="image"> -->

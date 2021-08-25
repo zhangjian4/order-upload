@@ -16,12 +16,14 @@ export class MainComponent implements OnInit {
   userInfo: any;
   fileList: any[] = [];
   page = 0;
-  num = 10;
+  num = 20;
   loading: boolean;
   loadEnd: boolean;
   syncObj: any;
   searchValue: string;
   skeletons = new Array(10);
+  destroy$ = new Subject();
+  dirty: boolean;
 
   constructor(
     private menu: MenuController,
@@ -32,7 +34,19 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     this.reloadUserInfo();
     this.initLoading();
+    this.baiduAPIService.fileChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.dirty = true;
+      });
   }
+
+  ionViewWillEnter(){
+    if(this.dirty){
+      this.initLoading();
+    }
+  }
+
 
   async initLoading() {
     this.page = 0;
@@ -92,6 +106,7 @@ export class MainComponent implements OnInit {
       }
       if (this.page === 0) {
         this.fileList = [];
+        this.dirty=false;
       }
       this.fileList.push(...list);
       this.page = this.page + 1;

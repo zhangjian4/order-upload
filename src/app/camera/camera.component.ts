@@ -1,6 +1,7 @@
 import {
   Component,
   HostBinding,
+  HostListener,
   NgZone,
   OnDestroy,
   OnInit,
@@ -11,7 +12,7 @@ import {
   CameraPreviewOptions,
   CameraPreviewDimensions,
 } from '@ionic-native/camera-preview/ngx';
-import { NavController, Platform } from '@ionic/angular';
+import { NavController, Platform, ToastController } from '@ionic/angular';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { format } from 'date-fns';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
@@ -30,7 +31,7 @@ export class CameraComponent implements OnInit, OnDestroy {
   imageSrc: string;
   base64: string;
   fileName: string;
-  uploading: boolean;
+  uploading: number;
 
   constructor(
     private cameraPreview: CameraPreview,
@@ -38,11 +39,23 @@ export class CameraComponent implements OnInit, OnDestroy {
     private navController: NavController,
     private webview: WebView,
     private baiduAPIService: BaiduAPIService,
-    private platform: Platform
+    private platform: Platform,
+    public toastController: ToastController
   ) {}
-
+  @HostListener('window:ionKeyboardDidShow', ['$event'])
+  keyboardShow(event: any) {
+    console.log(event);
+  }
   ngOnInit() {
     this.startCamera();
+    // window.removeEventListener('')
+    // window.addEventListener('ionKeyboardDidShow', ev => {
+    //   const { keyboardHeight } = ev;
+    //   // Do something with the keyboard height such as translating an input above the keyboard.
+    // });
+    // window.addEventListener('ionKeyboardDidHide', () => {
+    //   // Move input back to original location
+    // });
   }
 
   ngOnDestroy(): void {
@@ -106,16 +119,39 @@ export class CameraComponent implements OnInit, OnDestroy {
   }
 
   async uploadAndContinue() {
-    await this.upload();
-    this.continue();
+    if (!this.uploading) {
+      this.uploading = 1;
+      try {
+        await this.upload();
+        this.continue();
+      } finally {
+        this.uploading = 0;
+      }
+    }
   }
 
   async uploadAndExit() {
-    await this.upload();
-    this.back();
+    if (!this.uploading) {
+      this.uploading = 2;
+      try {
+        await this.upload();
+        this.back();
+      } finally {
+        this.uploading = 0;
+      }
+    }
   }
 
   async upload() {
+    if (!this.fileName) {
+      const toast = await this.toastController.create({
+        message: '文件名不能为空',
+        position: 'top',
+        duration: 2000,
+      });
+      toast.present();
+      throw '文件名不能为空';
+    }
     const blob = this.base64ToBlob(this.base64);
     const fileName = this.fileName + '.jpg';
     await this.baiduAPIService.upload(fileName, blob);
@@ -135,7 +171,6 @@ export class CameraComponent implements OnInit, OnDestroy {
           .substring(image.src.lastIndexOf('.') + 1)
           .toLowerCase();
         let base64 = canvas.toDataURL('image/jpeg');
-        console.log(base64);
         base64 = base64.substr(base64.indexOf(',') + 1);
         resolve(base64);
       };
@@ -156,5 +191,13 @@ export class CameraComponent implements OnInit, OnDestroy {
     return new Blob([u8arr], {
       type: mime,
     });
+  }
+
+  onInputFocus(event: Event) {
+    console.log(event);
+    const input = (event.target as HTMLElement).querySelector('input');
+    if (input) {
+      input.select();
+    }
   }
 }

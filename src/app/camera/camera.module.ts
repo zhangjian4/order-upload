@@ -5,6 +5,7 @@ import { CameraComponent } from './camera.component';
 import { CameraPreview} from '@ionic-native/camera-preview/ngx';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { IonicModule } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [CameraComponent],
@@ -16,7 +17,8 @@ import { IonicModule } from '@ionic/angular';
         component: CameraComponent,
       },
     ]),
-    IonicModule
+    IonicModule,
+    FormsModule
   ],
   providers: [CameraPreview,WebView],
 })

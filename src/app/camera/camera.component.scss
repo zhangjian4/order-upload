@@ -39,7 +39,27 @@
 ion-content {
   --overflow: hidden;
 }
-
 ion-footer {
+  height: 116px;
   background: #fff;
+  padding: 10px;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 10px;
+  z-index: 100;
+}
+.buttons {
+  text-align: center;
+}
+
+.file-name {
+  border-radius: 10px;
+  background: #dde9f7;
+  --padding-start: 10px;
 }
