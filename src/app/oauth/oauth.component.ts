@@ -25,6 +25,6 @@ export class OauthComponent implements OnInit {
 
   async getToken(code: string) {
     await this.baiduAPIService.getToken(code);
-    this.router.navigateByUrl('/');
+    this.router.navigateByUrl('/', { replaceUrl: true });
   }
 }

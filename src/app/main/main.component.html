@@ -60,20 +60,20 @@
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
       <ion-list>
-        <ion-item *ngFor="let item of fileList" lines="none">
+        <ion-item *ngFor="let item of fileService.fileList;let i=index;" lines="none" (click)="detail(item,i)">
           <ion-thumbnail *ngIf="item.thumbs" slot="start">
             <img [src]="item.thumbs.url1|thumbsUrl" />
           </ion-thumbnail>
           <ion-label>
-            <h3 [innerHTML]="item.server_filename | highlight: searchValue:'i':'font-highlight'"></h3>
+            <h3 [innerHTML]="item.server_filename | highlight: fileService.searchValue:'i':'font-highlight'"></h3>
             <p>{{ item.server_mtime | myDate }}&nbsp;&nbsp;&nbsp;{{ item.size | fileSize }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
       <ion-infinite-scroll
-        *ngIf="!loadEnd"
+        *ngIf="fileService.hasMore"
         threshold="500px"
-        (ionInfinite)="loadData($event)"
+        (ionInfinite)="loadMore($event)"
       >
         <ion-infinite-scroll-content
           loadingSpinner="bubbles"

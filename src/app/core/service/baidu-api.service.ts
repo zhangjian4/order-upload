@@ -77,7 +77,7 @@ export class BaiduAPIService {
   appKey = 'GwSU34r2Ni23OEObLFU637VipOlhzh5r';
   secretKey = 'U6z8Z3FOLQnFyYANZMdtPgxcfNHwLMhj';
   defaultDir = '/票据上传';
-  fileChange=new Subject();
+  fileChange = new Subject();
 
   constructor(
     private http: HttpService,
@@ -266,7 +266,6 @@ export class BaiduAPIService {
   }
 
   async upload(fileName: string, file: Blob) {
-
     // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
     const path = this.defaultDir + '/' + fileName;
     const size = file.size;
@@ -327,6 +326,20 @@ export class BaiduAPIService {
     } else {
       return token;
     }
+  }
+
+  multimedia(fsids: number[]) {
+    return this.get('https://pan.baidu.com/rest/2.0/xpan/multimedia', {
+      method: 'filemetas',
+      fsids: JSON.stringify(fsids),
+      dlink: '1',
+      extra: '1',
+    });
+  }
+
+  async getDlink(dlink: string) {
+    const token = await this.getAccessToken();
+    return dlink + '&access_token=' + token;
   }
 
   // private resolve<T>(result: T): Promise<T> {

@@ -16,7 +16,6 @@ import { NavController, Platform, ToastController } from '@ionic/angular';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { format } from 'date-fns';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
-import * as SparkMD5 from 'spark-md5';
 
 @Component({
   selector: 'app-camera',
@@ -92,7 +91,7 @@ export class CameraComponent implements OnInit, OnDestroy {
 
   async takePicture() {
     if (this.platform.is('cordova')) {
-      this.base64 = await this.cameraPreview.takePicture({ quality: 85 });
+      this.base64 = await this.cameraPreview.takePicture({ quality: 100 });
       if (this.base64) {
         this.zone.run(() => {
           this.fileName = format(new Date(), 'yyyyMMddHHmmss');

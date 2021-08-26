@@ -1,19 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OauthComponent } from './oauth.component';
 import { RouterModule } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
+import { DetailComponent } from './detail.component';
+
 
 
 @NgModule({
-  declarations: [OauthComponent],
+  declarations: [DetailComponent],
   imports: [
     CommonModule,
     RouterModule.forChild([
       {
         path: '',
-        component: OauthComponent,
-      }
+        component: DetailComponent,
+      },
     ]),
+    IonicModule,
   ]
 })
-export class OauthModule { }
+export class DetailModule { }
