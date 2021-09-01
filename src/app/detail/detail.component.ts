@@ -28,6 +28,7 @@ export class DetailComponent implements OnInit {
   ngOnInit() {}
 
   async reload() {
+    // this.fileService.loadImage(this.index);
     const result = await this.baiduAPIService.multimedia([this.id]);
     this.image = await this.baiduAPIService.getDlink(result.list[0].dlink);
     console.log(result);

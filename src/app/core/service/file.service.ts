@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BaiduAPIService } from './baidu-api.service';
+import { IndexedDBService } from './indexeddb.service';
 
 @Injectable({ providedIn: 'root' })
 export class FileService {
@@ -11,11 +12,13 @@ export class FileService {
   fileList: any[] = [];
   dirty: boolean;
   loading: boolean;
-  constructor(private baiduAPIService: BaiduAPIService) {
-    this.baiduAPIService.fileChange
-      .subscribe(() => {
-        this.dirty = true;
-      });
+  constructor(
+    private baiduAPIService: BaiduAPIService,
+    private indexedDBService: IndexedDBService
+  ) {
+    this.baiduAPIService.fileChange.subscribe(() => {
+      this.dirty = true;
+    });
   }
 
   async loadData(page: number) {
@@ -64,5 +67,11 @@ export class FileService {
     if (this.hasMore) {
       await this.loadData(this.page + 1);
     }
+  }
+
+  async loadImage(index: number) {
+    const ids = this.fileList.map((file) => file.fs_id);
+    const result = await this.baiduAPIService.multimedia(ids);
+    console.log(result);
   }
 }
