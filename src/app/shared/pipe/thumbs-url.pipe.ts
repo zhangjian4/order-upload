@@ -4,10 +4,14 @@ import { Pipe, PipeTransform } from '@angular/core';
   name: 'thumbsUrl',
 })
 export class ThumbsUrlPipe implements PipeTransform {
-  transform(value: string): string {
-    console.log(value);
+  transform(value: string, size?: string): string {
     if (value) {
-      value = value.replace(/&dp-logid=\d+/, '');
+      const url=new URL(value);
+      url.searchParams.delete('dp-logid');
+      if(size){
+        url.searchParams.set('size',size);
+      }
+      value = url.toString();
     }
     return value;
   }

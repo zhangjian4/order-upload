@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { DetailComponent } from './detail.component';
 import { SwiperModule } from 'swiper/angular';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [DetailComponent],
@@ -15,6 +16,7 @@ import { SwiperModule } from 'swiper/angular';
         component: DetailComponent,
       },
     ]),
+    SharedModule,
     IonicModule,
     SwiperModule,
   ],

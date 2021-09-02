@@ -1,1 +1,31 @@
-<img *ngIf="image" [src]="image">
+<!-- <img *ngIf="image" [src]="image"> -->
+<ion-header class="header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [text]="''"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ fileService.fileList[index]?.server_filename }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content [forceOverscroll]="false">
+  <swiper
+    #swiperRef
+    [zoom]="true"
+    [initialSlide]="index"
+    [lazy]="{ loadPrevNext: true }"
+    (slideChange)="onSlideChange($event)"
+    class="mySwiper"
+  >
+    <ng-container *ngFor="let item of fileService.fileList">
+      <ng-template swiperSlide>
+        <div class="swiper-zoom-container">
+          <img
+            [attr.data-src]="item.thumbs.url3 | thumbsUrl: 'c8500_u5800'"
+            class="swiper-lazy"
+          />
+        </div>
+        <div class="swiper-lazy-preloader swiper-lazy-preloader-white"></div>
+      </ng-template>
+    </ng-container>
+  </swiper>
+</ion-content>

@@ -6,9 +6,9 @@ import { IndexedDBService } from './indexeddb.service';
 export class FileService {
   syncObj: any;
   searchValue: string;
-  page = 0;
+  page = -1;
   num = 20;
-  hasMore: boolean;
+  hasMore: boolean = true;
   fileList: any[] = [];
   dirty: boolean;
   loading: boolean;
