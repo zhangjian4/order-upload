@@ -13,6 +13,8 @@ import { HttpService } from './core/service/http.service';
 import { BrowserHttpService } from './core/service/browser-http.service';
 import { HttpClientModule } from '@angular/common/http';
 import { CordovaHttpService } from './core/service/cordova-http.service';
+import { CodePush } from '@ionic-native/code-push/ngx';
+
 const startupServiceFactory = (startupService: StartupService) => () =>
   startupService.load();
 
@@ -41,6 +43,7 @@ const httpServiceFactory = (
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     HTTP,
+    CodePush,
     {
       provide: APP_INITIALIZER,
       useFactory: startupServiceFactory,

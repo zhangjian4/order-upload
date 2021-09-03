@@ -1,10 +1,23 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  NgZone,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
-import { IonContent, IonInfiniteScroll, MenuController } from '@ionic/angular';
+import {
+  AlertController,
+  IonContent,
+  IonInfiniteScroll,
+  MenuController,
+} from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { FileService } from '../core/service/file.service';
+import { CodePush, InstallMode, SyncStatus } from '@ionic-native/code-push/ngx';
+import { VERSION } from '../core/version';
 
 @Component({
   selector: 'app-main',
@@ -25,22 +38,21 @@ export class MainComponent implements OnInit {
   skeletons = new Array(10);
   destroy$ = new Subject();
   dirty: boolean;
-
+  version = VERSION;
+  updateAvailable: boolean = true;
   constructor(
-    private menu: MenuController,
     private baiduAPIService: BaiduAPIService,
     private router: Router,
-    public fileService: FileService
+    public fileService: FileService,
+    private codePush: CodePush,
+    private zone: NgZone,
+    public alertController: AlertController
   ) {}
 
   ngOnInit() {
     this.reloadUserInfo();
     this.initLoading();
-    // this.baiduAPIService.fileChange
-    //   .pipe(takeUntil(this.destroy$))
-    //   .subscribe(() => {
-    //     this.dirty = true;
-    //   });
+    this.checkForUpdate();
   }
 
   ionViewWillEnter() {
@@ -50,8 +62,6 @@ export class MainComponent implements OnInit {
   }
 
   async initLoading() {
-    // this.page = 0;
-    // this.loadEnd = false;
     this.loading = true;
     try {
       await this.fileService.reload();
@@ -65,15 +75,11 @@ export class MainComponent implements OnInit {
   }
 
   async doRefresh(event?: any) {
-    // this.page = 0;
-    // this.loadEnd = false;
     try {
       await this.fileService.reload();
     } catch (e) {
       console.error(e);
     }
-    // this.infiniteScroll.nativeElement.disabled = false;
-    // console.log(this.infiniteScroll.nativeElement);
     event.target.complete();
   }
 
@@ -85,68 +91,105 @@ export class MainComponent implements OnInit {
     }
   }
 
-  // async loadData(event?: any) {
-  //   const syncObj = new Object();
-  //   this.syncObj = syncObj;
-  //   try {
-  //     let list: any[];
-  //     let hasMore: boolean;
-  //     if (this.searchValue) {
-  //       const result = await this.baiduAPIService.search(
-  //         this.searchValue,
-  //         this.page + 1,
-  //         this.num
-  //       );
-  //       list = result.list;
-  //       hasMore = result.has_more;
-  //     } else {
-  //       const result = await this.baiduAPIService.getFileList(
-  //         this.page * this.num,
-  //         this.num
-  //       );
-  //       list = result.list;
-  //       hasMore = list.length === this.num;
-  //     }
-  //     if (this.syncObj !== syncObj) {
-  //       return;
-  //     }
-  //     if (!hasMore) {
-  //       this.loadEnd = true;
-  //     }
-  //     if (this.page === 0) {
-  //       this.fileList = [];
-  //       this.dirty = false;
-  //     }
-  //     this.fileList.push(...list);
-  //     this.page = this.page + 1;
-  //   } finally {
-  //     if (event) {
-  //       event.target.complete();
-  //     }
-  //   }
-  // }
-
   async search(event: any) {
     this.content.scrollToTop();
     this.fileService.searchValue = event.detail.value;
     this.initLoading();
-    // this.search$.next(value);
   }
-  openFirst() {
-    this.menu.open('first');
+
+  async checkForUpdate() {
+    const remote = await this.codePush.checkForUpdate();
+    this.zone.run(() => {
+      this.updateAvailable = remote != null;
+    });
+  }
+
+  async update() {
+    // await this.checkForUpdate();
+    if (this.updateAvailable) {
+      const alert = await this.alertController.create({
+        cssClass: 'my-custom-class',
+        header: '更新',
+        message: '检测到新版本，是否立即更新?',
+        buttons: [
+          {
+            text: '取消',
+            role: 'cancel',
+            cssClass: 'secondary',
+          },
+          {
+            text: '确定',
+            handler: () => {
+              // this.process.show();
+              // this.codePush
+              //   .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
+              //     console.log(
+              //       `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
+              //     );
+              //     this.process.updateProcess(
+              //       (progress.receivedBytes / progress.totalBytes) * 100
+              //     );
+              //   })
+              //   .subscribe((status) => {
+              //     console.log('SyncStatus', status);
+              //     switch (status) {
+              //       case SyncStatus.DOWNLOADING_PACKAGE:
+              //         // this.updateModalDisplay = true;
+              //         break;
+              //       case SyncStatus.INSTALLING_UPDATE:
+              //         // this.updateModalDisplay = false;
+              //         break;
+              //       case SyncStatus.ERROR:
+              //         this.process.close();
+              //         // this.updateModalDisplay = false;
+              //         this.toast.fail('更新失败', 1000, null, false);
+              //         break;
+              //     }
+              //   });
+            },
+          },
+        ],
+      });
+
+      await alert.present();
+      // this.modal.alert('更新', '检测到新版本，是否立即更新?', [
+      //   { text: '取消' },
+      //   {
+      //     text: '确定',
+      //     onPress: () => {
+      //       this.process.show();
+      //       this.codePush
+      //         .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
+      //           console.log(
+      //             `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
+      //           );
+      //           this.process.updateProcess(
+      //             (progress.receivedBytes / progress.totalBytes) * 100
+      //           );
+      //         })
+      //         .subscribe((status) => {
+      //           console.log('SyncStatus', status);
+      //           switch (status) {
+      //             case SyncStatus.DOWNLOADING_PACKAGE:
+      //               // this.updateModalDisplay = true;
+      //               break;
+      //             case SyncStatus.INSTALLING_UPDATE:
+      //               // this.updateModalDisplay = false;
+      //               break;
+      //             case SyncStatus.ERROR:
+      //               this.process.close();
+      //               // this.updateModalDisplay = false;
+      //               this.toast.fail('更新失败', 1000, null, false);
+      //               break;
+      //           }
+      //         });
+      //     },
+      //   },
+      // ]);
+    }
   }
 
   logout() {
     this.baiduAPIService.logout();
-  }
-
-  takePhoto() {
-    this.router.navigateByUrl('/camera');
-  }
-
-  detail(item: any, index: number) {
-    this.router.navigate(['/detail'], {
-      queryParams: { id: item.fs_id, index },
-    });
   }
 }
