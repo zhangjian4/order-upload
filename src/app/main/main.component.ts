@@ -51,6 +51,7 @@ export class MainComponent implements OnInit {
     this.reloadUserInfo();
     this.initLoading();
     this.checkForUpdate();
+    this.codePush.notifyApplicationReady();
   }
 
   ionViewWillEnter() {
