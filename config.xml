@@ -22,7 +22,7 @@
     <preference name="SplashScreenDelay" value="3000" />
     <platform name="android">
         <preference name="AndroidXEnabled" value="true" />
-        <preference name="CodePushPublicKey" value="DCV2WBrjJwnU9wgsdkOhjfMP9dIjMnGLg2www" />
+        <preference name="CodePushDeploymentKey" value="DCV2WBrjJwnU9wgsdkOhjfMP9dIjMnGLg2www" />
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application" xmlns:android="http://schemas.android.com/apk/res/android">
             <application android:networkSecurityConfig="@xml/network_security_config" />
         </edit-config>
@@ -55,7 +55,7 @@
         <hook src="scripts/replace_android_webview.js" type="after_prepare" />
     </platform>
     <platform name="ios">
-        <preference name="CodePushPublicKey" value="gcC0HR78_utrWm3vyFRtvrIEme3zLGkNGy0Ok" />
+        <preference name="CodePushDeploymentKey" value="gcC0HR78_utrWm3vyFRtvrIEme3zLGkNGy0Ok" />
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
         <icon height="57" src="resources/ios/icon/icon.png" width="57" />
