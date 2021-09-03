@@ -15,7 +15,6 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { Subject } from 'rxjs';
-import { takeUntil, debounceTime } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { FileService } from '../core/service/file.service';
 import { CodePush, InstallMode, SyncStatus } from '@ionic-native/code-push/ngx';
@@ -30,12 +29,7 @@ export class MainComponent implements OnInit {
   @ViewChild('content')
   content: IonContent;
   userInfo: any;
-  // fileList: any[] = [];
-  // page = 0;
-  // num = 20;
   loading: boolean;
-  // loadEnd: boolean;
-  // syncObj: any;
   searchValue: string;
   skeletons = new Array(10);
   destroy$ = new Subject();
@@ -46,7 +40,6 @@ export class MainComponent implements OnInit {
   progress: number;
   constructor(
     private baiduAPIService: BaiduAPIService,
-    private router: Router,
     public fileService: FileService,
     private codePush: CodePush,
     private zone: NgZone,
@@ -110,7 +103,7 @@ export class MainComponent implements OnInit {
   }
 
   async update() {
-    // await this.checkForUpdate();
+    await this.checkForUpdate();
     if (this.updateAvailable) {
       const alert = await this.alertController.create({
         cssClass: 'my-custom-class',
@@ -141,10 +134,8 @@ export class MainComponent implements OnInit {
                   console.log('SyncStatus', status);
                   switch (status) {
                     case SyncStatus.DOWNLOADING_PACKAGE:
-                      // this.updateModalDisplay = true;
                       break;
                     case SyncStatus.INSTALLING_UPDATE:
-                      // this.updateModalDisplay = false;
                       break;
                     case SyncStatus.ERROR:
                       this.zone.run(async () => {
@@ -162,42 +153,13 @@ export class MainComponent implements OnInit {
           },
         ],
       });
-
       await alert.present();
-      // this.modal.alert('更新', '检测到新版本，是否立即更新?', [
-      //   { text: '取消' },
-      //   {
-      //     text: '确定',
-      //     onPress: () => {
-      //       this.process.show();
-      //       this.codePush
-      //         .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
-      //           console.log(
-      //             `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
-      //           );
-      //           this.process.updateProcess(
-      //             (progress.receivedBytes / progress.totalBytes) * 100
-      //           );
-      //         })
-      //         .subscribe((status) => {
-      //           console.log('SyncStatus', status);
-      //           switch (status) {
-      //             case SyncStatus.DOWNLOADING_PACKAGE:
-      //               // this.updateModalDisplay = true;
-      //               break;
-      //             case SyncStatus.INSTALLING_UPDATE:
-      //               // this.updateModalDisplay = false;
-      //               break;
-      //             case SyncStatus.ERROR:
-      //               this.process.close();
-      //               // this.updateModalDisplay = false;
-      //               this.toast.fail('更新失败', 1000, null, false);
-      //               break;
-      //           }
-      //         });
-      //     },
-      //   },
-      // ]);
+    } else {
+      const toast = await this.toastController.create({
+        message: '当前已是最新版本',
+        duration: 2000,
+      });
+      toast.present();
     }
   }
 
