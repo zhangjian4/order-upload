@@ -14,6 +14,8 @@ import { BrowserHttpService } from './core/service/browser-http.service';
 import { HttpClientModule } from '@angular/common/http';
 import { CordovaHttpService } from './core/service/cordova-http.service';
 import { CodePush } from '@ionic-native/code-push/ngx';
+import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { SplashScreen } from '@ionic-native/splash-screen/ngx';
 
 const startupServiceFactory = (startupService: StartupService) => () =>
   startupService.load();
@@ -44,6 +46,8 @@ const httpServiceFactory = (
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     HTTP,
     CodePush,
+    StatusBar,
+    SplashScreen,
     {
       provide: APP_INITIALIZER,
       useFactory: startupServiceFactory,

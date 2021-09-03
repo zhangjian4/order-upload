@@ -10,7 +10,9 @@ import {
   AlertController,
   IonContent,
   IonInfiniteScroll,
+  LoadingController,
   MenuController,
+  ToastController,
 } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
@@ -39,14 +41,17 @@ export class MainComponent implements OnInit {
   destroy$ = new Subject();
   dirty: boolean;
   version = VERSION;
-  updateAvailable: boolean = true;
+  updateAvailable: boolean;
+  showProgress: boolean;
+  progress: number;
   constructor(
     private baiduAPIService: BaiduAPIService,
     private router: Router,
     public fileService: FileService,
     private codePush: CodePush,
     private zone: NgZone,
-    public alertController: AlertController
+    public alertController: AlertController,
+    public toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -120,32 +125,39 @@ export class MainComponent implements OnInit {
           {
             text: '确定',
             handler: () => {
-              // this.process.show();
-              // this.codePush
-              //   .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
-              //     console.log(
-              //       `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
-              //     );
-              //     this.process.updateProcess(
-              //       (progress.receivedBytes / progress.totalBytes) * 100
-              //     );
-              //   })
-              //   .subscribe((status) => {
-              //     console.log('SyncStatus', status);
-              //     switch (status) {
-              //       case SyncStatus.DOWNLOADING_PACKAGE:
-              //         // this.updateModalDisplay = true;
-              //         break;
-              //       case SyncStatus.INSTALLING_UPDATE:
-              //         // this.updateModalDisplay = false;
-              //         break;
-              //       case SyncStatus.ERROR:
-              //         this.process.close();
-              //         // this.updateModalDisplay = false;
-              //         this.toast.fail('更新失败', 1000, null, false);
-              //         break;
-              //     }
-              //   });
+              this.showProgress = true;
+              this.progress = 0;
+              this.codePush
+                .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
+                  console.log(
+                    `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
+                  );
+                  this.zone.run(() => {
+                    this.progress =
+                      progress.receivedBytes / progress.totalBytes;
+                  });
+                })
+                .subscribe((status) => {
+                  console.log('SyncStatus', status);
+                  switch (status) {
+                    case SyncStatus.DOWNLOADING_PACKAGE:
+                      // this.updateModalDisplay = true;
+                      break;
+                    case SyncStatus.INSTALLING_UPDATE:
+                      // this.updateModalDisplay = false;
+                      break;
+                    case SyncStatus.ERROR:
+                      this.zone.run(async () => {
+                        this.showProgress = false;
+                        const toast = await this.toastController.create({
+                          message: '更新失败',
+                          duration: 2000,
+                        });
+                        toast.present();
+                      });
+                      break;
+                  }
+                });
             },
           },
         ],

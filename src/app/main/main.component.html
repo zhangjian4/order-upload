@@ -101,6 +101,13 @@
     </ion-infinite-scroll>
   </ng-container>
 </ion-content>
-<div class="update-mask">
-  <ion-progress-bar value="0.5"></ion-progress-bar>
+<!-- <ion-backdrop>
+  <div class="progress-container">
+    <ion-progress-bar [value]="progress"></ion-progress-bar>
+  </div>
+</ion-backdrop> -->
+<div class="update-mask" *ngIf="showProgress">
+  <div class="progress-container">
+    <ion-progress-bar [value]="progress"></ion-progress-bar>
+  </div>
 </div>
