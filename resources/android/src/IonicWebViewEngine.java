@@ -8,7 +8,7 @@ import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 import android.webkit.ServiceWorkerController;
 import android.webkit.ServiceWorkerClient;
@@ -87,13 +87,13 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
     ServiceWorkerController controller = null;
 
     if (setAsServiceWorkerClient && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-      controller = ServiceWorkerController.getInstance();
-      controller.setServiceWorkerClient(new ServiceWorkerClient(){
-        @Override
-        public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
-          return localServer.shouldInterceptRequest(request.getUrl(), request);
-        }
-      });
+        controller = ServiceWorkerController.getInstance();
+        controller.setServiceWorkerClient(new ServiceWorkerClient(){
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+                return localServer.shouldInterceptRequest(request.getUrl(), request);
+            }
+        });
     }
   }
 
@@ -186,8 +186,8 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
     public void onPageFinished(WebView view, String url) {
       super.onPageFinished(view, url);
       view.loadUrl("javascript:(function() { " +
-        "window.WEBVIEW_SERVER_URL = '" + CDV_LOCAL_SERVER + "';" +
-        "})()");
+              "window.WEBVIEW_SERVER_URL = '" + CDV_LOCAL_SERVER + "';" +
+              "})()");
     }
   }
 
