@@ -1,5 +1,6 @@
 <ion-menu side="start" menuId="first" contentId="main">
   <ion-content *ngIf="userInfo">
+    <div class="safe-top"></div>
     <ion-list>
       <ion-item>
         <ion-avatar slot="start" class="ion-margin-start">
@@ -24,8 +25,8 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button menu="first">
-        <ion-avatar *ngIf="userInfo" style="height: 32px; width: 32px">
-          <img [src]="userInfo.avatar_url" />
+        <ion-avatar style="height: 32px; width: 32px">
+          <img *ngIf="userInfo" [src]="userInfo.avatar_url" />
         </ion-avatar>
       </ion-menu-button>
     </ion-buttons>

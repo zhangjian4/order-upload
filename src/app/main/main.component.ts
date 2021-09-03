@@ -44,7 +44,8 @@ export class MainComponent implements OnInit {
     private codePush: CodePush,
     private zone: NgZone,
     public alertController: AlertController,
-    public toastController: ToastController
+    public toastController: ToastController,
+    public loadingController: LoadingController
   ) {}
 
   ngOnInit() {
@@ -104,7 +105,20 @@ export class MainComponent implements OnInit {
   }
 
   async update() {
-    await this.checkForUpdate();
+    const loading = await this.loadingController.create({
+      message: '正在检查更新',
+    });
+    loading.present();
+    try {
+      await this.checkForUpdate();
+    } catch (e) {
+      console.error(e);
+      this.toast('检查更新失败');
+      return;
+    } finally {
+      loading.dismiss();
+    }
+
     if (this.updateAvailable) {
       const alert = await this.alertController.create({
         cssClass: 'my-custom-class',
@@ -139,13 +153,9 @@ export class MainComponent implements OnInit {
                     case SyncStatus.INSTALLING_UPDATE:
                       break;
                     case SyncStatus.ERROR:
-                      this.zone.run(async () => {
+                      this.zone.run(() => {
                         this.showProgress = false;
-                        const toast = await this.toastController.create({
-                          message: '更新失败',
-                          duration: 2000,
-                        });
-                        toast.present();
+                        this.toast('更新失败');
                       });
                       break;
                   }
@@ -156,15 +166,21 @@ export class MainComponent implements OnInit {
       });
       await alert.present();
     } else {
-      const toast = await this.toastController.create({
-        message: '当前已是最新版本',
-        duration: 2000,
-      });
-      toast.present();
+      this.toast('当前已是最新版本');
     }
   }
 
   logout() {
     this.baiduAPIService.logout();
+  }
+
+  async toast(message: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2000,
+      position: 'middle',
+      color: 'dark',
+    });
+    toast.present();
   }
 }
