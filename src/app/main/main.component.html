@@ -1,12 +1,12 @@
 <ion-menu side="start" menuId="first" contentId="main">
-  <ion-content *ngIf="userInfo">
+  <ion-content >
     <div class="safe-top"></div>
     <ion-list>
       <ion-item>
         <ion-avatar slot="start" class="ion-margin-start">
-          <img [src]="userInfo.avatar_url" />
+          <img [src]="userInfo?.avatar_url" />
         </ion-avatar>
-        <ion-label>{{ userInfo.baidu_name }}</ion-label>
+        <ion-label>{{ userInfo?.baidu_name }}</ion-label>
       </ion-item>
       <ion-item (click)="update()">
         <ion-icon name="share-sharp" slot="start"></ion-icon>

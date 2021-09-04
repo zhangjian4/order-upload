@@ -1,8 +1,16 @@
-:host:not(.camera-opened) {
-  background-color: #000;
-}
-.header {
-  padding-top: var(--ion-safe-area-top, 0);
+// :host {
+//   background-color: #000;
+//   &.hide-background {
+//     background-color: transparent;
+//   }
+// }
+:host.hide-background {
+  ion-content {
+    background-color: transparent;
+  }
+  ion-footer {
+    background-color: transparent;
+  }
 }
 
 .img-container {
@@ -15,10 +23,16 @@
   }
 }
 
+.exit {
+  position: absolute;
+  bottom: 60px;
+  left: 10%;
+  height: 60px;
+}
 .camera-touch {
   width: 60px;
   height: 60px;
-  background: rgba(255, 255, 255, 0.5);
+  background: #999;
   border-radius: 50%;
   margin: 0 auto;
   padding: 5px;
@@ -38,28 +52,41 @@
 }
 ion-content {
   --overflow: hidden;
+  --background: #000;
 }
-ion-footer {
-  height: 116px;
-  background: #fff;
-  padding: 10px;
-}
+// ion-footer {
+//   padding: 10px;
+// }
 
-.footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  padding: 10px;
-  z-index: 100;
-}
+// .footer {
+//   position: fixed;
+//   bottom: 0;
+//   left: 0;
+//   right: 0;
+//   background: #fff;
+//   padding: 10px;
+//   z-index: 100;
+// }
 .buttons {
   text-align: center;
+}
+
+.filename-editor {
+  display: flex;
+  padding: 10px;
+  ion-button {
+    height: 30px;
+    font-size: 18px;
+    --padding-end: 0;
+  }
 }
 
 .file-name {
   border-radius: 10px;
   background: #dde9f7;
   --padding-start: 10px;
+}
+
+.footer-inner {
+  height: 60.8px;
 }

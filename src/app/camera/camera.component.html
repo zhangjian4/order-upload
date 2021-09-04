@@ -1,21 +1,17 @@
-<ng-container *ngIf="!preview">
-  <div class="header">
-    <ion-button (click)="back()" fill="clear">
-      <ion-icon
-        style="color: #fff"
-        slot="icon-only"
-        name="close-circle"
-      ></ion-icon>
-    </ion-button>
+<ion-content *ngIf="!preview">
+  <ion-button class="exit" (click)="back()" fill="clear">
+    <ion-icon
+      style="color: #fff"
+      slot="icon-only"
+      name="close-circle"
+    ></ion-icon>
+  </ion-button>
+  <div class="camera-touch" (click)="takePicture()">
+    <div class="camera-touch-inner"></div>
   </div>
-  <div class="camera-options" (click)="takePicture()">
-    <div class="camera-touch">
-      <div class="camera-touch-inner"></div>
-    </div>
-  </div>
-</ng-container>
+</ion-content>
 <ng-container *ngIf="preview">
-  <ion-header>
+  <!-- <ion-header>
     <ion-toolbar>
       <ion-buttons slot="start">
         <ion-button (click)="back()">
@@ -23,39 +19,74 @@
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
-  </ion-header>
+  </ion-header> -->
   <ion-content>
-    <div class="img-container">
+    <div class="img-container safe-top">
       <img *ngIf="imageSrc" [src]="imageSrc" />
     </div>
   </ion-content>
-  <ion-footer>
-  
-      <div>
+  <ion-footer class="safe-bottom">
+    <!-- <ion-toolbar>
+      <ion-title>
+        <ion-input
+          [(ngModel)]="fileName"
+          [clearInput]="true"
+          (ionFocus)="onInputFocus($event)"
+          class="file-name"
+        >
+        </ion-input>
+      </ion-title>
+      <ion-buttons slot="primary">
+        <ion-button color="danger" fill="outline">
+          <ion-icon slot="end" name="create"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" fill="outline">
+          <ion-icon slot="end" name="create"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar> -->
+    <div class="footer-inner">
+      <div class="filename-editor" [ngStyle]="footerStyle">
         <ion-input
           [(ngModel)]="fileName"
           [clearInput]="true"
           (ionFocus)="onInputFocus($event)"
           class="file-name"
         ></ion-input>
+        <ion-button fill="clear" (click)="uploadAndContinue()">
+          <ion-icon
+            *ngIf="uploading !== 1"
+            color="success"
+            slot="icon-only"
+            name="checkmark-circle-sharp"
+          ></ion-icon>
+          <ion-spinner *ngIf="uploading === 1" name="crescent"></ion-spinner>
+          <!-- <ion-spinner name="crescent"></ion-spinner> -->
+        </ion-button>
+        <ion-button fill="clear" (click)="continue()">
+          <ion-icon
+            color="danger"
+            slot="icon-only"
+            name="close-circle"
+          ></ion-icon>
+        </ion-button>
       </div>
-      <div class="buttons">
+    </div>
+
+    <!-- <div class="buttons">
         <ion-button fill="solid" color="primary" (click)="uploadAndContinue()">
           保存并继续
-          <!-- <ion-icon slot="end" name="save"></ion-icon> -->
           <ion-spinner *ngIf="uploading === 1" name="crescent"></ion-spinner>
         </ion-button>
         <ion-button fill="solid" (click)="uploadAndExit()">
           保存并退出
-          <!-- <ion-icon slot="end" name="exit"></ion-icon> -->
           <ion-spinner *ngIf="uploading === 2" name="crescent"></ion-spinner>
         </ion-button>
         <ion-button fill="solid" color="danger" (click)="continue()">
           重拍
-          <!-- <ion-icon slot="end" name="camera"></ion-icon> -->
         </ion-button>
-      </div>
-    </ion-footer>
+      </div> -->
+  </ion-footer>
 </ng-container>
 
 <!-- <img *ngIf="image" [src]="image"> -->

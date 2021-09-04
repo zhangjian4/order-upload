@@ -19,6 +19,7 @@ import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { FileService } from '../core/service/file.service';
 import { CodePush, InstallMode, SyncStatus } from '@ionic-native/code-push/ngx';
 import { VERSION } from '../core/version';
+import { Storage } from '@ionic/storage-angular';
 
 @Component({
   selector: 'app-main',
@@ -45,7 +46,8 @@ export class MainComponent implements OnInit {
     private zone: NgZone,
     public alertController: AlertController,
     public toastController: ToastController,
-    public loadingController: LoadingController
+    public loadingController: LoadingController,
+    private storage: Storage
   ) {}
 
   ngOnInit() {
@@ -71,7 +73,10 @@ export class MainComponent implements OnInit {
   }
 
   async reloadUserInfo() {
+    //先从缓存中获取，再从接口获取
+    this.userInfo = await this.storage.get('userInfo')
     this.userInfo = await this.baiduAPIService.getUserInfo();
+    this.storage.set('userInfo', this.userInfo);
   }
 
   async doRefresh(event?: any) {

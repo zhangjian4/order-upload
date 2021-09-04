@@ -23,14 +23,15 @@ import { BaiduAPIService } from '../core/service/baidu-api.service';
   styleUrls: ['./camera.component.scss'],
 })
 export class CameraComponent implements OnInit, OnDestroy {
-  @HostBinding('class.camera-opened')
-  cameraOpened: boolean;
+  @HostBinding('class.hide-background')
+  hideBackground: boolean;
   preview: boolean;
   file: string;
   imageSrc: string;
   base64: string;
   fileName: string;
   uploading: number;
+  footerStyle: any = {};
 
   constructor(
     private cameraPreview: CameraPreview,
@@ -41,10 +42,7 @@ export class CameraComponent implements OnInit, OnDestroy {
     private platform: Platform,
     public toastController: ToastController
   ) {}
-  @HostListener('window:ionKeyboardDidShow', ['$event'])
-  keyboardShow(event: any) {
-    console.log(event);
-  }
+
   ngOnInit() {
     this.startCamera();
     // window.removeEventListener('')
@@ -78,14 +76,14 @@ export class CameraComponent implements OnInit, OnDestroy {
     // start camera
     await this.cameraPreview.startCamera(cameraPreviewOpts);
     this.zone.run(() => {
-      this.cameraOpened = true;
+      this.hideBackground = true;
     });
   }
 
   async stopCamera() {
     await this.cameraPreview.stopCamera();
     this.zone.run(() => {
-      this.cameraOpened = false;
+      this.hideBackground = false;
     });
   }
 
@@ -96,15 +94,15 @@ export class CameraComponent implements OnInit, OnDestroy {
         this.zone.run(() => {
           this.fileName = format(new Date(), 'yyyyMMddHHmmss');
           this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
-          this.preview = true;
         });
       }
     } else {
       this.imageSrc = '/assets/img/lake.jpg';
       this.base64 = await this.urlToBase64(this.imageSrc);
       this.fileName = format(new Date(), 'yyyyMMddHHmmss');
-      this.preview = true;
     }
+    this.preview = true;
+    this.hideBackground = false;
   }
 
   back() {
@@ -115,6 +113,7 @@ export class CameraComponent implements OnInit, OnDestroy {
     this.base64 = null;
     this.imageSrc = null;
     this.preview = false;
+    this.hideBackground = true;
   }
 
   async uploadAndContinue() {
@@ -198,5 +197,26 @@ export class CameraComponent implements OnInit, OnDestroy {
     if (input) {
       input.select();
     }
+  }
+
+  @HostListener('window:ionKeyboardDidShow', ['$event'])
+  keyboardDidShow(event: any) {
+    const { keyboardHeight } = event;
+    alert('keyboardDidShow:' + keyboardHeight);
+    this.zone.run(() => {
+      this.footerStyle = {
+        position: 'absolute',
+        bottom: keyboardHeight + 'px',
+        width: '100%',
+      };
+    });
+  }
+
+  @HostListener('window:ionKeyboardDidHide', ['$event'])
+  keyboardDidHide(event: any) {
+    alert('keyboardDidHide');
+    this.zone.run(() => {
+      this.footerStyle = {};
+    });
   }
 }

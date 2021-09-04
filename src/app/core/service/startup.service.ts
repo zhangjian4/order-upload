@@ -18,6 +18,7 @@ export class StartupService {
     if(this.platform.is('cordova')){
       if(this.platform.is('android')){
         document.body.style.setProperty('--ion-safe-area-top', '31px');
+        document.body.style.setProperty('--ion-safe-area-bottom', '20px');
       }
       this.statusBar.show();
       // 沉浸式并且悬浮透明

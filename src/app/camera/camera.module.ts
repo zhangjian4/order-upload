@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
       },
     ]),
     IonicModule,
-    FormsModule
+    FormsModule,
   ],
   providers: [CameraPreview,WebView],
 })
