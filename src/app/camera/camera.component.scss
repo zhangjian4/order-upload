@@ -6,7 +6,7 @@
 // }
 :host.hide-background {
   ion-content {
-    background-color: transparent;
+    --background: transparent;
   }
   ion-footer {
     background-color: transparent;
