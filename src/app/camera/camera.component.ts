@@ -201,12 +201,11 @@ export class CameraComponent implements OnInit, OnDestroy {
 
   @HostListener('window:ionKeyboardDidShow', ['$event'])
   keyboardDidShow(event: any) {
-    const { keyboardHeight } = event;
-    alert('keyboardDidShow:' + keyboardHeight);
     this.zone.run(() => {
       this.footerStyle = {
         position: 'absolute',
-        bottom: keyboardHeight + 'px',
+        bottom: event.detail.keyboardHeight + 'px',
+        paddingBottom: '60px',
         width: '100%',
       };
     });
@@ -214,7 +213,6 @@ export class CameraComponent implements OnInit, OnDestroy {
 
   @HostListener('window:ionKeyboardDidHide', ['$event'])
   keyboardDidHide(event: any) {
-    alert('keyboardDidHide');
     this.zone.run(() => {
       this.footerStyle = {};
     });
