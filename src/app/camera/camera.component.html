@@ -1,13 +1,28 @@
 <ion-content *ngIf="!preview">
-  <ion-button class="exit" (click)="back()" fill="clear">
-    <ion-icon
-      style="color: #fff"
-      slot="icon-only"
-      name="close-circle"
-    ></ion-icon>
-  </ion-button>
-  <div class="camera-touch" (click)="takePicture()">
-    <div class="camera-touch-inner"></div>
+  <div class="safe-top">
+    <ion-button class="exit" (click)="back()" fill="clear">
+      <ion-icon
+        style="color: #fff"
+        slot="icon-only"
+        name="close-circle"
+      ></ion-icon>
+    </ion-button>
+  </div>
+  <div class="operations">
+    <div class="photo-list">
+      <div *ngIf="last" class="thumb-container">
+        <ion-thumbnail>
+          <img src="data:image/jpeg;base64,{{ last.base64 }}" />
+        </ion-thumbnail>
+        <ion-badge color="primary">{{photoList.length}}</ion-badge>
+      </div>
+    </div>
+    <div class="camera-touch" (click)="takePicture()">
+      <div class="camera-touch-inner"></div>
+    </div>
+    <div class="submit">
+      <ion-button *ngIf="photoList.length" color="primary">完成</ion-button>
+    </div>
   </div>
 </ion-content>
 <ng-container *ngIf="preview">

@@ -12,10 +12,16 @@ import {
   CameraPreviewOptions,
   CameraPreviewDimensions,
 } from '@ionic-native/camera-preview/ngx';
-import { NavController, Platform, ToastController } from '@ionic/angular';
+import {
+  AlertController,
+  NavController,
+  Platform,
+  ToastController,
+} from '@ionic/angular';
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { format } from 'date-fns';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
+import { IndexedDBService, PREUPLOAD_PHOTO } from '../core/service/indexeddb.service';
 
 @Component({
   selector: 'app-camera',
@@ -32,6 +38,10 @@ export class CameraComponent implements OnInit, OnDestroy {
   fileName: string;
   uploading: number;
   footerStyle: any = {};
+  photoList = [];
+  last: any;
+  db: any;
+  objectStore: any;
 
   constructor(
     private cameraPreview: CameraPreview,
@@ -40,11 +50,20 @@ export class CameraComponent implements OnInit, OnDestroy {
     private webview: WebView,
     private baiduAPIService: BaiduAPIService,
     private platform: Platform,
-    public toastController: ToastController
+    public toastController: ToastController,
+    public alertController: AlertController,
+    private indexedDBService: IndexedDBService
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.startCamera();
+    const result=await this.indexedDBService.readAll(PREUPLOAD_PHOTO,['fileName']);
+    console.log(result);
+    // this.db = await this.indexedDBService.open();
+    // console.log(this.db);
+    // if (!this.db.objectStoreNames.contains('preupload-photo')) {
+    //   this.objectStore = this.db.createObjectStore('preupload-photo', { autoIncrement: true });
+    // }
     // window.removeEventListener('')
     // window.addEventListener('ionKeyboardDidShow', ev => {
     //   const { keyboardHeight } = ev;
@@ -88,25 +107,46 @@ export class CameraComponent implements OnInit, OnDestroy {
   }
 
   async takePicture() {
+    let base64: string;
     if (this.platform.is('cordova')) {
-      this.base64 = await this.cameraPreview.takePicture({ quality: 100 });
-      if (this.base64) {
-        this.zone.run(() => {
-          this.fileName = format(new Date(), 'yyyyMMddHHmmss');
-          this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
-        });
-      }
+      base64 = await this.cameraPreview.takePicture({ quality: 100 });
     } else {
-      this.imageSrc = '/assets/img/lake.jpg';
-      this.base64 = await this.urlToBase64(this.imageSrc);
-      this.fileName = format(new Date(), 'yyyyMMddHHmmss');
+      base64 = await this.urlToBase64('/assets/img/lake.jpg');
     }
-    this.preview = true;
-    this.hideBackground = false;
+    this.zone.run(() => {
+      const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
+      this.last = { base64, fileName };
+      this.photoList.push(this.last);
+      this.indexedDBService.add('preupload-photo', this.last);
+      // this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
+      // this.preview = true;
+      // this.hideBackground = false;
+    });
   }
 
-  back() {
-    this.navController.back();
+  async back() {
+    if (this.photoList.length) {
+      const alert = await this.alertController.create({
+        cssClass: 'my-custom-class',
+        message: '放弃拍摄的' + this.photoList.length + '张图片?',
+        buttons: [
+          {
+            text: '取消',
+            role: 'cancel',
+            cssClass: 'secondary',
+          },
+          {
+            text: '放弃',
+            handler: () => {
+              this.navController.back();
+            },
+          },
+        ],
+      });
+      await alert.present();
+    } else {
+      this.navController.back();
+    }
   }
 
   continue() {

@@ -23,23 +23,47 @@
   }
 }
 
-.exit {
+// .exit {
+//   position: absolute;
+//   bottom: 60px;
+//   left: 10%;
+//   height: 60px;
+// }
+.operations {
+  width: 100%;
+  display: flex;
   position: absolute;
   bottom: 60px;
-  left: 10%;
-  height: 60px;
+}
+.photo-list {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .thumb-container{
+    height: 50px;
+    width: 50px;
+    position: relative;
+    ion-badge{
+      position: absolute;
+      top: -10px;
+      left: 35px;
+    }
+  }
+}
+
+.submit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .camera-touch {
   width: 60px;
   height: 60px;
   background: #999;
   border-radius: 50%;
-  margin: 0 auto;
   padding: 5px;
-  position: absolute;
-  bottom: 60px;
-  left: 0;
-  right: 0;
 
   .camera-touch-inner {
     width: 100%;
