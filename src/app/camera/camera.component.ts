@@ -26,13 +26,14 @@ import {
   PREUPLOAD_PHOTO,
 } from '../core/service/indexeddb.service';
 import { Database } from '../core/service/database.service';
+import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 
 @Component({
   selector: 'app-camera',
   templateUrl: './camera.component.html',
   styleUrls: ['./camera.component.scss'],
 })
-export class CameraComponent implements OnInit, OnDestroy {
+export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   @HostBinding('class.hide-background')
   hideBackground: boolean;
   preview: boolean;
@@ -257,22 +258,49 @@ export class CameraComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:ionKeyboardDidShow', ['$event'])
-  keyboardDidShow(event: any) {
-    this.zone.run(() => {
-      this.footerStyle = {
-        position: 'absolute',
-        bottom: event.detail.keyboardHeight + 'px',
-        paddingBottom: '60px',
-        width: '100%',
-      };
-    });
+  async deactivateConfirm() {
+    return null;
+    // if (this.photoCount) {
+    //   const alert = await this.alertController.create({
+    //     cssClass: 'my-custom-class',
+    //     message: '放弃拍摄的' + this.photoCount + '张图片?',
+    //     buttons: [
+    //       {
+    //         text: '取消',
+    //         role: 'cancel',
+    //         cssClass: 'secondary',
+    //       },
+    //       {
+    //         text: '放弃',
+    //         handler: () => {
+    //           this.clear();
+    //           this.navController.back();
+    //         },
+    //       },
+    //     ],
+    //   });
+    //   await alert.present();
+    // } else {
+    //   this.navController.back();
+    // }
   }
 
-  @HostListener('window:ionKeyboardDidHide', ['$event'])
-  keyboardDidHide(event: any) {
-    this.zone.run(() => {
-      this.footerStyle = {};
-    });
-  }
+  // @HostListener('window:ionKeyboardDidShow', ['$event'])
+  // keyboardDidShow(event: any) {
+  //   this.zone.run(() => {
+  //     this.footerStyle = {
+  //       position: 'absolute',
+  //       bottom: event.detail.keyboardHeight + 'px',
+  //       paddingBottom: '60px',
+  //       width: '100%',
+  //     };
+  //   });
+  // }
+
+  // @HostListener('window:ionKeyboardDidHide', ['$event'])
+  // keyboardDidHide(event: any) {
+  //   this.zone.run(() => {
+  //     this.footerStyle = {};
+  //   });
+  // }
 }
