@@ -21,7 +21,11 @@ import {
 import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { format } from 'date-fns';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
-import { IndexedDBService, PREUPLOAD_PHOTO } from '../core/service/indexeddb.service';
+import {
+  IndexedDBService,
+  PREUPLOAD_PHOTO,
+} from '../core/service/indexeddb.service';
+import { Database } from '../core/service/database.service';
 
 @Component({
   selector: 'app-camera',
@@ -38,11 +42,11 @@ export class CameraComponent implements OnInit, OnDestroy {
   fileName: string;
   uploading: number;
   footerStyle: any = {};
-  photoList = [];
+  photoCount = 0;
   last: any;
   db: any;
   objectStore: any;
-
+  lastFileId: number;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -52,13 +56,13 @@ export class CameraComponent implements OnInit, OnDestroy {
     private platform: Platform,
     public toastController: ToastController,
     public alertController: AlertController,
-    private indexedDBService: IndexedDBService
+    private indexedDBService: IndexedDBService,
+    private database: Database
   ) {}
 
   async ngOnInit() {
     this.startCamera();
-    const result=await this.indexedDBService.readAll(PREUPLOAD_PHOTO,['fileName']);
-    console.log(result);
+    this.clear();
     // this.db = await this.indexedDBService.open();
     // console.log(this.db);
     // if (!this.db.objectStoreNames.contains('preupload-photo')) {
@@ -113,22 +117,29 @@ export class CameraComponent implements OnInit, OnDestroy {
     } else {
       base64 = await this.urlToBase64('/assets/img/lake.jpg');
     }
-    this.zone.run(() => {
-      const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
-      this.last = { base64, fileName };
-      this.photoList.push(this.last);
-      this.indexedDBService.add('preupload-photo', this.last);
-      // this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
-      // this.preview = true;
-      // this.hideBackground = false;
-    });
+    const blob = this.base64ToBlob(base64);
+    const name = format(new Date(), 'yyyyMMddHHmmssSSS');
+    this.photoCount++;
+    this.lastFileId = await this.database.preuploadFile.add({ name, blob });
+    // this.lastFileId = id;
+    // this.zone.run(() => {
+    //   const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
+    //   this.last = { base64, fileName };
+    //   this.photoCount++;
+    //   // this.photoList.push(this.last);
+    //   this.database.preuploadFile.add({ name: fileName });
+    //   // this.indexedDBService.add('preupload-photo', this.last);
+    //   // this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
+    //   // this.preview = true;
+    //   // this.hideBackground = false;
+    // });
   }
 
   async back() {
-    if (this.photoList.length) {
+    if (this.photoCount) {
       const alert = await this.alertController.create({
         cssClass: 'my-custom-class',
-        message: '放弃拍摄的' + this.photoList.length + '张图片?',
+        message: '放弃拍摄的' + this.photoCount + '张图片?',
         buttons: [
           {
             text: '取消',
@@ -138,6 +149,7 @@ export class CameraComponent implements OnInit, OnDestroy {
           {
             text: '放弃',
             handler: () => {
+              this.clear();
               this.navController.back();
             },
           },
@@ -147,6 +159,12 @@ export class CameraComponent implements OnInit, OnDestroy {
     } else {
       this.navController.back();
     }
+  }
+
+  clear() {
+    this.photoCount = 0;
+    this.lastFileId = null;
+    this.database.preuploadFile.clear();
   }
 
   continue() {

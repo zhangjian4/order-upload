@@ -1,0 +1,6 @@
+<ion-header>
+  <ion-toolbar></ion-toolbar>
+</ion-header>
+<ion-content>
+  <img *ngFor="let item of data" appDbImage table="preuploadFile" [index]="item.id">
+</ion-content>

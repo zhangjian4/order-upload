@@ -10,18 +10,18 @@
   </div>
   <div class="operations">
     <div class="photo-list">
-      <div *ngIf="last" class="thumb-container">
+      <div *ngIf="lastFileId" class="thumb-container">
         <ion-thumbnail>
-          <img src="data:image/jpeg;base64,{{ last.base64 }}" />
+          <img appDbImage [table]="'preuploadFile'" [index]="lastFileId"/>
         </ion-thumbnail>
-        <ion-badge color="primary">{{photoList.length}}</ion-badge>
+        <ion-badge color="primary">{{photoCount}}</ion-badge>
       </div>
     </div>
     <div class="camera-touch" (click)="takePicture()">
       <div class="camera-touch-inner"></div>
     </div>
     <div class="submit">
-      <ion-button *ngIf="photoList.length" color="primary">完成</ion-button>
+      <ion-button *ngIf="photoCount" color="primary" routerLink="/preupload" [replaceUrl]="true">完成</ion-button>
     </div>
   </div>
 </ion-content>

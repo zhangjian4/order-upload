@@ -5,25 +5,37 @@ const routes: Routes = [
   {
     path: '',
     redirectTo: '/main',
-    pathMatch: 'full'
-  }, {
+    pathMatch: 'full',
+  },
+  {
     path: 'main',
-    loadChildren: () => import('./main/main.module').then(m => m.MainModule)
-  }, {
+    loadChildren: () => import('./main/main.module').then((m) => m.MainModule),
+  },
+  {
     path: 'oauth',
-    loadChildren: () => import('./oauth/oauth.module').then(m => m.OauthModule)
-  }, {
+    loadChildren: () =>
+      import('./oauth/oauth.module').then((m) => m.OauthModule),
+  },
+  {
     path: 'camera',
-    loadChildren: () => import('./camera/camera.module').then(m => m.CameraModule)
-  }, {
+    loadChildren: () =>
+      import('./camera/camera.module').then((m) => m.CameraModule),
+  },
+  {
     path: 'detail',
-    loadChildren: () => import('./detail/detail.module').then(m => m.DetailModule)
-  }
+    loadChildren: () =>
+      import('./detail/detail.module').then((m) => m.DetailModule),
+  },
+  {
+    path: 'preupload',
+    loadChildren: () =>
+      import('./preupload/preupload.module').then((m) => m.PreuploadModule),
+  },
 ];
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules }),
   ],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}
