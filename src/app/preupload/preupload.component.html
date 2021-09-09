@@ -2,5 +2,31 @@
   <ion-toolbar></ion-toolbar>
 </ion-header>
 <ion-content>
-  <img *ngFor="let item of data" appDbImage table="preuploadFile" [index]="item.id">
+  <div class="container">
+    <div *ngFor="let item of data" class="item">
+      <ion-card>
+        <img appDbImage table="preuploadFile" [index]="item.id" />
+        <!-- <ion-card-header>
+          <ion-card-subtitle>Destination</ion-card-subtitle>
+          <ion-card-title>Madison, WI</ion-card-title>
+        </ion-card-header> -->
+        <ion-card-content (click)="rename(item)">
+          <ion-input
+            *ngIf="renameId === item.id"
+            [ngModel]="item.name"
+            (ngModelChange)="editName = $event"
+          ></ion-input>
+          <ng-container *ngIf="renameId !== item.id">
+            {{ item.name }}.jpg</ng-container
+          >
+        </ion-card-content>
+      </ion-card>
+      <!-- <div class="image-container">
+        <img  appDbImage table="preuploadFile" [index]="item.id">
+      </div>
+      <div class="">
+
+      </div> -->
+    </div>
+  </div>
 </ion-content>

@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.item {
+  width: 50%;
+}
+
+ion-card {
+  margin-inline: 6px;
+  margin: 6px;
+}
+
+img {
+  height: 200px;
+}
+
+ion-card-content {
+  padding: 5px;
+  height: 60px;
+}

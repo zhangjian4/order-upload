@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { PreuploadComponent } from './preupload.component';
 import { DbImageModule } from '../shared/directive/db-image/db-image.module';
 import { IonicModule } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [PreuploadComponent],
@@ -17,6 +18,7 @@ import { IonicModule } from '@ionic/angular';
     ]),
     DbImageModule,
     IonicModule,
+    FormsModule
   ],
 })
 export class PreuploadModule {}

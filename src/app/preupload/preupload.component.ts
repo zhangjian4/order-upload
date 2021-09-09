@@ -7,8 +7,9 @@ import { Database } from '../core/service/database.service';
   styleUrls: ['./preupload.component.scss'],
 })
 export class PreuploadComponent implements OnInit {
-
-  data:any[];
+  data: any[];
+  renameId: number;
+  editName:string;
 
   constructor(private database: Database) {}
 
@@ -16,7 +17,12 @@ export class PreuploadComponent implements OnInit {
     this.reload();
   }
 
-  async reload(){
-    this.data=await this.database.preuploadFile.toArray();
+  async reload() {
+    this.data = await this.database.preuploadFile.toArray();
+  }
+
+  rename(item: any) {
+    this.renameId = item.id;
+    this.editName=item.name;
   }
 }
