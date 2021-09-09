@@ -1,6 +1,13 @@
 <ion-content *ngIf="!preview">
   <div class="safe-top">
-    <ion-button class="exit" (click)="back()" fill="clear">
+    <!-- <ion-back-button>
+      <ion-icon
+        style="color: #fff"
+        slot="icon-only"
+        name="close-circle"
+      ></ion-icon>
+    </ion-back-button> -->
+    <ion-button (click)="back()" fill="clear">
       <ion-icon
         style="color: #fff"
         slot="icon-only"
@@ -21,7 +28,7 @@
       <div class="camera-touch-inner"></div>
     </div>
     <div class="submit">
-      <ion-button *ngIf="photoCount" color="primary" routerLink="/preupload" [replaceUrl]="true">完成</ion-button>
+      <ion-button *ngIf="photoCount" color="primary" routerLink="/preupload">完成</ion-button>
     </div>
   </div>
 </ion-content>

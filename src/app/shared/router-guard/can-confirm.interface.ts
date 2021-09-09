@@ -1,3 +1,5 @@
+import { RouterStateSnapshot } from '@angular/router';
+
 export interface CanConfirm {
-  deactivateConfirm(): Promise<boolean>;
+  deactivateConfirm(nextState: RouterStateSnapshot): Promise<boolean>;
 }

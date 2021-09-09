@@ -27,6 +27,7 @@ import {
 } from '../core/service/indexeddb.service';
 import { Database } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
+import { RouterStateSnapshot } from '@angular/router';
 
 @Component({
   selector: 'app-camera',
@@ -34,8 +35,6 @@ import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
   styleUrls: ['./camera.component.scss'],
 })
 export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
-  @HostBinding('class.hide-background')
-  hideBackground: boolean;
   preview: boolean;
   file: string;
   imageSrc: string;
@@ -48,6 +47,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   db: any;
   objectStore: any;
   lastFileId: number;
+  viewEntered: boolean;
+  cameraStarted: boolean;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -61,9 +62,14 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private database: Database
   ) {}
 
+  @HostBinding('class.hide-background')
+  get hideBackground(): boolean {
+    return this.viewEntered && this.cameraStarted;
+  }
+
   async ngOnInit() {
-    this.startCamera();
-    this.clear();
+    // this.startCamera();
+    // this.clear();
     // this.db = await this.indexedDBService.open();
     // console.log(this.db);
     // if (!this.db.objectStoreNames.contains('preupload-photo')) {
@@ -79,8 +85,26 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // });
   }
 
-  ngOnDestroy(): void {
+  async ionViewWillEnter() {
+    this.startCamera();
+    this.photoCount = await this.database.preuploadFile.count();
+    if (this.photoCount > 0) {
+      const last = await this.database.preuploadFile.toCollection().last();
+      this.lastFileId = last.id;
+    }
+  }
+
+  ionViewDidEnter() {
+    this.viewEntered = true;
+  }
+
+  ionViewWillLeave() {
+    this.viewEntered = false;
     this.stopCamera();
+  }
+
+  ngOnDestroy(): void {
+    // this.stopCamera();
   }
 
   async startCamera() {
@@ -100,14 +124,14 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // start camera
     await this.cameraPreview.startCamera(cameraPreviewOpts);
     this.zone.run(() => {
-      this.hideBackground = true;
+      this.cameraStarted = true;
     });
   }
 
   async stopCamera() {
     await this.cameraPreview.stopCamera();
     this.zone.run(() => {
-      this.hideBackground = false;
+      this.cameraStarted = false;
     });
   }
 
@@ -137,29 +161,30 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async back() {
-    if (this.photoCount) {
-      const alert = await this.alertController.create({
-        cssClass: 'my-custom-class',
-        message: '放弃拍摄的' + this.photoCount + '张图片?',
-        buttons: [
-          {
-            text: '取消',
-            role: 'cancel',
-            cssClass: 'secondary',
-          },
-          {
-            text: '放弃',
-            handler: () => {
-              this.clear();
-              this.navController.back();
-            },
-          },
-        ],
-      });
-      await alert.present();
-    } else {
-      this.navController.back();
-    }
+    this.navController.back();
+    // if (this.photoCount) {
+    //   const alert = await this.alertController.create({
+    //     cssClass: 'my-custom-class',
+    //     message: '放弃拍摄的' + this.photoCount + '张图片?',
+    //     buttons: [
+    //       {
+    //         text: '取消',
+    //         role: 'cancel',
+    //         cssClass: 'secondary',
+    //       },
+    //       {
+    //         text: '放弃',
+    //         handler: () => {
+    //           this.clear();
+    //           this.navController.back();
+    //         },
+    //       },
+    //     ],
+    //   });
+    //   await alert.present();
+    // } else {
+    //   this.navController.back();
+    // }
   }
 
   clear() {
@@ -172,7 +197,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     this.base64 = null;
     this.imageSrc = null;
     this.preview = false;
-    this.hideBackground = true;
+    // this.hideBackground = true;
   }
 
   async uploadAndContinue() {
@@ -258,31 +283,32 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     }
   }
 
-  async deactivateConfirm() {
-    return null;
-    // if (this.photoCount) {
-    //   const alert = await this.alertController.create({
-    //     cssClass: 'my-custom-class',
-    //     message: '放弃拍摄的' + this.photoCount + '张图片?',
-    //     buttons: [
-    //       {
-    //         text: '取消',
-    //         role: 'cancel',
-    //         cssClass: 'secondary',
-    //       },
-    //       {
-    //         text: '放弃',
-    //         handler: () => {
-    //           this.clear();
-    //           this.navController.back();
-    //         },
-    //       },
-    //     ],
-    //   });
-    //   await alert.present();
-    // } else {
-    //   this.navController.back();
-    // }
+  async deactivateConfirm(nextState: RouterStateSnapshot) {
+    if (this.photoCount === 0 || nextState.url === '/preupload') {
+      return true;
+    }
+    return new Promise<boolean>(async (resolve) => {
+      const alert = await this.alertController.create({
+        message: '放弃拍摄的' + this.photoCount + '张图片?',
+        buttons: [
+          {
+            text: '取消',
+            role: 'cancel',
+            handler: () => {
+              resolve(false);
+            },
+          },
+          {
+            text: '放弃',
+            handler: () => {
+              this.clear();
+              resolve(true);
+            },
+          },
+        ],
+      });
+      await alert.present();
+    });
   }
 
   // @HostListener('window:ionKeyboardDidShow', ['$event'])
