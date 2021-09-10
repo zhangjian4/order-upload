@@ -138,7 +138,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async takePicture() {
     let base64: string;
     if (this.platform.is('cordova')) {
-      base64 = await this.cameraPreview.takePicture({ quality: 100 });
+      base64 = await this.cameraPreview.takeSnapshot({ quality: 90 });
     } else {
       base64 = await this.urlToBase64('/assets/img/lake.jpg');
     }
@@ -161,7 +161,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async back() {
-    this.navController.back();
+    this.navController.pop();
     // if (this.photoCount) {
     //   const alert = await this.alertController.create({
     //     cssClass: 'my-custom-class',

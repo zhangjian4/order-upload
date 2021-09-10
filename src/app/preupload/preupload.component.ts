@@ -76,6 +76,7 @@ export class PreuploadComponent implements OnInit {
         await this.database.preuploadFile.delete(item.id);
         this.uploaded++;
       } catch (e) {
+        alert(e)
         const select = await this.retryConfirm(i);
         if (select === 'retry') {
           i--;
