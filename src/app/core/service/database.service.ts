@@ -5,22 +5,25 @@ import Dexie from 'dexie';
 export class Database extends Dexie {
   // Declare implicit table properties.
   // (just to inform Typescript. Instanciated by Dexie in stores() method)
-  preuploadFile: Dexie.Table<IPreuploadFile, number>; // number = type of the primkey
+  preuploadFile: Dexie.Table<IUploadFile, number>; // number = type of the primkey
+  uploadFile: Dexie.Table<IUploadFile, number>;
   //...other tables goes here...
 
   constructor() {
     super('MyDatabase');
-    this.version(1).stores({
+    this.version(2).stores({
       preuploadFile: '++id, name, content',
+      uploadFile: '++id, name, content',
       //...other tables goes here...
     });
     // The following line is needed if your typescript
     // is compiled using babel instead of tsc:
     this.preuploadFile = this.table('preuploadFile');
+    this.uploadFile = this.table('uploadFile');
   }
 }
 
-interface IPreuploadFile {
+export interface IUploadFile {
   id?: number;
   name: string;
   blob?: Blob;

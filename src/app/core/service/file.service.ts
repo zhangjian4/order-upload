@@ -8,7 +8,7 @@ export class FileService {
   searchValue: string;
   page = -1;
   num = 20;
-  hasMore: boolean = true;
+  hasMore = true;
   fileList: any[] = [];
   dirty: boolean;
   loading: boolean;

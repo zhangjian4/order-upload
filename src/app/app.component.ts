@@ -15,7 +15,7 @@ export class AppComponent{
   ) {
     (router as any).canceledNavigationResolution = 'computed';
     platform.backButton.subscribeWithPriority(10, () => {
-      navController.back();
+      navController.pop();
     });
   }
 }

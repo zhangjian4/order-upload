@@ -1,20 +1,36 @@
 <ion-header>
-  <ion-toolbar></ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [text]="''"></ion-back-button>
+    </ion-buttons>
+    <ion-title></ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="save()">
+        <ion-icon name="save"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
 <ion-content>
   <div class="container">
     <div *ngFor="let item of data" class="item">
       <ion-card>
-        <img appDbImage table="preuploadFile" [index]="item.id" />
+        <ion-thumbnail>
+          <img appDbImage table="preuploadFile" [index]="item.id" />
+        </ion-thumbnail>
         <!-- <ion-card-header>
           <ion-card-subtitle>Destination</ion-card-subtitle>
           <ion-card-title>Madison, WI</ion-card-title>
         </ion-card-header> -->
         <ion-card-content (click)="rename(item)">
           <ion-input
+            #nameInput
             *ngIf="renameId === item.id"
             [ngModel]="item.name"
+            enterkeyhint="done"
             (ngModelChange)="editName = $event"
+            (ionBlur)="renameEnd(item)"
+            (keydown)="onKeydown(item, $event)"
           ></ion-input>
           <ng-container *ngIf="renameId !== item.id">
             {{ item.name }}.jpg</ng-container
@@ -30,3 +46,9 @@
     </div>
   </div>
 </ion-content>
+<div class="update-mask" *ngIf="uploading">
+  <div class="progress-container">
+    <ion-progress-bar [value]="uploaded / data.length"></ion-progress-bar>
+    <div>{{ uploaded }}/{{ data.length }}</div>
+  </div>
+</div>
