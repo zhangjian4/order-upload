@@ -178,7 +178,6 @@ export class BaiduAPIService {
     if (withToken) {
       params.access_token = await this.getAccessToken();
     }
-    console.log('[HTTP] get', url, params);
     try {
       const response = await this.http.get(url, params);
       return this.handleResponse(response, showError);
@@ -200,19 +199,6 @@ export class BaiduAPIService {
       throw response;
     }
     return response;
-    // console.log('[HTTP] response', response);
-    // if (response.status === 200) {
-    //   const data = JSON.parse(response.data);
-    //   if (data.errno != null && data.errno !== 0) {
-    //     if (showError) {
-    //       this.showError(data.errno);
-    //     }
-    //     throw data;
-    //   }
-    //   return this.resolve(JSON.parse(response.data));
-    // } else {
-    //   throw response;
-    // }
   }
 
   async showError(errno: number) {
@@ -228,7 +214,6 @@ export class BaiduAPIService {
       });
       toast.present();
     }
-    console.log(error);
   }
 
   async getToken(code: string) {
@@ -265,14 +250,14 @@ export class BaiduAPIService {
     // location.href = url;
   }
 
-  async upload(fileName: string, file: Blob) {
+  async upload(fileName: string, file: Blob, md5: string) {
     // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
     const path = this.defaultDir + '/' + fileName;
     const size = file.size;
-    const spark = new SparkMD5.ArrayBuffer();
-    const arrayBuffer = await file.arrayBuffer();
-    spark.append(arrayBuffer);
-    const md5 = spark.end();
+    // const spark = new SparkMD5.ArrayBuffer();
+    // const arrayBuffer = await file.arrayBuffer();
+    // spark.append(arrayBuffer);
+    // const md5 = spark.end();
     const blockList = [md5];
     const result = await this.precreate(path, size, blockList);
     const uploadid = result.uploadid;

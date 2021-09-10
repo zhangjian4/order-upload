@@ -16,7 +16,7 @@
     <div *ngFor="let item of data" class="item">
       <ion-card>
         <ion-thumbnail>
-          <img appDbImage table="preuploadFile" [index]="item.id" />
+          <img [blob-src]="item.blob" />
         </ion-thumbnail>
         <!-- <ion-card-header>
           <ion-card-subtitle>Destination</ion-card-subtitle>

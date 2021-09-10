@@ -142,16 +142,12 @@ export class MainComponent implements OnInit {
               this.progress = 0;
               this.codePush
                 .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
-                  console.log(
-                    `Downloaded ${progress.receivedBytes} of ${progress.totalBytes}`
-                  );
                   this.zone.run(() => {
                     this.progress =
                       progress.receivedBytes / progress.totalBytes;
                   });
                 })
                 .subscribe((status) => {
-                  console.log('SyncStatus', status);
                   switch (status) {
                     case SyncStatus.DOWNLOADING_PACKAGE:
                       break;

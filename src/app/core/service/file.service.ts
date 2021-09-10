@@ -69,9 +69,8 @@ export class FileService {
     }
   }
 
-  async loadImage(index: number) {
-    const ids = this.fileList.map((file) => file.fs_id);
-    const result = await this.baiduAPIService.multimedia(ids);
-    console.log(result);
-  }
+  // async loadImage(index: number) {
+  //   const ids = this.fileList.map((file) => file.fs_id);
+  //   const result = await this.baiduAPIService.multimedia(ids);
+  // }
 }

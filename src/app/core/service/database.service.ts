@@ -11,9 +11,9 @@ export class Database extends Dexie {
 
   constructor() {
     super('MyDatabase');
-    this.version(2).stores({
-      preuploadFile: '++id, name, content',
-      uploadFile: '++id, name, content',
+    this.version(3).stores({
+      preuploadFile: '++id, name, content, md5',
+      uploadFile: '++id, name, content, md5',
       //...other tables goes here...
     });
     // The following line is needed if your typescript
@@ -26,5 +26,6 @@ export class Database extends Dexie {
 export interface IUploadFile {
   id?: number;
   name: string;
+  md5: string;
   blob?: Blob;
 }

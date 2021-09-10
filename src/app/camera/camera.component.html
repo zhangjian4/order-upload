@@ -1,4 +1,4 @@
-<ion-content *ngIf="!preview">
+<ion-content>
   <div class="safe-top">
     <!-- <ion-back-button>
       <ion-icon
@@ -17,9 +17,9 @@
   </div>
   <div class="operations">
     <div class="photo-list">
-      <div *ngIf="lastFileId" class="thumb-container">
+      <div *ngIf="lastFile" class="thumb-container">
         <ion-thumbnail>
-          <img appDbImage [table]="'preuploadFile'" [index]="lastFileId"/>
+          <img [blob-src]="lastFile"/>
         </ion-thumbnail>
         <ion-badge color="primary">{{photoCount}}</ion-badge>
       </div>
@@ -32,41 +32,13 @@
     </div>
   </div>
 </ion-content>
-<ng-container *ngIf="preview">
-  <!-- <ion-header>
-    <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-button (click)="back()">
-          <ion-icon slot="icon-only" name="close"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header> -->
+<!-- <ng-container *ngIf="preview">
   <ion-content>
     <div class="img-container safe-top">
       <img *ngIf="imageSrc" [src]="imageSrc" />
     </div>
   </ion-content>
   <ion-footer class="safe-bottom">
-    <!-- <ion-toolbar>
-      <ion-title>
-        <ion-input
-          [(ngModel)]="fileName"
-          [clearInput]="true"
-          (ionFocus)="onInputFocus($event)"
-          class="file-name"
-        >
-        </ion-input>
-      </ion-title>
-      <ion-buttons slot="primary">
-        <ion-button color="danger" fill="outline">
-          <ion-icon slot="end" name="create"></ion-icon>
-        </ion-button>
-        <ion-button color="danger" fill="outline">
-          <ion-icon slot="end" name="create"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar> -->
     <div class="footer-inner">
       <div class="filename-editor" [ngStyle]="footerStyle">
         <ion-input
@@ -83,7 +55,6 @@
             name="checkmark-circle-sharp"
           ></ion-icon>
           <ion-spinner *ngIf="uploading === 1" name="crescent"></ion-spinner>
-          <!-- <ion-spinner name="crescent"></ion-spinner> -->
         </ion-button>
         <ion-button fill="clear" (click)="continue()">
           <ion-icon
@@ -94,22 +65,8 @@
         </ion-button>
       </div>
     </div>
-
-    <!-- <div class="buttons">
-        <ion-button fill="solid" color="primary" (click)="uploadAndContinue()">
-          保存并继续
-          <ion-spinner *ngIf="uploading === 1" name="crescent"></ion-spinner>
-        </ion-button>
-        <ion-button fill="solid" (click)="uploadAndExit()">
-          保存并退出
-          <ion-spinner *ngIf="uploading === 2" name="crescent"></ion-spinner>
-        </ion-button>
-        <ion-button fill="solid" color="danger" (click)="continue()">
-          重拍
-        </ion-button>
-      </div> -->
   </ion-footer>
-</ng-container>
+</ng-container> -->
 
 <!-- <img *ngIf="image" [src]="image"> -->
 <!-- <ion-header>

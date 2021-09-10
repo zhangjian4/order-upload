@@ -16,7 +16,6 @@ export class OauthComponent implements OnInit {
   ) {
     route.queryParams.subscribe((params) => {
       this.code = params.code;
-      console.log('code:', this.code);
       this.getToken(this.code);
     });
   }

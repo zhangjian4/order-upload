@@ -28,6 +28,7 @@ import {
 import { Database } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 import { RouterStateSnapshot } from '@angular/router';
+import * as SparkMD5 from 'spark-md5';
 
 @Component({
   selector: 'app-camera',
@@ -46,19 +47,16 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   last: any;
   db: any;
   objectStore: any;
-  lastFileId: number;
+  lastFile: Blob;
   viewEntered: boolean;
   cameraStarted: boolean;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
     private navController: NavController,
-    private webview: WebView,
-    private baiduAPIService: BaiduAPIService,
     private platform: Platform,
     public toastController: ToastController,
     public alertController: AlertController,
-    private indexedDBService: IndexedDBService,
     private database: Database
   ) {}
 
@@ -90,7 +88,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     this.photoCount = await this.database.preuploadFile.count();
     if (this.photoCount > 0) {
       const last = await this.database.preuploadFile.toCollection().last();
-      this.lastFileId = last.id;
+      this.lastFile = last.blob;
     }
   }
 
@@ -142,10 +140,22 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     } else {
       base64 = await this.urlToBase64('/assets/img/lake.jpg');
     }
-    const blob = this.base64ToBlob(base64);
+    const buffer = this.base64ToArrayBuffer(base64);
+    const blob = new Blob([buffer], {
+      type: 'image/jpeg',
+    });
+    const spark = new SparkMD5.ArrayBuffer();
+    spark.append(buffer);
+    const md5 = spark.end();
+    // const blob = this.base64ToBlob(base64);
     const name = format(new Date(), 'yyyyMMddHHmmssSSS');
     this.photoCount++;
-    this.lastFileId = await this.database.preuploadFile.add({ name, blob });
+    this.lastFile = blob;
+    await this.database.preuploadFile.add({
+      name,
+      blob,
+      md5,
+    });
     // this.lastFileId = id;
     // this.zone.run(() => {
     //   const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
@@ -189,7 +199,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   clear() {
     this.photoCount = 0;
-    this.lastFileId = null;
+    this.lastFile = null;
     this.database.preuploadFile.clear();
   }
 
@@ -200,44 +210,44 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // this.hideBackground = true;
   }
 
-  async uploadAndContinue() {
-    if (!this.uploading) {
-      this.uploading = 1;
-      try {
-        await this.upload();
-        this.continue();
-      } finally {
-        this.uploading = 0;
-      }
-    }
-  }
+  // async uploadAndContinue() {
+  //   if (!this.uploading) {
+  //     this.uploading = 1;
+  //     try {
+  //       await this.upload();
+  //       this.continue();
+  //     } finally {
+  //       this.uploading = 0;
+  //     }
+  //   }
+  // }
 
-  async uploadAndExit() {
-    if (!this.uploading) {
-      this.uploading = 2;
-      try {
-        await this.upload();
-        this.back();
-      } finally {
-        this.uploading = 0;
-      }
-    }
-  }
+  // async uploadAndExit() {
+  //   if (!this.uploading) {
+  //     this.uploading = 2;
+  //     try {
+  //       await this.upload();
+  //       this.back();
+  //     } finally {
+  //       this.uploading = 0;
+  //     }
+  //   }
+  // }
 
-  async upload() {
-    if (!this.fileName) {
-      const toast = await this.toastController.create({
-        message: '文件名不能为空',
-        position: 'top',
-        duration: 2000,
-      });
-      toast.present();
-      throw '文件名不能为空';
-    }
-    const blob = this.base64ToBlob(this.base64);
-    const fileName = this.fileName + '.jpg';
-    await this.baiduAPIService.upload(fileName, blob);
-  }
+  // async upload() {
+  //   if (!this.fileName) {
+  //     const toast = await this.toastController.create({
+  //       message: '文件名不能为空',
+  //       position: 'top',
+  //       duration: 2000,
+  //     });
+  //     toast.present();
+  //     throw '文件名不能为空';
+  //   }
+  //   const blob = this.base64ToBlob(this.base64);
+  //   const fileName = this.fileName + '.jpg';
+  //   await this.baiduAPIService.upload(fileName, blob);
+  // }
 
   urlToBase64(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -262,26 +272,36 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     });
   }
 
-  base64ToBlob(dataurl) {
-    const mime = 'image/jpeg';
-    const bstr = atob(dataurl);
+  base64ToArrayBuffer(base64: string) {
+    const bstr = atob(base64);
     let n = bstr.length;
-    const u8arr = new Uint8Array(n);
+    const buffer: ArrayBuffer = new Uint8Array(n);
     while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+      buffer[n] = bstr.charCodeAt(n);
     }
-    return new Blob([u8arr], {
-      type: mime,
-    });
+    return buffer;
   }
 
-  onInputFocus(event: Event) {
-    console.log(event);
-    const input = (event.target as HTMLElement).querySelector('input');
-    if (input) {
-      input.select();
-    }
-  }
+  // base64ToBlob(dataurl) {
+  //   const mime = 'image/jpeg';
+  //   const bstr = atob(dataurl);
+  //   let n = bstr.length;
+  //   const u8arr: ArrayBuffer = new Uint8Array(n);
+  //   while (n--) {
+  //     u8arr[n] = bstr.charCodeAt(n);
+  //   }
+  //   return new Blob([u8arr], {
+  //     type: mime,
+  //   });
+  // }
+
+  // onInputFocus(event: Event) {
+  //   console.log(event);
+  //   const input = (event.target as HTMLElement).querySelector('input');
+  //   if (input) {
+  //     input.select();
+  //   }
+  // }
 
   async deactivateConfirm(nextState: RouterStateSnapshot) {
     if (this.photoCount === 0 || nextState.url === '/preupload') {

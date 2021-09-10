@@ -39,11 +39,13 @@ export class PreuploadComponent implements OnInit {
       this.renameId = item.id;
       this.editName = item.name;
       this.zone.onStable.pipe(take(1)).subscribe(async () => {
-        console.log(this.nameInput);
         if (this.nameInput) {
           await this.nameInput.setFocus();
           const element = await this.nameInput.getInputElement();
           element.select();
+          setTimeout(()=>{
+            element.scrollIntoView();
+          })
         }
       });
     }
@@ -72,11 +74,15 @@ export class PreuploadComponent implements OnInit {
       const item = this.data[i];
       try {
         // await this.sleep(3000);
-        await this.baiduAPIService.upload(item.name + '.jpg', item.blob);
+        await this.baiduAPIService.upload(
+          item.name + '.jpg',
+          item.blob,
+          item.md5
+        );
         await this.database.preuploadFile.delete(item.id);
         this.uploaded++;
       } catch (e) {
-        alert(e)
+        alert(e);
         const select = await this.retryConfirm(i);
         if (select === 'retry') {
           i--;

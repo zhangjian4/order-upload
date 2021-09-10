@@ -67,6 +67,5 @@ export class DetailComponent implements OnInit {
         this.fileService.loadNextPage();
       }
     });
-    console.log(this.index);
   }
 }

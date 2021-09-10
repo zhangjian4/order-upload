@@ -9,10 +9,8 @@
     "build": "ng build",
     "run:android": "ionic cordova run android -l --external --buildConfig=build.json",
     "build:android": "ionic cordova build android --prod --release --buildConfig=build.json",
-    "prepare:android": "ionic cordova prepare android --prod",
-    "prepare:ios": "ionic cordova prepare ios --prod",
-    "code-push:android": "appcenter codepush release-cordova -a 499980990/order_upload_android -d Production",
-    "code-push:ios": "appcenter codepush release-cordova -a 499980990/order_upload_ios -d Production",
+    "code-push:android": "ionic cordova prepare android --prod && appcenter codepush release-cordova -a 499980990/order_upload_android -d Production",
+    "code-push:ios": "ionic cordova prepare ios --prod && appcenter codepush release-cordova -a 499980990/order_upload_ios -d Production",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
