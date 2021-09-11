@@ -66,7 +66,7 @@
     </ion-refresher>
     <ion-list>
       <ion-item
-        *ngFor="let item of fileService.fileList; let i = index"
+        *ngFor="let item of fileService.fileList; let i = index;trackBy:trackItems"
         lines="none"
         routerLink="/detail"
         [queryParams]="{ index: i }"

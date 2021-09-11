@@ -74,7 +74,7 @@ export class MainComponent implements OnInit {
 
   async reloadUserInfo() {
     //先从缓存中获取，再从接口获取
-    this.userInfo = await this.storage.get('userInfo')
+    this.userInfo = await this.storage.get('userInfo');
     this.userInfo = await this.baiduAPIService.getUserInfo();
     this.storage.set('userInfo', this.userInfo);
   }
@@ -171,8 +171,28 @@ export class MainComponent implements OnInit {
     }
   }
 
-  logout() {
-    this.baiduAPIService.logout();
+  async logout() {
+    const alert = await this.alertController.create({
+      message: `是否确认退出登录？`,
+      backdropDismiss: false,
+      buttons: [
+        {
+          text: '取消',
+          role: 'cancel',
+        },
+        {
+          text: '确定',
+          handler: () => {
+            this.baiduAPIService.logout();
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  trackItems(index: number, item: any) {
+    return item.fs_id;
   }
 
   async toast(message: string) {

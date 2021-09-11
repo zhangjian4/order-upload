@@ -31,6 +31,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./preupload/preupload.module').then((m) => m.PreuploadModule),
   },
+  {
+    path: 'opencv-test',
+    loadChildren: () =>
+      import('./opencv-test/opencv-test.module').then((m) => m.OpencvTestModule),
+  },
 ];
 @NgModule({
   imports: [

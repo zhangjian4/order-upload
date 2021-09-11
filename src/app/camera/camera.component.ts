@@ -29,6 +29,7 @@ import { Database } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 import { RouterStateSnapshot } from '@angular/router';
 import * as SparkMD5 from 'spark-md5';
+import { base64ToArrayBuffer, urlToBase64 } from '../shared/util/image.util';
 
 @Component({
   selector: 'app-camera',
@@ -138,9 +139,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (this.platform.is('cordova')) {
       base64 = await this.cameraPreview.takeSnapshot({ quality: 90 });
     } else {
-      base64 = await this.urlToBase64('/assets/img/lake.jpg');
+      base64 = await urlToBase64('/assets/img/lake.jpg');
     }
-    const buffer = this.base64ToArrayBuffer(base64);
+    const buffer = base64ToArrayBuffer(base64);
     const blob = new Blob([buffer], {
       type: 'image/jpeg',
     });
@@ -249,38 +250,38 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   //   await this.baiduAPIService.upload(fileName, blob);
   // }
 
-  urlToBase64(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.src = url;
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0, image.width, image.height);
-        const ext = image.src
-          .substring(image.src.lastIndexOf('.') + 1)
-          .toLowerCase();
-        let base64 = canvas.toDataURL('image/jpeg');
-        base64 = base64.substr(base64.indexOf(',') + 1);
-        resolve(base64);
-      };
-      image.onerror = (e) => {
-        reject(e);
-      };
-    });
-  }
+  // urlToBase64(url: string): Promise<string> {
+  //   return new Promise((resolve, reject) => {
+  //     const image = new Image();
+  //     image.src = url;
+  //     image.onload = () => {
+  //       const canvas = document.createElement('canvas');
+  //       canvas.width = image.width;
+  //       canvas.height = image.height;
+  //       const ctx = canvas.getContext('2d');
+  //       ctx.drawImage(image, 0, 0, image.width, image.height);
+  //       const ext = image.src
+  //         .substring(image.src.lastIndexOf('.') + 1)
+  //         .toLowerCase();
+  //       let base64 = canvas.toDataURL('image/jpeg');
+  //       base64 = base64.substr(base64.indexOf(',') + 1);
+  //       resolve(base64);
+  //     };
+  //     image.onerror = (e) => {
+  //       reject(e);
+  //     };
+  //   });
+  // }
 
-  base64ToArrayBuffer(base64: string) {
-    const bstr = atob(base64);
-    let n = bstr.length;
-    const buffer: ArrayBuffer = new Uint8Array(n);
-    while (n--) {
-      buffer[n] = bstr.charCodeAt(n);
-    }
-    return buffer;
-  }
+  // base64ToArrayBuffer(base64: string) {
+  //   const bstr = atob(base64);
+  //   let n = bstr.length;
+  //   const buffer: ArrayBuffer = new Uint8Array(n);
+  //   while (n--) {
+  //     buffer[n] = bstr.charCodeAt(n);
+  //   }
+  //   return buffer;
+  // }
 
   // base64ToBlob(dataurl) {
   //   const mime = 'image/jpeg';

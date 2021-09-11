@@ -5,6 +5,7 @@ import { PreuploadComponent } from './preupload.component';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
+import { SharedModule } from '../shared/shared.module';
 
 @NgModule({
   declarations: [PreuploadComponent],
@@ -19,6 +20,7 @@ import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
     BlobSrcModule,
     IonicModule,
     FormsModule,
+    SharedModule
   ],
 })
 export class PreuploadModule {}

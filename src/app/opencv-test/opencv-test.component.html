@@ -1,0 +1,13 @@
+<h2>Hello OpenCV.js</h2>
+<p id="status">{{status}}</p>
+<div>
+  <div class="inputoutput">
+    <img *ngIf="ready" id="imageSrc" alt="No Image" src="/assets/img/document.png" (load)="imageLoad($event)"/>
+    <!-- <div class="caption">imageSrc <input type="file" id="fileInput" name="file" (change)="inputChange($event)" />
+    </div> -->
+  </div>
+  <div class="inputoutput">
+    <canvas id="canvasOutput" ></canvas>
+    <div class="caption">canvasOutput</div>
+  </div>
+</div>

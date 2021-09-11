@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button [text]="''"></ion-back-button>
     </ion-buttons>
-    <ion-title></ion-title>
+    <ion-title>{{ length }}个文件(共{{ size | fileSize }})</ion-title>
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="save()">
         <ion-icon name="save"></ion-icon>
@@ -11,13 +11,21 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
-<ion-content>
+<ion-content #content>
   <div class="container">
-    <div *ngFor="let item of data" class="item">
+    <div
+      *ngFor="let item of data; trackBy: trackItems"
+      class="item"
+      [attr.item-id]="item.id"
+    >
       <ion-card>
         <ion-thumbnail>
           <img [blob-src]="item.blob" />
         </ion-thumbnail>
+        <a class="remove-btn" (click)="remove(item)">
+          <ion-icon name="close"></ion-icon>
+        </a>
+
         <!-- <ion-card-header>
           <ion-card-subtitle>Destination</ion-card-subtitle>
           <ion-card-title>Madison, WI</ion-card-title>

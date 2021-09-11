@@ -12,6 +12,7 @@
 ion-card {
   margin-inline: 6px;
   margin: 6px;
+  position: relative;
 }
 
 ion-thumbnail {
@@ -25,23 +26,33 @@ ion-card-content {
 }
 
 .update-mask {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-  .progress-container {
-    width: 200px;
-    height: 80px;
-    background: #f9f9f9;
-    display: flex;
-    align-items: center;
-    padding: 30px;
-    border-radius: 8px;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+.progress-container {
+  width: 200px;
+  height: 80px;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  padding: 30px;
+  border-radius: 8px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  padding: 5px;
+  height: 25px;
+  color: #999;
+}
