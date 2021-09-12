@@ -13,6 +13,10 @@
         <ion-label>检查更新</ion-label>
         <ion-note slot="end">{{ version }}</ion-note>
       </ion-item>
+      <ion-item routerLink="/opencv-test">
+        <ion-icon name="exit" slot="start"></ion-icon>
+        <ion-label>测试</ion-label>
+      </ion-item>
       <ion-item (click)="logout()">
         <ion-icon name="exit" slot="start"></ion-icon>
         <ion-label>退出登录</ion-label>
