@@ -1,14 +1,12 @@
 <h2>Hello OpenCV.js</h2>
 <p id="status">{{ status }}</p>
 <div>
-  <img
-    *ngIf="ready"
-    id="imageSrc"
-    alt="No Image"
-    src="/assets/img/document.png"
-    (load)="imageLoad($event)"
-  />
+  <img *ngIf="blob" [blob-src]="blob" (load)="imageLoad($event)" />
   <!-- <div class="caption">imageSrc <input type="file" id="fileInput" name="file" (change)="inputChange($event)" />
     </div> -->
-  <canvas id="canvasOutput"></canvas>
+  <canvas id="canvasOutput0"></canvas>
+  <canvas id="canvasOutput1"></canvas>
+  <canvas id="canvasOutput2"></canvas>
+  <canvas id="canvasOutput3"></canvas>
+  <canvas id="canvasOutput4"></canvas>
 </div>

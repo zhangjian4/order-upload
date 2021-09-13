@@ -139,7 +139,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (this.platform.is('cordova')) {
       base64 = await this.cameraPreview.takeSnapshot({ quality: 90 });
     } else {
-      base64 = await urlToBase64('/assets/img/lake.jpg');
+      base64 = await urlToBase64('/assets/img/test.jpg');
     }
     const buffer = base64ToArrayBuffer(base64);
     const blob = new Blob([buffer], {
