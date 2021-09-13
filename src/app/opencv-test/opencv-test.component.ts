@@ -107,6 +107,15 @@ export class OpencvTestComponent implements OnInit {
 
   orderPoints(pts){
 
+
+    for (let i = 0; i < pts.rows; ++i) {
+      const x=pts.data32S[i * 2];
+      const y=pts.data32S[i * 2 + 1]
+
+      let far = new cv.Point(box.data32S[i * 2], box.data32S[i * 2 + 1]);
+      console.log(far);
+      cv.circle(src, far, 5, circleColor, 2);
+    }
   }
 
   warpImage(image, box) {}
