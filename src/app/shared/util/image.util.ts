@@ -9,18 +9,22 @@ export const imageToBase64 = (image: HTMLImageElement) => {
   return base64;
 };
 
-export const urlToBase64 = (url: string) =>
-  new Promise<string>((resolve, reject) => {
+export const loadImage = (url: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.src = url;
     image.onload = () => {
-      const base64 = imageToBase64(image);
-      resolve(base64);
+      resolve(image);
     };
     image.onerror = (e) => {
       reject(e);
     };
   });
+
+export const urlToBase64 = async (url: string) => {
+  const image = await loadImage(url);
+  return imageToBase64(image);
+};
 
 export const base64ToArrayBuffer = (base64: string) => {
   const bstr = atob(base64);

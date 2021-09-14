@@ -17,9 +17,15 @@ import {
 import { Subject } from 'rxjs';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { FileService } from '../core/service/file.service';
-import { CodePush, InstallMode, SyncStatus } from '@ionic-native/code-push/ngx';
+import {
+  CodePush,
+  InstallMode,
+  IRemotePackage,
+  SyncStatus,
+} from '@ionic-native/code-push/ngx';
 import { VERSION } from '../core/version';
 import { Storage } from '@ionic/storage-angular';
+import { formatFileSize } from '../shared/util/unit.util';
 
 @Component({
   selector: 'app-main',
@@ -36,7 +42,7 @@ export class MainComponent implements OnInit {
   destroy$ = new Subject();
   dirty: boolean;
   version = VERSION;
-  updateAvailable: boolean;
+  remotePackage: IRemotePackage;
   showProgress: boolean;
   progress: number;
   constructor(
@@ -105,7 +111,7 @@ export class MainComponent implements OnInit {
   async checkForUpdate() {
     const remote = await this.codePush.checkForUpdate();
     this.zone.run(() => {
-      this.updateAvailable = remote != null;
+      this.remotePackage = remote;
     });
   }
 
@@ -124,11 +130,12 @@ export class MainComponent implements OnInit {
       loading.dismiss();
     }
 
-    if (this.updateAvailable) {
+    if (this.remotePackage != null) {
+      const size = formatFileSize(this.remotePackage.packageSize);
       const alert = await this.alertController.create({
-        cssClass: 'my-custom-class',
         header: '更新',
-        message: '检测到新版本，是否立即更新?',
+        message: `检测到新版本，是否立即更新?
+(更新包大小${size}，建议在wifi下更新)`,
         buttons: [
           {
             text: '取消',
