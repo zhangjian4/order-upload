@@ -66,7 +66,7 @@ export class OpenCVService {
     // cv.cvtColor(image, dst1, cv.COLOR_RGBA2GRAY, 0);
     const dst2 = new cv.Mat();
     // 高斯模糊
-    // cv.GaussianBlur(dst1, dst2, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
+    // cv.GaussianBlur(image, dst2, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
     // 中值滤波
     cv.medianBlur(image, dst2, 5);
     // 双边滤波
@@ -76,7 +76,7 @@ export class OpenCVService {
     // dst1.delete();
     const dst3 = new cv.Mat();
     // 边缘检测
-    cv.Canny(dst2, dst3, 60, 240);
+    cv.Canny(dst2, dst3, 100, 300);
     console.log(dst3);
     dst2.delete();
     const dst4 = new cv.Mat();
