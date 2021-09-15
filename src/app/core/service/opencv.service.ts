@@ -72,7 +72,7 @@ export class OpenCVService {
     // 双边滤波
     // cv.cvtColor(image, image, cv.COLOR_RGBA2RGB, 0);
     // cv.bilateralFilter(image, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
-    cv.imshow('canvasOutput0', dst2);
+    // cv.imshow('canvasOutput0', dst2);
     // dst1.delete();
     const dst3 = new cv.Mat();
     // 边缘检测
@@ -198,5 +198,25 @@ export class OpenCVService {
     cv.warpPerspective(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT);
     M.delete();
     return dst;
+  }
+
+  async getPager(blob:Blob){
+    await this.init();
+    const src = await this.fromBlob(blob);
+    let ratio = 1;
+    if (src.rows > 900) {
+      ratio = 900 / src.rows;
+    }
+    const resize = this.resizeImg(src, ratio);
+    const canny = this.getCanny(resize);
+    const maxContour = this.findMaxContour(canny);
+    canny.delete();
+    const points = this.getBoxPoint(maxContour);
+    maxContour.delete();
+    const dst = this.warpImage(src, points,ratio);
+    resize.delete();
+    points.delete();
+    src.delete();
+    dst.delete();
   }
 }

@@ -8,6 +8,8 @@ import {
 import { take } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { Database, IUploadFile } from '../core/service/database.service';
+import { OpenCVService } from '../core/service/opencv.service';
+import { PreuploadService } from './preupload.service';
 
 @Component({
   selector: 'app-preupload',
@@ -32,7 +34,9 @@ export class PreuploadComponent implements OnInit {
     private zone: NgZone,
     private baiduAPIService: BaiduAPIService,
     private alertController: AlertController,
-    private navController: NavController
+    private navController: NavController,
+    private preuploadService: PreuploadService,
+    private opencvService:OpenCVService
   ) {}
 
   ngOnInit() {
@@ -40,7 +44,11 @@ export class PreuploadComponent implements OnInit {
   }
 
   async reload() {
-    this.data = await this.database.preuploadFile.toArray();
+    const data = await this.database.preuploadFile.toArray();
+    for(const item of data){
+
+    }
+    this.data=data;
     this.length = this.data.length;
     this.size = this.data.reduce((prev, cur) => prev + cur.blob.size, 0);
     // this.title = `${this.data.length}个文件(${})`;
