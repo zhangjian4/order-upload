@@ -61,16 +61,23 @@ export class OpenCVService {
    * @returns
    */
   getCanny(image: Mat) {
-    const dst1 = new cv.Mat();
     // 灰度
-    cv.cvtColor(image, dst1, cv.COLOR_RGBA2GRAY, 0);
+    // const dst1 = new cv.Mat();
+    // cv.cvtColor(image, dst1, cv.COLOR_RGBA2GRAY, 0);
     const dst2 = new cv.Mat();
     // 高斯模糊
-    cv.GaussianBlur(dst1, dst2, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
-    dst1.delete();
+    // cv.GaussianBlur(dst1, dst2, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
+    // 中值滤波
+    cv.medianBlur(image, dst2, 5);
+    // 双边滤波
+    // cv.cvtColor(image, image, cv.COLOR_RGBA2RGB, 0);
+    // cv.bilateralFilter(image, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
+    cv.imshow('canvasOutput0', dst2);
+    // dst1.delete();
     const dst3 = new cv.Mat();
     // 边缘检测
     cv.Canny(dst2, dst3, 60, 240);
+    console.log(dst3);
     dst2.delete();
     const dst4 = new cv.Mat();
     const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
@@ -86,7 +93,7 @@ export class OpenCVService {
       cv.morphologyDefaultBorderValue()
     );
     kernel.delete();
-    dst3.delete();
+    // dst3.delete();
     return dst4;
   }
 

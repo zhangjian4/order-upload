@@ -57,6 +57,12 @@ export class OpencvTestComponent implements OnInit {
       ratio = 900 / src.rows;
     }
     const resize = this.opencvService.resizeImg(src, ratio);
+    const dst2=new cv.Mat();
+    console.log(cv);
+    // cv.cvtColor(resize, resize, cv.COLOR_RGBA2RGB, 0);
+    // cv.bilateralFilter(resize, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
+    // cv.medianBlur(resize, dst2, 5);
+    // cv.imshow('canvasOutput0', dst2);
     const canny = this.opencvService.getCanny(resize);
     this.showCanny(canny);
     const maxContour = this.opencvService.findMaxContour(canny);
