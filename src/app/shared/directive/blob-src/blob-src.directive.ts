@@ -44,7 +44,8 @@ export class BlobSrcDirective {
       this.objectUrl = URL.createObjectURL(this.blob);
       this.element.src = this.objectUrl;
     }else{
-      this.element.src = null;
+      this.element.removeAttribute('src');
+      // this.element.src = null;
     }
   }
 

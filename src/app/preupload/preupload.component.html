@@ -14,17 +14,24 @@
 <ion-content #content>
   <div class="container">
     <div
-      *ngFor="let item of data; trackBy: trackItems"
+      *ngFor="let item of preuploadService.data; trackBy: trackItems;let i=index"
       class="item"
       [attr.item-id]="item.id"
     >
       <ion-card>
-        <ion-thumbnail
+        <div
+          class="img-container"
+          routerLink="edit"
+          [queryParams]="{ index: i }"
+        >
+          <img [blob-src]="item.dest || item.blob" />
+        </div>
+        <!-- <ion-thumbnail
           routerLink="edit"
           [queryParams]="{ id: item.id }"
         >
           <img [blob-src]="item.blob" />
-        </ion-thumbnail>
+        </ion-thumbnail> -->
         <a class="remove-btn" (click)="remove(item)">
           <ion-icon name="close"></ion-icon>
         </a>
@@ -59,7 +66,9 @@
 </ion-content>
 <div class="update-mask" *ngIf="uploading">
   <div class="progress-container">
-    <ion-progress-bar [value]="uploaded / data.length"></ion-progress-bar>
-    <div>{{ uploaded }}/{{ data.length }}</div>
+    <ion-progress-bar
+      [value]="uploaded / preuploadService.data.length"
+    ></ion-progress-bar>
+    <div>{{ uploaded }}/{{ preuploadService.data.length }}</div>
   </div>
 </div>

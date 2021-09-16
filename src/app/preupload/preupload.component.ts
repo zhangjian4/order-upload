@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit, ViewChild } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import {
   AlertController,
   IonContent,
@@ -16,12 +16,12 @@ import { PreuploadService } from './preupload.service';
   templateUrl: './preupload.component.html',
   styleUrls: ['./preupload.component.scss'],
 })
-export class PreuploadComponent implements OnInit {
+export class PreuploadComponent implements OnInit, OnDestroy {
   @ViewChild('nameInput')
   nameInput: IonInput;
   @ViewChild('content')
   content: IonContent;
-  data: IUploadFile[];
+  // data: IUploadFile[];
   renameId: number;
   editName: string;
   uploading: boolean;
@@ -35,22 +35,35 @@ export class PreuploadComponent implements OnInit {
     private baiduAPIService: BaiduAPIService,
     private alertController: AlertController,
     private navController: NavController,
-    private preuploadService: PreuploadService,
-    private opencvService:OpenCVService
+    public preuploadService: PreuploadService,
+    private opencvService: OpenCVService
   ) {}
+
 
   ngOnInit() {
     this.reload();
   }
 
+  ngOnDestroy(): void {
+    this.preuploadService.data = [];
+  }
+
   async reload() {
     const data = await this.database.preuploadFile.toArray();
-    for(const item of data){
-
+    this.preuploadService.data = data;
+    for (const item of data) {
+      try {
+        item.dest = await this.opencvService.getPagerRect(item.blob);
+      } catch (e) {
+        console.error(e);
+      }
     }
-    this.data=data;
-    this.length = this.data.length;
-    this.size = this.data.reduce((prev, cur) => prev + cur.blob.size, 0);
+    // this.data = data;
+    this.length = this.preuploadService.data.length;
+    this.size = this.preuploadService.data.reduce(
+      (prev, cur) => prev + cur.blob.size,
+      0
+    );
     // this.title = `${this.data.length}个文件(${})`;
   }
 
@@ -116,8 +129,8 @@ export class PreuploadComponent implements OnInit {
   async save() {
     this.uploaded = 0;
     this.uploading = true;
-    for (let i = 0; i < this.data.length; i++) {
-      const item = this.data[i];
+    for (let i = 0; i < this.preuploadService.data.length; i++) {
+      const item = this.preuploadService.data[i];
       try {
         // await this.sleep(3000);
         await this.baiduAPIService.upload(
@@ -141,7 +154,7 @@ export class PreuploadComponent implements OnInit {
     }
     this.uploading = false;
     await this.reload();
-    if (this.data.length === 0) {
+    if (this.preuploadService.data.length === 0) {
       this.navController.navigateRoot('/main');
     }
   }

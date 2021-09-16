@@ -1,0 +1,24 @@
+.image-container {
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  overflow: visible;
+  .image-cotainer-inner {
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    display: flex;
+    overflow: visible;
+  }
+  img {
+    max-height: 100%;
+    max-width: 100%;
+  }
+  .rect {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  }
+}

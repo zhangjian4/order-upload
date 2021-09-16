@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LazyService } from './lazy.service';
 import cv, { Mat, Point, Rect } from 'opencv-ts';
-import { loadImage } from 'src/app/shared/util/image.util';
+import { base64ToBlob, loadImage } from 'src/app/shared/util/image.util';
 
 // declare const cv: any;
 
@@ -77,7 +77,6 @@ export class OpenCVService {
     const dst3 = new cv.Mat();
     // 边缘检测
     cv.Canny(dst2, dst3, 100, 300);
-    console.log(dst3);
     dst2.delete();
     const dst4 = new cv.Mat();
     const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
@@ -200,7 +199,7 @@ export class OpenCVService {
     return dst;
   }
 
-  async getPager(blob:Blob){
+  async getPagerRect(blob: Blob) {
     await this.init();
     const src = await this.fromBlob(blob);
     let ratio = 1;
@@ -213,10 +212,16 @@ export class OpenCVService {
     canny.delete();
     const points = this.getBoxPoint(maxContour);
     maxContour.delete();
-    const dst = this.warpImage(src, points,ratio);
+    const dst = this.warpImage(src, points, ratio);
+    const canvas = document.createElement('canvas');
+    cv.imshow(canvas, dst);
+    let base64 = canvas.toDataURL('image/jpeg');
+    base64 = base64.substr(base64.indexOf(',') + 1);
+    blob= base64ToBlob(base64);
     resize.delete();
     points.delete();
     src.delete();
     dst.delete();
+    return blob;
   }
 }
