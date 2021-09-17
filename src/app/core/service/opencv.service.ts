@@ -210,18 +210,28 @@ export class OpenCVService {
     const canny = this.getCanny(resize);
     const maxContour = this.findMaxContour(canny);
     canny.delete();
-    const points = this.getBoxPoint(maxContour);
+    const approx = this.getBoxPoint(maxContour);
     maxContour.delete();
-    const dst = this.warpImage(src, points, ratio);
-    const canvas = document.createElement('canvas');
-    cv.imshow(canvas, dst);
-    let base64 = canvas.toDataURL('image/jpeg');
-    base64 = base64.substr(base64.indexOf(',') + 1);
-    blob= base64ToBlob(base64);
+        const points: Point[] = [];
+    for (let i = 0; i < approx.rows; ++i) {
+      const point = new cv.Point(
+        approx.data32S[i * 2]/ratio,
+        approx.data32S[i * 2 + 1]/ratio
+      );
+      console.log(point);
+      points.push(point);
+    }
+    // const dst = this.warpImage(src, approx, ratio);
+    // const canvas = document.createElement('canvas');
+    // cv.imshow(canvas, dst);
+    // let base64 = canvas.toDataURL('image/jpeg');
+    // base64 = base64.substr(base64.indexOf(',') + 1);
+    // blob= base64ToBlob(base64);
+    // dst.delete();
     resize.delete();
-    points.delete();
+    approx.delete();
     src.delete();
-    dst.delete();
-    return blob;
+    // return blob;
+    return points;
   }
 }

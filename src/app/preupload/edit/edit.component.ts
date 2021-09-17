@@ -12,14 +12,15 @@ import { PreuploadService } from '../preupload.service';
 })
 export class EditComponent implements OnInit, OnDestroy {
   data: IUploadFile;
-  points = [
-    { x: 0, y: 0 },
-    { x: 300, y: 30 },
-    { x: 300, y: 500 },
-    { x: 10, y: 400 },
-  ];
+  points: any[];
 
   polygon: string;
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+  ratio: number;
+
   destroy$ = new Subject();
 
   constructor(
@@ -42,7 +43,19 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   onImageLoad(event: Event) {
-    console.log(event.target);
+    const img = event.target as HTMLImageElement;
+    const { offsetTop, offsetLeft, offsetHeight, offsetWidth, naturalHeight } =
+      img;
+    this.ratio = offsetHeight / naturalHeight;
+    this.top = offsetTop;
+    this.left = offsetLeft;
+    this.bottom = offsetTop + offsetHeight;
+    this.right = offsetLeft + offsetWidth;
+    this.points = this.data.rect.map((p) => ({
+      x: p.x * this.ratio + this.left,
+      y: p.y * this.ratio + this.top,
+    }));
+    this.updatePolygon();
   }
 
   onPointClick(event) {
@@ -58,19 +71,23 @@ export class EditComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(mouseup))
       .subscribe((e: TouchEvent) => {
         const touchMove = e.touches.item(0);
-        let x = startX + touchMove.clientX;
-        let y = startY + touchMove.clientY;
-        x = Math.max(x, 0);
-        y = Math.max(y, 0);
-        point.x = x;
-        point.y = y;
+        const x = startX + touchMove.clientX;
+        const y = startY + touchMove.clientY;
+        point.x = this.limit(x, this.left, this.right);
+        point.y = this.limit(y, this.top, this.bottom);
         this.updatePolygon();
       });
   }
 
+  limit(num: number, min: number, max: number) {
+    return Math.max(Math.min(num, max), min);
+  }
+
   updatePolygon() {
-    this.polygon = this.points
-      .map((point) => point.x + ',' + point.y)
-      .join(' ');
+    if (this.points) {
+      this.polygon = this.points
+        .map((point) => point.x + ',' + point.y)
+        .join(' ');
+    }
   }
 }

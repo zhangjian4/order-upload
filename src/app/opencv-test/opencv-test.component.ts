@@ -57,8 +57,8 @@ export class OpencvTestComponent implements OnInit {
       ratio = 900 / src.rows;
     }
     const resize = this.opencvService.resizeImg(src, ratio);
-    const dst2=new cv.Mat();
-    console.log(cv);
+    const dst2 = new cv.Mat();
+
     // cv.cvtColor(resize, resize, cv.COLOR_RGBA2RGB, 0);
     // cv.bilateralFilter(resize, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
     // cv.medianBlur(resize, dst2, 5);
@@ -74,7 +74,15 @@ export class OpencvTestComponent implements OnInit {
     this.showPoints(resize, points);
     // points = this.orderPoints(points);
     // console.log(points);
-    const dst = this.opencvService.warpImage(src, points,ratio);
+    const dst = this.opencvService.warpImage(src, points, ratio);
+    // const minColor = cv.matFromArray(1, 3, cv.CV_32S, [200, 200, 100]);
+    // const maxColor = cv.matFromArray(1, 3, cv.CV_32S, [250, 250, 150]);
+    let low = new cv.Mat(src.rows, src.cols, src.type(), [150, 0, 0, 0] as any);
+    let high = new cv.Mat(src.rows, src.cols, src.type(), [255, 150, 150, 255] as any);
+    console.log(cv);
+    const dst3 = new cv.Mat();
+    cv.inRange(src, low, high, dst3);
+    cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
     resize.delete();
     points.delete();

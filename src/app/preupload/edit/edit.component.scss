@@ -2,15 +2,13 @@
   height: 100%;
   width: 100%;
   padding: 20px;
-  overflow: visible;
+  position: relative;
   .image-cotainer-inner {
     height: 100%;
     width: 100%;
     align-items: center;
     justify-content: center;
-    position: relative;
     display: flex;
-    overflow: visible;
   }
   img {
     max-height: 100%;
@@ -20,5 +18,7 @@
     position: absolute;
     height: 100%;
     width: 100%;
+    top: 0;
+    left: 0;
   }
 }

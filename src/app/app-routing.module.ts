@@ -36,6 +36,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./opencv-test/opencv-test.module').then((m) => m.OpencvTestModule),
   },
+  {
+    path: 'ocr-test',
+    loadChildren: () =>
+      import('./ocr-test/ocr-test.module').then((m) => m.OcrTestModule),
+  },
 ];
 @NgModule({
   imports: [

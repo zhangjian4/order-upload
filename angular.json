@@ -29,6 +29,16 @@
                 "glob": "**/*.svg",
                 "input": "node_modules/ionicons/dist/ionicons/svg",
                 "output": "./svg"
+              },
+              {
+                "glob": "worker.min.js",
+                "input": "node_modules/tesseract.js/dist",
+                "output": "assets/tesseract"
+              },
+              {
+                "glob": "tesseract-core.wasm.js",
+                "input": "node_modules/tesseract.js-core",
+                "output": "assets/tesseract"
               }
             ],
             "styles": ["src/theme/variables.scss", "src/global.scss"],

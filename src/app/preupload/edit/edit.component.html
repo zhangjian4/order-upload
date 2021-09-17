@@ -5,21 +5,21 @@
   <div class="image-container">
     <div class="image-cotainer-inner">
       <img [blob-src]="data?.blob" (load)="onImageLoad($event)" />
-      <svg class="rect" version="1.1" xmlns="http://www.w3.org/2000/svg">
-        <polygon
-          [attr.points]="polygon"
-          style="fill: none; stroke: #000000; stroke-width: 1"
-        />
-        <circle
-          *ngFor="let point of points"
-          (touchstart)="onPointMousedown($event, point)"
-          [attr.cx]="point.x"
-          [attr.cy]="point.y"
-          r="6"
-          fill="red"
-        />
-      </svg>
     </div>
+    <svg *ngIf="points" class="rect" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      <polygon
+        [attr.points]="polygon"
+        style="fill: none; stroke: #F00; stroke-width: 1"
+      />
+      <circle
+        *ngFor="let point of points"
+        (touchstart)="onPointMousedown($event, point)"
+        [attr.cx]="point.x"
+        [attr.cy]="point.y"
+        r="6"
+        fill="#F00"
+      />
+    </svg>
   </div>
 </ion-content>
 <ion-footer></ion-footer>

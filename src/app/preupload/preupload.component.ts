@@ -53,7 +53,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     this.preuploadService.data = data;
     for (const item of data) {
       try {
-        item.dest = await this.opencvService.getPagerRect(item.blob);
+        item.rect = await this.opencvService.getPagerRect(item.blob);
       } catch (e) {
         console.error(e);
       }
