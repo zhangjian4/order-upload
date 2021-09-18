@@ -29,7 +29,12 @@ import { Database } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 import { RouterStateSnapshot } from '@angular/router';
 import * as SparkMD5 from 'spark-md5';
-import { base64ToArrayBuffer, urlToBase64 } from '../shared/util/image.util';
+import {
+  base64ToArrayBuffer,
+  base64ToBlob,
+  urlToBase64,
+} from '../shared/util/image.util';
+import { OpenCVService } from '../core/service/opencv.service';
 
 @Component({
   selector: 'app-camera',
@@ -51,6 +56,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   lastFile: Blob;
   viewEntered: boolean;
   cameraStarted: boolean;
+  promises: Promise<any>[] = [];
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -58,7 +64,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private platform: Platform,
     public toastController: ToastController,
     public alertController: AlertController,
-    private database: Database
+    private database: Database,
+    private opencvService: OpenCVService
   ) {}
 
   @HostBinding('class.hide-background')
@@ -67,6 +74,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.opencvService.init();
     // this.startCamera();
     // this.clear();
     // this.db = await this.indexedDBService.open();
@@ -139,24 +147,25 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (this.platform.is('cordova')) {
       base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
     } else {
-      base64 = await urlToBase64('/assets/img/test4.jpg');
+      base64 = await urlToBase64(`/assets/img/test${this.photoCount % 5}.jpg`);
     }
-    const buffer = base64ToArrayBuffer(base64);
-    const blob = new Blob([buffer], {
-      type: 'image/jpeg',
-    });
+    // const buffer = base64ToArrayBuffer(base64);
+    // const blob = new Blob([buffer], {
+    //   type: 'image/jpeg',
+    // });
+    const blob = base64ToBlob(base64);
     const spark = new SparkMD5.ArrayBuffer();
-    spark.append(buffer);
+    spark.append(blob);
     const md5 = spark.end();
-    // const blob = this.base64ToBlob(base64);
     const name = format(new Date(), 'yyyyMMddHHmmssSSS');
     this.photoCount++;
     this.lastFile = blob;
-    await this.database.preuploadFile.add({
+    const id = await this.database.preuploadFile.add({
       name,
       blob,
-      md5,
     });
+    this.promises.push(this.handlePhoto(id, blob));
+
     // this.lastFileId = id;
     // this.zone.run(() => {
     //   const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
@@ -169,6 +178,30 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     //   // this.preview = true;
     //   // this.hideBackground = false;
     // });
+  }
+
+  async handlePhoto(id: number, blob: Blob) {
+    const src = await this.opencvService.fromBlob(blob);
+    try {
+      const change: any = {};
+      const rect = await this.opencvService.getPagerRect(src);
+      if (rect.length === 4) {
+        const dest = await this.opencvService.transform(src, rect);
+        const size = dest.size;
+        await this.database.preuploadFile.update(id, { rect, dest, size });
+      }
+      // await this.sleep();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      src.delete();
+    }
+  }
+
+  sleep() {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 1000);
+    });
   }
 
   async back() {
@@ -196,6 +229,11 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // } else {
     //   this.navController.back();
     // }
+  }
+
+  async submit() {
+    await Promise.all(this.promises);
+    this.navController.navigateForward('/preupload');
   }
 
   clear() {

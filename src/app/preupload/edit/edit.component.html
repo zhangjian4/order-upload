@@ -6,10 +6,23 @@
     <div class="image-cotainer-inner">
       <img [blob-src]="data?.blob" (load)="onImageLoad($event)" />
     </div>
-    <svg *ngIf="points" class="rect" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <div *ngIf="data?.blob" class="magnify" [class.hidden]="!moving" [class.right]="magnifyPositionRight">
+      <img
+        [blob-src]="data?.blob"
+        [style.transform]="magnifyTransform"
+        [style.width.px]="magnifyWidth"
+      />
+      <ion-icon name="add"></ion-icon>
+    </div>
+    <svg
+      *ngIf="points"
+      class="rect"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <polygon
         [attr.points]="polygon"
-        style="fill: none; stroke: #F00; stroke-width: 1"
+        style="fill: none; stroke: #f00; stroke-width: 1"
       />
       <circle
         *ngFor="let point of points"

@@ -39,7 +39,6 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     private opencvService: OpenCVService
   ) {}
 
-
   ngOnInit() {
     this.reload();
   }
@@ -48,20 +47,44 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     this.preuploadService.data = [];
   }
 
+  ionViewWillEnter() {
+    if (this.preuploadService.updateData.size > 0) {
+      this.preuploadService.updateData.forEach(async (item) => {
+        item.dest = await this.opencvService.transform(item.blob, item.rect);
+        this.database.preuploadFile.update(item.id, { dest: item.dest });
+      });
+      this.preuploadService.updateData.clear();
+    }
+  }
+
   async reload() {
     const data = await this.database.preuploadFile.toArray();
     this.preuploadService.data = data;
-    for (const item of data) {
-      try {
-        item.rect = await this.opencvService.getPagerRect(item.blob);
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    // for (const item of data) {
+    //   try {
+    //     if (item.rect) {
+    //       item.dest = await this.opencvService.transform(item.blob, item.rect);
+    //     } else {
+    //       const src = await this.opencvService.fromBlob(item.blob);
+    //       try {
+    //         const points = await this.opencvService.getPagerRect(src);
+    //         if (points.length === 4) {
+    //           item.rect = points;
+    //           item.dest = await this.opencvService.transform(src, points);
+    //         }
+    //       } finally {
+    //         src.delete();
+    //       }
+    //     }
+    //     // item.rect = await this.opencvService.getPagerRect(item.blob);
+    //   } catch (e) {
+    //     console.error(e);
+    //   }
+    // }
     // this.data = data;
     this.length = this.preuploadService.data.length;
     this.size = this.preuploadService.data.reduce(
-      (prev, cur) => prev + cur.blob.size,
+      (prev, cur) => prev + (cur.dest || cur.blob).size,
       0
     );
     // this.title = `${this.data.length}个文件(${})`;

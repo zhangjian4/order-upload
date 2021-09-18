@@ -69,23 +69,25 @@ export class OpencvTestComponent implements OnInit {
     canny.delete();
     this.showMaxContour(resize, maxContour);
     // let dst4 = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
-    const points = this.opencvService.getBoxPoint(maxContour);
+    const points = this.opencvService.getBoxPoint(maxContour, ratio);
     maxContour.delete();
     this.showPoints(resize, points);
     // points = this.orderPoints(points);
     // console.log(points);
-    const dst = this.opencvService.warpImage(src, points, ratio);
+    const dst = this.opencvService.warpImage(src, points);
     // const minColor = cv.matFromArray(1, 3, cv.CV_32S, [200, 200, 100]);
     // const maxColor = cv.matFromArray(1, 3, cv.CV_32S, [250, 250, 150]);
     let low = new cv.Mat(src.rows, src.cols, src.type(), [150, 0, 0, 0] as any);
-    let high = new cv.Mat(src.rows, src.cols, src.type(), [255, 150, 150, 255] as any);
+    let high = new cv.Mat(src.rows, src.cols, src.type(), [
+      255, 150, 150, 255,
+    ] as any);
     console.log(cv);
     const dst3 = new cv.Mat();
     cv.inRange(src, low, high, dst3);
     cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
     resize.delete();
-    points.delete();
+    // points.delete();
     src.delete();
     dst.delete();
     // await this.opencvService.init();
@@ -156,16 +158,19 @@ export class OpencvTestComponent implements OnInit {
     contours.delete();
   }
 
-  showPoints(src: Mat, approx: Mat) {
+  showPoints(src: Mat, points: Point[]) {
     const dst = src.clone();
     const color = new cv.Scalar(255, 0, 0);
-    for (let i = 0; i < approx.rows; ++i) {
-      const point = new cv.Point(
-        approx.data32S[i * 2],
-        approx.data32S[i * 2 + 1]
-      );
+    points.forEach((point) => {
       cv.circle(dst, point, 5, color, 2);
-    }
+    });
+    // for (let i = 0; i < approx.rows; ++i) {
+    //   const point = new cv.Point(
+    //     approx.data32S[i * 2],
+    //     approx.data32S[i * 2 + 1]
+    //   );
+    //   cv.circle(dst, point, 5, color, 2);
+    // }
     cv.imshow('canvasOutput3', dst);
     dst.delete();
   }

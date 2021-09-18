@@ -133,7 +133,7 @@ export class OpenCVService {
    * @param contour
    * @returns
    */
-  getBoxPoint(contour: Mat) {
+  getBoxPoint(contour: Mat, ratio: number) {
     const hull = new cv.Mat();
     // 多边形拟合凸包
     cv.convexHull(contour, hull);
@@ -143,7 +143,17 @@ export class OpenCVService {
     // 多边形拟合
     cv.approxPolyDP(hull, approx, epsilon, true);
     hull.delete();
-    return approx;
+    // return approx;
+    const points: Point[] = [];
+    for (let i = 0; i < approx.rows; ++i) {
+      const point = new cv.Point(
+        approx.data32S[i * 2] / ratio,
+        approx.data32S[i * 2 + 1] / ratio
+      );
+      points.push(point);
+    }
+    approx.delete();
+    return points;
     // const points: Point[] = [];
     // for (let i = 0; i < approx.rows; ++i) {
     //   const point = new cv.Point(
@@ -156,25 +166,47 @@ export class OpenCVService {
     // return points;
   }
 
-  getDistance(contour: number[], index1: number, index2: number) {
+  // getDistance(contour: number[], index1: number, index2: number) {
+  //   return Math.sqrt(
+  //     Math.pow(contour[index1 * 2] - contour[index2 * 2], 2) +
+  //       Math.pow(contour[index1 * 2 + 1] - contour[index2 * 2 + 1], 2)
+  //   );
+  // }
+
+  getDistance(point1: Point, point2: Point) {
     return Math.sqrt(
-      Math.pow(contour[index1 * 2] - contour[index2 * 2], 2) +
-        Math.pow(contour[index1 * 2 + 1] - contour[index2 * 2 + 1], 2)
+      Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
     );
   }
 
-  warpImage(src: Mat, points: Mat, ratio: number) {
-    let data = points.data32S;
-    if (ratio !== 1) {
-      data = data.map((value) => Math.round(value / ratio));
-    }
+  warpImage(src: Mat, points: Point[]) {
+    // let data = points.data32S;
+    // if (ratio !== 1) {
+    //   data = data.map((value) => Math.round(value / ratio));
+    // }
+    // const width = Math.round(
+    //   Math.max(this.getDistance(data, 0, 1), this.getDistance(data, 2, 3))
+    // );
+    // const height = Math.round(
+    //   Math.max(this.getDistance(data, 1, 2), this.getDistance(data, 3, 0))
+    // );
     const width = Math.round(
-      Math.max(this.getDistance(data, 0, 1), this.getDistance(data, 2, 3))
+      Math.max(
+        this.getDistance(points[0], points[1]),
+        this.getDistance(points[2], points[3])
+      )
     );
     const height = Math.round(
-      Math.max(this.getDistance(data, 1, 2), this.getDistance(data, 3, 0))
+      Math.max(
+        this.getDistance(points[1], points[2]),
+        this.getDistance(points[3], points[0])
+      )
     );
-    const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, data);
+    const srcArray = [];
+    points.forEach((point) => {
+      srcArray.push(point.x, point.y);
+    });
+    const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, srcArray);
     const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
       0,
       0,
@@ -199,28 +231,30 @@ export class OpenCVService {
     return dst;
   }
 
-  async getPagerRect(blob: Blob) {
+  async getPagerRect(src: Blob | Mat) {
     await this.init();
-    const src = await this.fromBlob(blob);
+    if (src instanceof Blob) {
+      src = await this.fromBlob(src as Blob);
+    }
     let ratio = 1;
     if (src.rows > 900) {
       ratio = 900 / src.rows;
     }
     const resize = this.resizeImg(src, ratio);
     const canny = this.getCanny(resize);
+    resize.delete();
     const maxContour = this.findMaxContour(canny);
     canny.delete();
-    const approx = this.getBoxPoint(maxContour);
+    const points = this.getBoxPoint(maxContour, ratio);
     maxContour.delete();
-        const points: Point[] = [];
-    for (let i = 0; i < approx.rows; ++i) {
-      const point = new cv.Point(
-        approx.data32S[i * 2]/ratio,
-        approx.data32S[i * 2 + 1]/ratio
-      );
-      console.log(point);
-      points.push(point);
-    }
+    // const points: Point[] = [];
+    // for (let i = 0; i < approx.rows; ++i) {
+    //   const point = new cv.Point(
+    //     approx.data32S[i * 2] / ratio,
+    //     approx.data32S[i * 2 + 1] / ratio
+    //   );
+    //   points.push(point);
+    // }
     // const dst = this.warpImage(src, approx, ratio);
     // const canvas = document.createElement('canvas');
     // cv.imshow(canvas, dst);
@@ -228,10 +262,24 @@ export class OpenCVService {
     // base64 = base64.substr(base64.indexOf(',') + 1);
     // blob= base64ToBlob(base64);
     // dst.delete();
-    resize.delete();
-    approx.delete();
-    src.delete();
+    
+    // approx.delete();
+    // src.delete();
     // return blob;
     return points;
+  }
+
+  async transform(src: Blob | Mat, points: Point[]) {
+    if (src instanceof Blob) {
+      src = await this.fromBlob(src as Blob);
+    }
+    const dst = this.warpImage(src, points);
+    const canvas = document.createElement('canvas');
+    cv.imshow(canvas, dst);
+    let base64 = canvas.toDataURL('image/jpeg');
+    base64 = base64.substr(base64.indexOf(',') + 1);
+    const result = base64ToBlob(base64);
+    dst.delete();
+    return result;
   }
 }

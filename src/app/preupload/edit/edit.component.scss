@@ -9,10 +9,10 @@
     align-items: center;
     justify-content: center;
     display: flex;
-  }
-  img {
-    max-height: 100%;
-    max-width: 100%;
+    img {
+      max-height: 100%;
+      max-width: 100%;
+    }
   }
   .rect {
     position: absolute;
@@ -20,5 +20,34 @@
     width: 100%;
     top: 0;
     left: 0;
+  }
+}
+.magnify {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: 10px;
+  border-radius: 50px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #3880ff;
+  background-color: #000;
+  &.hidden {
+    display: none;
+  }
+  &.right {
+    right: 10px;
+  }
+  ion-icon {
+    color: #3880ff;
+  }
+  img {
+    position: absolute;
+    max-width: none;
+    image-rendering: pixelated;
+    left: 50px;
+    top: 50px;
   }
 }
