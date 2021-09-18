@@ -14,7 +14,11 @@
 <ion-content #content>
   <div class="container">
     <div
-      *ngFor="let item of preuploadService.data; trackBy: trackItems;let i=index"
+      *ngFor="
+        let item of preuploadService.data;
+        trackBy: trackItems;
+        let i = index
+      "
       class="item"
       [attr.item-id]="item.id"
     >
@@ -24,12 +28,12 @@
           routerLink="edit"
           [queryParams]="{ index: i }"
         >
-        <!-- <div
+          <!-- <div
           class="img-container"
           routerLink="/opencv-test"
           [queryParams]="{ id: item.id }"
         > -->
-          <img [blob-src]="item.dest || item.blob" />
+          <img [src]="item.destUrl || item.url | sanitizer: 'url'" />
         </div>
         <!-- <ion-thumbnail
           routerLink="edit"
