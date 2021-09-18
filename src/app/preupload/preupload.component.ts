@@ -44,22 +44,16 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.preuploadService.data = [];
+    this.preuploadService.clear();
   }
 
   ionViewWillEnter() {
-    if (this.preuploadService.updateData.size > 0) {
-      this.preuploadService.updateData.forEach(async (item) => {
-        item.dest = await this.opencvService.transform(item.blob, item.rect);
-        this.database.preuploadFile.update(item.id, { dest: item.dest });
-      });
-      this.preuploadService.updateData.clear();
-    }
+    this.preuploadService.updateUrls();
   }
 
   async reload() {
-    const data = await this.database.preuploadFile.toArray();
-    this.preuploadService.data = data;
+    await this.preuploadService.reload();
+    // this.preuploadService.data = data;
     // for (const item of data) {
     //   try {
     //     if (item.rect) {
@@ -158,8 +152,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
         // await this.sleep(3000);
         await this.baiduAPIService.upload(
           item.name + '.jpg',
-          item.blob,
-          item.md5
+          item.dest || item.blob
         );
         await this.database.preuploadFile.delete(item.id);
         this.uploaded++;

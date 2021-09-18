@@ -1,38 +1,75 @@
 <ion-header>
-  <ion-toolbar></ion-toolbar>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button text=""></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
 <ion-content [forceOverscroll]="false">
-  <div class="image-container">
-    <div class="image-cotainer-inner">
-      <img [blob-src]="data?.blob" (load)="onImageLoad($event)" />
-    </div>
-    <div *ngIf="data?.blob" class="magnify" [class.hidden]="!moving" [class.right]="magnifyPositionRight">
-      <img
-        [blob-src]="data?.blob"
-        [style.transform]="magnifyTransform"
-        [style.width.px]="magnifyWidth"
-      />
-      <ion-icon name="add"></ion-icon>
-    </div>
-    <svg
-      *ngIf="points"
-      class="rect"
-      version="1.1"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <polygon
-        [attr.points]="polygon"
-        style="fill: none; stroke: #f00; stroke-width: 1"
-      />
-      <circle
-        *ngFor="let point of points"
-        (touchstart)="onPointMousedown($event, point)"
-        [attr.cx]="point.x"
-        [attr.cy]="point.y"
-        r="6"
-        fill="#F00"
-      />
-    </svg>
-  </div>
+  <swiper
+    #swiperRef
+    [initialSlide]="index"
+    (transitionEnd)="onSlideChange($event)"
+    [virtual]="true"
+    [virtualTranslate]
+    class="mySwiper"
+  >
+    <ng-container *ngFor="let item of preuploadService.data; let i = index">
+      <ng-template swiperSlide>
+        <div *ngIf="item" class="image-container">
+          <div class="image-cotainer-inner">
+            <img
+              [src]="item?.url | sanitizer: 'url'"
+              (load)="onImageLoad($event,item, i)"
+              id="image-{{ i }}"
+            />
+          </div>
+          <div
+            class="magnify"
+            [class.hidden]="!moving"
+            [class.right]="magnifyPositionRight"
+          >
+            <img
+              [src]="item?.url | sanitizer: 'url'"
+              [style.transform]="magnifyTransform"
+              [style.width.px]="magnifyWidth"
+            />
+            <ion-icon name="add"></ion-icon>
+          </div>
+          <svg
+            *ngIf="index === i && points"
+            class="rect"
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <polygon
+              [attr.points]="polygon"
+              style="fill: none; stroke: #f00; stroke-width: 1"
+            />
+            <circle
+              *ngFor="let point of points"
+              [attr.cx]="point.x"
+              [attr.cy]="point.y"
+              r="6"
+              fill="#F00"
+            />
+            <circle
+              *ngFor="let point of points"
+              (touchstart)="onPointMousedown($event, point)"
+              (mousedown)="$event.stopPropagation()"
+              [attr.cx]="point.x"
+              [attr.cy]="point.y"
+              r="10"
+              fill="rgba(0,0,0,0)"
+            />
+          </svg>
+        </div>
+      </ng-template>
+    </ng-container>
+  </swiper>
 </ion-content>
-<ion-footer></ion-footer>
+<ion-footer>
+  <ion-toolbar>
+    <ion-title size="small">Small Title above a Default Title</ion-title>
+  </ion-toolbar>
+</ion-footer>

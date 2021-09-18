@@ -32,7 +32,7 @@ import * as SparkMD5 from 'spark-md5';
 import {
   base64ToArrayBuffer,
   base64ToBlob,
-  urlToBase64,
+  urlToBlob,
 } from '../shared/util/image.util';
 import { OpenCVService } from '../core/service/opencv.service';
 
@@ -143,20 +143,21 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async takePicture() {
-    let base64: string;
+    let blob: Blob;
     if (this.platform.is('cordova')) {
-      base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
+      const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
+      blob = base64ToBlob(base64);
     } else {
-      base64 = await urlToBase64(`/assets/img/test${this.photoCount % 5}.jpg`);
+      blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
     }
     // const buffer = base64ToArrayBuffer(base64);
     // const blob = new Blob([buffer], {
     //   type: 'image/jpeg',
     // });
-    const blob = base64ToBlob(base64);
-    const spark = new SparkMD5.ArrayBuffer();
-    spark.append(blob);
-    const md5 = spark.end();
+    // const blob = base64ToBlob(base64);
+    // const spark = new SparkMD5.ArrayBuffer();
+    // spark.append(blob);
+    // const md5 = spark.end();
     const name = format(new Date(), 'yyyyMMddHHmmssSSS');
     this.photoCount++;
     this.lastFile = blob;

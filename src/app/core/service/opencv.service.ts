@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
 import { LazyService } from './lazy.service';
 import cv, { Mat, Point, Rect } from 'opencv-ts';
-import { base64ToBlob, loadImage } from 'src/app/shared/util/image.util';
+import {
+  base64ToBlob,
+  canvasToBlob,
+  loadImage,
+} from 'src/app/shared/util/image.util';
 
 // declare const cv: any;
 
@@ -190,6 +194,7 @@ export class OpenCVService {
     // const height = Math.round(
     //   Math.max(this.getDistance(data, 1, 2), this.getDistance(data, 3, 0))
     // );
+    points = this.orderPoints(points);
     const width = Math.round(
       Math.max(
         this.getDistance(points[0], points[1]),
@@ -230,6 +235,25 @@ export class OpenCVService {
     M.delete();
     return dst;
   }
+  orderPoints(points: Point[]): Point[] {
+    // 找出离左上角最近的点作为第一个点
+    let firstIndex: number;
+    let min: number;
+    points.forEach((point, i) => {
+      const sum = point.x + point.y;
+      if (min == null || sum < min) {
+        min = sum;
+        firstIndex = i;
+      }
+    });
+    if (firstIndex === 0) {
+      return points;
+    } else {
+      return points
+        .slice(firstIndex, points.length)
+        .concat(points.slice(0, firstIndex));
+    }
+  }
 
   async getPagerRect(src: Blob | Mat) {
     await this.init();
@@ -262,7 +286,7 @@ export class OpenCVService {
     // base64 = base64.substr(base64.indexOf(',') + 1);
     // blob= base64ToBlob(base64);
     // dst.delete();
-    
+
     // approx.delete();
     // src.delete();
     // return blob;
@@ -276,9 +300,10 @@ export class OpenCVService {
     const dst = this.warpImage(src, points);
     const canvas = document.createElement('canvas');
     cv.imshow(canvas, dst);
-    let base64 = canvas.toDataURL('image/jpeg');
-    base64 = base64.substr(base64.indexOf(',') + 1);
-    const result = base64ToBlob(base64);
+    const result = await canvasToBlob(canvas);
+    // let base64 = canvas.toDataURL('image/jpeg');
+    // base64 = base64.substr(base64.indexOf(',') + 1);
+    // const result = base64ToBlob(base64);
     dst.delete();
     return result;
   }
