@@ -247,25 +247,6 @@ export class OpenCVService {
     canny.delete();
     const points = this.getBoxPoint(maxContour, ratio);
     maxContour.delete();
-    // const points: Point[] = [];
-    // for (let i = 0; i < approx.rows; ++i) {
-    //   const point = new cv.Point(
-    //     approx.data32S[i * 2] / ratio,
-    //     approx.data32S[i * 2 + 1] / ratio
-    //   );
-    //   points.push(point);
-    // }
-    // const dst = this.warpImage(src, approx, ratio);
-    // const canvas = document.createElement('canvas');
-    // cv.imshow(canvas, dst);
-    // let base64 = canvas.toDataURL('image/jpeg');
-    // base64 = base64.substr(base64.indexOf(',') + 1);
-    // blob= base64ToBlob(base64);
-    // dst.delete();
-    
-    // approx.delete();
-    // src.delete();
-    // return blob;
     return points;
   }
 
