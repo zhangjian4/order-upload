@@ -69,10 +69,11 @@
       <ion-refresher-content></ion-refresher-content>
     </ion-refresher>
     <ion-list>
-      <ion-item
-        *ngFor="let item of fileService.fileList; let i = index;trackBy:trackItems"
+      <ion-virtual-scroll [items]="fileService.fileList" approxItemHeight="61.4px">
+        <ion-item
+        *virtualItem="let item"
         lines="none"
-        (click)="detail(item,i)"
+        (click)="detail(item,1)"
       >
         <ion-thumbnail  slot="start">
           <img *ngIf="item.isdir" src="/assets/img/ic_file2.png">
@@ -92,6 +93,8 @@
           </p>
         </ion-label>
       </ion-item>
+      </ion-virtual-scroll>
+     
     </ion-list>
     <ion-infinite-scroll
       *ngIf="fileService.hasMore"

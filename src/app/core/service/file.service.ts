@@ -7,7 +7,7 @@ export class FileService {
   syncObj: any;
   searchValue: string;
   page = -1;
-  num = 20;
+  num = 1000;
   hasMore = true;
   fileList: any[] = [];
   dirty: boolean;
@@ -57,7 +57,8 @@ export class FileService {
       if (page === 0) {
         this.dirty = false;
       }
-      this.fileList.push(...list);
+      this.fileList=[...this.fileList,...list];
+      // this.fileList.push(...list);
       this.page = page;
     } finally {
       this.loading = false;
