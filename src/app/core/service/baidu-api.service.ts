@@ -121,13 +121,13 @@ export class BaiduAPIService {
     });
   }
 
-  async getFileList(start: number, limit: number) {
+  async getFileList(dir: string, start: number, limit: number) {
     try {
       return await this.get(
         'https://pan.baidu.com/rest/2.0/xpan/file',
         {
           method: 'list',
-          dir: this.defaultDir,
+          dir,
           web: '1',
           order: 'time',
           desc: '1',
@@ -193,7 +193,9 @@ export class BaiduAPIService {
 
   handleResponse(response: any, showError = true) {
     if (response.errno != null && response.errno !== 0) {
-      if (showError) {
+      if (response.errno === -6) {
+        this.oauth();
+      } else {
         this.showError(response.errno);
       }
       throw response;

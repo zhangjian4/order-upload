@@ -20,6 +20,7 @@
     <ng-template swiperSlide *ngFor="let item of fileService.fileList">
       <div class="swiper-zoom-container">
         <img
+          *ngIf="item.thumbs"
           [attr.data-src]="item.thumbs.url3 | thumbsUrl: 'c8500_u5800'"
           class="swiper-lazy"
         />

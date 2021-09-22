@@ -12,6 +12,7 @@ export class FileService {
   fileList: any[] = [];
   dirty: boolean;
   loading: boolean;
+  dir = '/';
   constructor(
     private baiduAPIService: BaiduAPIService,
     private indexedDBService: IndexedDBService
@@ -38,7 +39,11 @@ export class FileService {
         list = result.list;
         hasMore = result.has_more;
       } else {
-        const result = await this.baiduAPIService.getFileList(start, this.num);
+        const result = await this.baiduAPIService.getFileList(
+          this.dir,
+          start,
+          this.num
+        );
         list = result.list;
         hasMore = list.length === this.num;
       }
@@ -59,7 +64,15 @@ export class FileService {
     }
   }
 
-  async reload() {
+  loadDir(dir: string) {
+    this.dir = dir;
+    this.reload();
+  }
+
+  async reload(dir?: string) {
+    if (dir) {
+      this.dir = dir;
+    }
     await this.loadData(0);
   }
 

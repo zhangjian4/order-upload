@@ -10,6 +10,10 @@ ion-searchbar {
   text-align: left;
 }
 
+ion-item {
+  --padding-start: 0;
+}
+
 ion-thumbnail {
   --border-radius: 5px;
   height: 40px;

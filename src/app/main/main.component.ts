@@ -5,7 +5,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AlertController,
   IonContent,
@@ -45,6 +45,7 @@ export class MainComponent implements OnInit {
   remotePackage: IRemotePackage;
   showProgress: boolean;
   progress: number;
+  dir = '/';
   constructor(
     private baiduAPIService: BaiduAPIService,
     public fileService: FileService,
@@ -53,8 +54,18 @@ export class MainComponent implements OnInit {
     public alertController: AlertController,
     public toastController: ToastController,
     public loadingController: LoadingController,
-    private storage: Storage
-  ) {}
+    private storage: Storage,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {
+    route.queryParams.subscribe((params) => {
+      const dir = params.dir || '/';
+      if (this.dir != dir) {
+        this.dir = dir;
+        this.initLoading();
+      }
+    });
+  }
 
   ngOnInit() {
     this.reloadUserInfo();
@@ -72,7 +83,7 @@ export class MainComponent implements OnInit {
   async initLoading() {
     this.loading = true;
     try {
-      await this.fileService.reload();
+      await this.fileService.reload(this.dir);
     } finally {
       this.loading = false;
     }
@@ -210,5 +221,13 @@ export class MainComponent implements OnInit {
       color: 'dark',
     });
     toast.present();
+  }
+
+  detail(item: any, index: number) {
+    if (item.isdir) {
+      this.router.navigate(['/', 'main'], { queryParams: { dir: item.path } });
+    } else if (item.thumbs) {
+      this.router.navigate(['/detail'], { queryParams: { index } });
+    }
   }
 }

@@ -72,11 +72,11 @@
       <ion-item
         *ngFor="let item of fileService.fileList; let i = index;trackBy:trackItems"
         lines="none"
-        routerLink="/detail"
-        [queryParams]="{ index: i }"
+        (click)="detail(item,i)"
       >
-        <ion-thumbnail *ngIf="item.thumbs" slot="start">
-          <img [src]="item.thumbs.url1 | thumbsUrl" />
+        <ion-thumbnail  slot="start">
+          <img *ngIf="item.isdir" src="/assets/img/ic_file2.png">
+          <img *ngIf="item.thumbs" [src]="item.thumbs.url1 | thumbsUrl" />
         </ion-thumbnail>
         <ion-label>
           <h3
