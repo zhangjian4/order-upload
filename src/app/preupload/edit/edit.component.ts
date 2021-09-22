@@ -1,10 +1,19 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  NgZone,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import cv, { Point } from 'opencv-ts';
 import { fromEvent, Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
 import { IUploadFile } from 'src/app/core/service/database.service';
 import { PreuploadService } from '../preupload.service';
+import SwiperCore, { Virtual } from 'swiper';
+
+SwiperCore.use([Virtual]);
 
 @Component({
   selector: 'app-edit',
@@ -21,6 +30,7 @@ export class EditComponent implements OnInit, OnDestroy {
   bottom: number;
   right: number;
   ratio: number;
+  index: number;
 
   destroy$ = new Subject();
   moving: boolean;
@@ -31,11 +41,13 @@ export class EditComponent implements OnInit, OnDestroy {
 
   constructor(
     public preuploadService: PreuploadService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private zone: NgZone,
+    private cd: ChangeDetectorRef
   ) {
     route.queryParams.subscribe((params) => {
       if (params.index != null) {
-        this.data = this.preuploadService.data[params.index];
+        this.index = +params.index;
       }
     });
   }
@@ -45,11 +57,18 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.updatePolygon();
+    this.data = this.preuploadService.data[this.index];
   }
 
-  onImageLoad(event: Event) {
-    const img = event.target as HTMLImageElement;
+  onImageLoad(event: Event, item: IUploadFile, index: number) {
+    if (index === this.index) {
+      const img = event.target as HTMLImageElement;
+      this.data = item;
+      this.updateImage(img);
+    }
+  }
+
+  updateImage(img: HTMLImageElement) {
     const {
       offsetTop,
       offsetLeft,
@@ -85,31 +104,43 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   onPointMousedown(event: TouchEvent, point: any) {
-    const touchStart = event.touches.item(0);
-    const startX = point.x - touchStart.clientX;
-    const startY = point.y - touchStart.clientY;
-    const mouseup = fromEvent(document, 'touchend').pipe(take(1));
-    this.moving = true;
-    this.updateMagnify(point);
-    fromEvent(document, 'touchmove')
-      .pipe(takeUntil(mouseup))
-      .subscribe((e: TouchEvent) => {
-        const touchMove = e.touches.item(0);
-        point.x = this.limit(startX + touchMove.clientX, this.left, this.right);
-        point.y = this.limit(startY + touchMove.clientY, this.top, this.bottom);
-        this.updatePolygon();
-        this.updateMagnify(point);
+    this.zone.run(() => {
+      event.stopPropagation();
+      const touchStart = event.touches.item(0);
+      const startX = point.x - touchStart.clientX;
+      const startY = point.y - touchStart.clientY;
+      const mouseup = fromEvent(document, 'touchend').pipe(take(1));
+      this.moving = true;
+      this.updateMagnify(point);
+      fromEvent(document, 'touchmove')
+        .pipe(takeUntil(mouseup))
+        .subscribe((e: TouchEvent) => {
+          console.log(e);
+          const touchMove = e.touches.item(0);
+          point.x = this.limit(
+            startX + touchMove.clientX,
+            this.left,
+            this.right
+          );
+          point.y = this.limit(
+            startY + touchMove.clientY,
+            this.top,
+            this.bottom
+          );
+          this.updatePolygon();
+          this.updateMagnify(point);
+        });
+      mouseup.subscribe(() => {
+        this.moving = false;
+        const points = this.points.map(
+          (p) =>
+            new cv.Point(
+              (p.x - this.left) / this.ratio,
+              (p.y - this.top) / this.ratio
+            )
+        );
+        this.preuploadService.updateRect(this.data, points);
       });
-    mouseup.subscribe(() => {
-      this.moving = false;
-      const points = this.points.map(
-        (p) =>
-          new cv.Point(
-            (p.x - this.left) / this.ratio,
-            (p.y - this.top) / this.ratio
-          )
-      );
-      this.preuploadService.updateRect(this.data, points);
     });
   }
 
@@ -138,5 +169,27 @@ export class EditComponent implements OnInit, OnDestroy {
     const translateX = ((this.left - x) * this.magnifyRatio) / this.ratio;
     const translateY = ((this.top - y) * this.magnifyRatio) / this.ratio;
     this.magnifyTransform = `translate(${translateX}px,${translateY}px)`;
+  }
+
+  onSlideChange(event: any) {
+    if (this.index !== event.activeIndex) {
+      this.zone.run(() => {
+        this.index = event.activeIndex;
+        this.data = this.preuploadService.data[this.index];
+        const img = document.getElementById(
+          'image-' + this.index
+        ) as HTMLImageElement;
+        if (img) {
+          this.updateImage(img);
+        }
+      });
+    }
+
+    // if (
+    //   this.fileService.fileList.length < this.index + 3 &&
+    //   this.fileService.hasMore
+    // ) {
+    //   this.fileService.loadNextPage();
+    // }
   }
 }

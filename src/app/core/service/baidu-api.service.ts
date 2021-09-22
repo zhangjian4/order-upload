@@ -250,14 +250,13 @@ export class BaiduAPIService {
     // location.href = url;
   }
 
-  async upload(fileName: string, file: Blob, md5: string) {
+  async upload(fileName: string, file: Blob) {
     // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
     const path = this.defaultDir + '/' + fileName;
     const size = file.size;
-    // const spark = new SparkMD5.ArrayBuffer();
-    // const arrayBuffer = await file.arrayBuffer();
-    // spark.append(arrayBuffer);
-    // const md5 = spark.end();
+    const spark = new SparkMD5.ArrayBuffer();
+    spark.append(file);
+    const md5 = spark.end();
     const blockList = [md5];
     const result = await this.precreate(path, size, blockList);
     const uploadid = result.uploadid;

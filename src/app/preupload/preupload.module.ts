@@ -8,6 +8,7 @@ import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
 import { SharedModule } from '../shared/shared.module';
 import { EditComponent } from './edit/edit.component';
 import { PreuploadService } from './preupload.service';
+import { SwiperModule } from 'swiper/angular';
 
 @NgModule({
   declarations: [PreuploadComponent, EditComponent],
@@ -27,6 +28,7 @@ import { PreuploadService } from './preupload.service';
     IonicModule,
     FormsModule,
     SharedModule,
+    SwiperModule,
   ],
   providers:[
     PreuploadService

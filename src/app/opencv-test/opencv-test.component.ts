@@ -3,8 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { Database } from '../core/service/database.service';
 import { LazyService } from '../core/service/lazy.service';
-import { OpenCVService } from '../core/service/opencv.service';
-import { base64ToBlob, urlToBase64 } from '../shared/util/image.util';
+import { OpenCVService } from '../core/service/opencv.service'
 import cv, { Mat, Point, Rect } from 'opencv-ts';
 
 // declare const cv: any;
