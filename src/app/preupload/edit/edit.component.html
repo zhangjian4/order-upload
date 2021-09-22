@@ -8,22 +8,24 @@
 <ion-content [forceOverscroll]="false">
   <swiper
     #swiperRef
-    [initialSlide]="index"
+    [initialSlide]="initIndex"
     (transitionEnd)="onSlideChange($event)"
     [virtual]="true"
-    [virtualTranslate]
     class="mySwiper"
   >
-    <ng-container *ngFor="let item of preuploadService.data; let i = index">
-      <ng-template swiperSlide>
-        <div *ngIf="item" class="image-container">
-          <div class="image-cotainer-inner">
-            <img
-              [src]="item?.url | sanitizer: 'url'"
-              (load)="onImageLoad($event,item, i)"
-              id="image-{{ i }}"
-            />
-          </div>
+    <ng-template
+      swiperSlide
+      *ngFor="let item of preuploadService.data; let i = index"
+    >
+      <div *ngIf="item" class="image-container">
+        <div class="image-cotainer-inner">
+          <img
+            [src]="item?.url | sanitizer: 'url'"
+            (load)="onImageLoad($event, item, i)"
+            id="image-{{ i }}"
+          />
+        </div>
+        <ng-container *ngIf="index === i">
           <div
             class="magnify"
             [class.hidden]="!moving"
@@ -37,7 +39,7 @@
             <ion-icon name="add"></ion-icon>
           </div>
           <svg
-            *ngIf="index === i && points"
+            *ngIf="points"
             class="rect"
             version="1.1"
             xmlns="http://www.w3.org/2000/svg"
@@ -59,13 +61,13 @@
               (mousedown)="$event.stopPropagation()"
               [attr.cx]="point.x"
               [attr.cy]="point.y"
-              r="10"
+              r="12"
               fill="rgba(0,0,0,0)"
             />
           </svg>
-        </div>
-      </ng-template>
-    </ng-container>
+        </ng-container>
+      </div>
+    </ng-template>
   </swiper>
 </ion-content>
 <ion-footer>

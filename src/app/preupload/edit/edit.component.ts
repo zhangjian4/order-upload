@@ -11,9 +11,9 @@ import { fromEvent, Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
 import { IUploadFile } from 'src/app/core/service/database.service';
 import { PreuploadService } from '../preupload.service';
-import SwiperCore, { Virtual } from 'swiper';
+import SwiperCore, { Pagination, Navigation, Virtual } from 'swiper';
 
-SwiperCore.use([Virtual]);
+SwiperCore.use([Virtual, Pagination, Navigation]);
 
 @Component({
   selector: 'app-edit',
@@ -30,6 +30,7 @@ export class EditComponent implements OnInit, OnDestroy {
   bottom: number;
   right: number;
   ratio: number;
+  initIndex: number;
   index: number;
 
   destroy$ = new Subject();
@@ -38,6 +39,7 @@ export class EditComponent implements OnInit, OnDestroy {
   magnifyTransform: string;
   magnifyWidth: number;
   magnifyPositionRight: boolean;
+  slides = Array.from({ length: 1000 }).map((_, index) => `Slide ${index + 1}`);
 
   constructor(
     public preuploadService: PreuploadService,
@@ -47,7 +49,9 @@ export class EditComponent implements OnInit, OnDestroy {
   ) {
     route.queryParams.subscribe((params) => {
       if (params.index != null) {
-        this.index = +params.index;
+        this.initIndex = +params.index;
+        this.index = this.initIndex;
+        this.data = this.preuploadService.data[this.index];
       }
     });
   }
@@ -57,7 +61,7 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.data = this.preuploadService.data[this.index];
+    // this.data = this.preuploadService.data[this.index];
   }
 
   onImageLoad(event: Event, item: IUploadFile, index: number) {

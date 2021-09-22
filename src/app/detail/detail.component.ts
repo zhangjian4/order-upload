@@ -13,7 +13,7 @@ import { SwiperComponent } from 'swiper/angular';
 import { SwiperEvents } from 'swiper/types';
 
 // install Swiper modules
-SwiperCore.use([Zoom, Navigation, Pagination, Virtual, Lazy]);
+SwiperCore.use([Zoom, Virtual, Lazy]);
 
 @Component({
   selector: 'app-detail',
@@ -25,6 +25,7 @@ export class DetailComponent implements OnInit {
   index: number;
   image: string;
   @ViewChild('swiperRef', { static: false }) swiperRef?: SwiperComponent;
+  initIndex: number;
   constructor(
     private route: ActivatedRoute,
     public fileService: FileService,
@@ -33,7 +34,7 @@ export class DetailComponent implements OnInit {
   ) {
     route.queryParams.subscribe((params) => {
       this.id = +params.id;
-      this.index = +params.index;
+      this.index = this.initIndex = +params.index;
       this.reload();
     });
   }

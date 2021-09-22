@@ -11,21 +11,20 @@
   <swiper
     #swiperRef
     [zoom]="true"
-    [initialSlide]="index"
+    [initialSlide]="initIndex"
+    [virtual]="false"
     [lazy]="{ loadPrevNext: true }"
     (slideChange)="onSlideChange($event)"
     class="mySwiper"
   >
-    <ng-container *ngFor="let item of fileService.fileList">
-      <ng-template swiperSlide>
-        <div class="swiper-zoom-container">
-          <img
-            [attr.data-src]="item.thumbs.url3 | thumbsUrl: 'c8500_u5800'"
-            class="swiper-lazy"
-          />
-        </div>
-        <div class="swiper-lazy-preloader swiper-lazy-preloader-white"></div>
-      </ng-template>
-    </ng-container>
+    <ng-template swiperSlide *ngFor="let item of fileService.fileList">
+      <div class="swiper-zoom-container">
+        <img
+          [attr.data-src]="item.thumbs.url3 | thumbsUrl: 'c8500_u5800'"
+          class="swiper-lazy"
+        />
+      </div>
+      <div class="swiper-lazy-preloader swiper-lazy-preloader-white"></div>
+    </ng-template>
   </swiper>
 </ion-content>
