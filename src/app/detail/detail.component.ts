@@ -21,11 +21,12 @@ SwiperCore.use([Zoom, Virtual, Lazy]);
   styleUrls: ['./detail.component.scss'],
 })
 export class DetailComponent implements OnInit {
+  @ViewChild('swiperRef', { static: false }) swiperRef?: SwiperComponent;
   id: number;
   index: number;
   image: string;
-  @ViewChild('swiperRef', { static: false }) swiperRef?: SwiperComponent;
   initIndex: number;
+  items: any[];
   constructor(
     private route: ActivatedRoute,
     public fileService: FileService,
@@ -34,12 +35,23 @@ export class DetailComponent implements OnInit {
   ) {
     route.queryParams.subscribe((params) => {
       this.id = +params.id;
-      this.index = this.initIndex = +params.index;
-      this.reload();
+      // this.index = this.initIndex = +params.index;
+      // this.reload();
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.initIndex = 0;
+    this.items = [];
+    this.fileService.fileList.forEach((item) => {
+      if (item.thumbs) {
+        this.items.push(item);
+        if (item.fs_id === this.id) {
+          this.initIndex = this.items.length - 1;
+        }
+      }
+    });
+  }
 
   async reload() {
     while (
@@ -54,19 +66,16 @@ export class DetailComponent implements OnInit {
     // console.log(result);
   }
 
-  slideTo(index: number) {
-    this.swiperRef.swiperRef.slideTo(index - 1, 0);
-  }
 
   onSlideChange(event: any) {
-    this.zone.run(() => {
-      this.index = event.activeIndex;
-      if (
-        this.fileService.fileList.length < this.index + 3 &&
-        this.fileService.hasMore
-      ) {
-        this.fileService.loadNextPage();
-      }
-    });
+    // this.zone.run(() => {
+    //   this.index = event.activeIndex;
+    //   if (
+    //     this.fileService.fileList.length < this.index + 3 &&
+    //     this.fileService.hasMore
+    //   ) {
+    //     this.fileService.loadNextPage();
+    //   }
+    // });
   }
 }

@@ -9,9 +9,10 @@ import { SharedModule } from '../shared/shared.module';
 import { EditComponent } from './edit/edit.component';
 import { PreuploadService } from './preupload.service';
 import { SwiperModule } from 'swiper/angular';
+import { DirSelectComponent } from './dir-select/dir-select.component';
 
 @NgModule({
-  declarations: [PreuploadComponent, EditComponent],
+  declarations: [PreuploadComponent, EditComponent, DirSelectComponent],
   imports: [
     CommonModule,
     RouterModule.forChild([
@@ -30,8 +31,6 @@ import { SwiperModule } from 'swiper/angular';
     SharedModule,
     SwiperModule,
   ],
-  providers:[
-    PreuploadService
-  ]
+  providers: [PreuploadService],
 })
 export class PreuploadModule {}

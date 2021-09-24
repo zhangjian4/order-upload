@@ -1,5 +1,5 @@
 <ion-menu side="start" menuId="first" contentId="main">
-  <ion-content >
+  <ion-content>
     <div class="safe-top"></div>
     <ion-list>
       <ion-item>
@@ -28,11 +28,14 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-menu-button menu="first">
+      <ion-menu-button *ngIf="fileService.dir === '/'" menu="first">
         <ion-avatar style="height: 32px; width: 32px">
           <img *ngIf="userInfo" [src]="userInfo.avatar_url" />
         </ion-avatar>
       </ion-menu-button>
+      <ion-button *ngIf="fileService.dir !== '/'" (click)="back()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
     </ion-buttons>
     <ion-title>
       <ion-searchbar
@@ -69,32 +72,33 @@
       <ion-refresher-content></ion-refresher-content>
     </ion-refresher>
     <ion-list>
-      <ion-virtual-scroll [items]="fileService.fileList" approxItemHeight="61.4px">
-        <ion-item
-        *virtualItem="let item"
-        lines="none"
-        (click)="detail(item,1)"
+      <ion-virtual-scroll
+        [items]="fileService.fileList"
+        approxItemHeight="61.4px"
       >
-        <ion-thumbnail  slot="start">
-          <img *ngIf="item.isdir" src="/assets/img/ic_file2.png">
-          <img *ngIf="item.thumbs" [src]="item.thumbs.url1 | thumbsUrl" />
-        </ion-thumbnail>
-        <ion-label>
-          <h3
-            [innerHTML]="
-              item.server_filename
-                | highlight: fileService.searchValue:'i':'font-highlight'
-            "
-          ></h3>
-          <p>
-            {{ item.server_mtime | myDate }}&nbsp;&nbsp;&nbsp;{{
-              item.size | fileSize
-            }}
-          </p>
-        </ion-label>
-      </ion-item>
+        <ion-item
+          *virtualItem="let item"
+          lines="none"
+          (click)="detail(item, item.fs_id)"
+        >
+          <ion-thumbnail slot="start">
+            <img  [src]="item| thumbsUrl" />
+          </ion-thumbnail>
+          <ion-label>
+            <h3
+              [innerHTML]="
+                item.server_filename
+                  | highlight: fileService.searchValue:'i':'font-highlight'
+              "
+            ></h3>
+            <p>
+              {{ item.server_mtime | myDate }}&nbsp;&nbsp;&nbsp;{{
+                item.size | fileSize
+              }}
+            </p>
+          </ion-label>
+        </ion-item>
       </ion-virtual-scroll>
-     
     </ion-list>
     <ion-infinite-scroll
       *ngIf="fileService.hasMore"

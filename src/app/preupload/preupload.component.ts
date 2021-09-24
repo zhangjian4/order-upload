@@ -3,12 +3,15 @@ import {
   AlertController,
   IonContent,
   IonInput,
+  ModalController,
   NavController,
 } from '@ionic/angular';
 import { take } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { Database, IUploadFile } from '../core/service/database.service';
+import { FileService } from '../core/service/file.service';
 import { OpenCVService } from '../core/service/opencv.service';
+import { DirSelectComponent } from './dir-select/dir-select.component';
 import { PreuploadService } from './preupload.service';
 
 @Component({
@@ -28,6 +31,8 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   uploaded: number;
   length = 0;
   size = 0;
+  dir: string;
+  shortDir: string;
 
   constructor(
     private database: Database,
@@ -36,11 +41,14 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     private alertController: AlertController,
     private navController: NavController,
     public preuploadService: PreuploadService,
-    private opencvService: OpenCVService
+    private opencvService: OpenCVService,
+    public modalController: ModalController,
+    private fileService: FileService
   ) {}
 
   ngOnInit() {
     this.reload();
+    this.setDir(this.fileService.dir);
   }
 
   ngOnDestroy(): void {
@@ -49,6 +57,15 @@ export class PreuploadComponent implements OnInit, OnDestroy {
 
   ionViewWillEnter() {
     this.preuploadService.updateUrls();
+  }
+
+  setDir(dir: string) {
+    this.dir = dir;
+    if (dir === '/') {
+      this.shortDir = '我的文件';
+    } else {
+      this.shortDir = dir.substr(dir.lastIndexOf('/') + 1);
+    }
   }
 
   async reload() {
@@ -141,6 +158,14 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     if (event.key === 'Enter') {
       this.renameEnd(item);
     }
+  }
+
+  async selectDir() {
+    const modal = await this.modalController.create({
+      component: DirSelectComponent,
+      cssClass: 'my-custom-class',
+    });
+    return await modal.present();
   }
 
   async save() {

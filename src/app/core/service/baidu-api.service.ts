@@ -109,11 +109,11 @@ export class BaiduAPIService {
     });
   }
 
-  search(key: string, page: number, num: number) {
+  search(dir: string, key: string, page: number, num: number) {
     return this.get('https://pan.baidu.com/rest/2.0/xpan/file', {
       method: 'search',
       key,
-      dir: this.defaultDir,
+      dir,
       recursion: '1',
       page: page.toString(),
       num: num.toString(),

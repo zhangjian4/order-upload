@@ -4,7 +4,7 @@
     <ion-buttons slot="start">
       <ion-back-button [text]="''"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ fileService.fileList[index]?.server_filename }}</ion-title>
+    <ion-title>{{ items[index]?.server_filename }}</ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [forceOverscroll]="false">
@@ -17,11 +17,11 @@
     (slideChange)="onSlideChange($event)"
     class="mySwiper"
   >
-    <ng-template swiperSlide *ngFor="let item of fileService.fileList">
+    <ng-template swiperSlide *ngFor="let item of items">
       <div class="swiper-zoom-container">
         <img
           *ngIf="item.thumbs"
-          [attr.data-src]="item.thumbs.url3 | thumbsUrl: 'c8500_u5800'"
+          [attr.data-src]="item | thumbsUrl: 'c8500_u5800'"
           class="swiper-lazy"
         />
       </div>

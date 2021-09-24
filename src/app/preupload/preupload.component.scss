@@ -68,3 +68,21 @@ ion-card-content {
   height: 25px;
   color: #999;
 }
+
+ion-footer ion-buttons {
+  width: 100%;
+  > ion-button {
+    --border-radius: 16px;
+  }
+  .upload-to {
+    flex: 1;
+  }
+  .upload {
+    width: 80px;
+    flex: none;
+  }
+  .upload-to-inner {
+    display: inline-flex;
+    width: 100%;
+  }
+}

@@ -12,6 +12,7 @@ import {
   IonInfiniteScroll,
   LoadingController,
   MenuController,
+  Platform,
   ToastController,
 } from '@ionic/angular';
 import { Subject } from 'rxjs';
@@ -46,6 +47,7 @@ export class MainComponent implements OnInit {
   showProgress: boolean;
   progress: number;
   dir = '/';
+  backSub: any;
   constructor(
     private baiduAPIService: BaiduAPIService,
     public fileService: FileService,
@@ -56,15 +58,15 @@ export class MainComponent implements OnInit {
     public loadingController: LoadingController,
     private storage: Storage,
     private router: Router,
-    private route: ActivatedRoute
+    private platform: Platform
   ) {
-    route.queryParams.subscribe((params) => {
-      const dir = params.dir || '/';
-      if (this.dir != dir) {
-        this.dir = dir;
-        this.initLoading();
-      }
-    });
+    // route.queryParams.subscribe((params) => {
+    //   const dir = params.dir || '/';
+    //   if (this.dir !== dir) {
+    //     this.dir = dir;
+    //     this.initLoading();
+    //   }
+    // });
   }
 
   ngOnInit() {
@@ -74,7 +76,17 @@ export class MainComponent implements OnInit {
     this.codePush.notifyApplicationReady();
   }
 
+  ionViewWillLeave() {
+    if (this.backSub) {
+      this.backSub.unsubscribe();
+      this.backSub = null;
+    }
+  }
+
   ionViewWillEnter() {
+    this.backSub = this.platform.backButton.subscribeWithPriority(10, () => {
+      this.back();
+    });
     if (this.fileService.dirty) {
       this.initLoading();
     }
@@ -223,11 +235,23 @@ export class MainComponent implements OnInit {
     toast.present();
   }
 
-  detail(item: any, index: number) {
+  detail(item: any, id: number) {
     if (item.isdir) {
-      this.router.navigate(['/', 'main'], { queryParams: { dir: item.path } });
+      this.dir = item.path;
+      this.initLoading();
+      // this.router.navigate(['/', 'main'], { queryParams: { dir: item.path } });
     } else if (item.thumbs) {
-      this.router.navigate(['/detail'], { queryParams: { index } });
+      this.router.navigate(['/detail'], { queryParams: { id } });
+    }
+  }
+
+  back() {
+    if (this.dir !== '/') {
+      this.dir = this.dir.substr(0, this.dir.lastIndexOf('/'));
+      if (this.dir === '') {
+        this.dir = '/';
+      }
+      this.initLoading();
     }
   }
 }

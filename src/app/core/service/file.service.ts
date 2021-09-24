@@ -32,6 +32,7 @@ export class FileService {
       this.loading = true;
       if (this.searchValue) {
         const result = await this.baiduAPIService.search(
+          this.dir,
           this.searchValue,
           page + 1,
           this.num
@@ -57,7 +58,7 @@ export class FileService {
       if (page === 0) {
         this.dirty = false;
       }
-      this.fileList=[...this.fileList,...list];
+      this.fileList = [...this.fileList, ...list];
       // this.fileList.push(...list);
       this.page = page;
     } finally {
@@ -65,13 +66,14 @@ export class FileService {
     }
   }
 
-  loadDir(dir: string) {
-    this.dir = dir;
-    this.reload();
-  }
+  // async back() {
+  //   if (this.dir !== '/') {
+  //     this.reload(this.dir.substr(0, this.dir.lastIndexOf('/')));
+  //   }
+  // }
 
   async reload(dir?: string) {
-    if (dir) {
+    if (dir != null) {
       this.dir = dir;
     }
     await this.loadData(0);
