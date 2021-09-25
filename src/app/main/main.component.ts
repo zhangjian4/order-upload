@@ -46,7 +46,7 @@ export class MainComponent implements OnInit {
   remotePackage: IRemotePackage;
   showProgress: boolean;
   progress: number;
-  dir = '/';
+  // dir = '/';
   backSub: any;
   constructor(
     private baiduAPIService: BaiduAPIService,
@@ -92,10 +92,10 @@ export class MainComponent implements OnInit {
     }
   }
 
-  async initLoading() {
+  async initLoading(dir?: string) {
     this.loading = true;
     try {
-      await this.fileService.reload(this.dir);
+      await this.fileService.reload(dir);
     } finally {
       this.loading = false;
     }
@@ -237,8 +237,7 @@ export class MainComponent implements OnInit {
 
   detail(item: any, id: number) {
     if (item.isdir) {
-      this.dir = item.path;
-      this.initLoading();
+      this.initLoading(item.path);
       // this.router.navigate(['/', 'main'], { queryParams: { dir: item.path } });
     } else if (item.thumbs) {
       this.router.navigate(['/detail'], { queryParams: { id } });
@@ -246,12 +245,13 @@ export class MainComponent implements OnInit {
   }
 
   back() {
-    if (this.dir !== '/') {
-      this.dir = this.dir.substr(0, this.dir.lastIndexOf('/'));
-      if (this.dir === '') {
-        this.dir = '/';
+    let dir=this.fileService.dir;
+    if (dir !== '/') {
+      dir = dir.substr(0, dir.lastIndexOf('/'));
+      if (dir === '') {
+        dir = '/';
       }
-      this.initLoading();
+      this.initLoading(dir);
     }
   }
 }

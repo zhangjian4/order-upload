@@ -4,11 +4,11 @@
       <ion-back-button [text]="''"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ length }}个文件(共{{ size | fileSize }})</ion-title>
-    <ion-buttons slot="end">
+    <!-- <ion-buttons slot="end">
       <ion-button fill="clear" (click)="selectDir()">
         <ion-icon name="save"></ion-icon>
       </ion-button>
-    </ion-buttons>
+    </ion-buttons> -->
   </ion-toolbar>
 </ion-header>
 <ion-content #content>
@@ -81,16 +81,26 @@
     </div> -->
 
     <ion-buttons>
-      <ion-button color="light" fill="solid" class="upload-to">
-        <span class="upload-to-inner"
-          >上传到:<span>{{ shortDir }}</span>
+      <ion-button
+        color="light"
+        fill="solid"
+        class="upload-to"
+        (click)="selectDir()"
+      >
+        <span class="upload-to-inner">
+          上传到：
+          <a>{{ dir | fileName }}</a>
         </span>
-        <ion-icon name="arrow-forward"></ion-icon>
+        <ion-icon name="chevron-forward-outline"></ion-icon>
       </ion-button>
-      <ion-button color="primary" fill="solid" class="upload">上传</ion-button>
+      <ion-button
+        color="primary"
+        fill="solid"
+        class="upload"
+        (click)="save()"
+        >上传</ion-button
+      >
     </ion-buttons>
-    <!-- <ion-buttons slot="end">
-    </ion-buttons> -->
   </ion-toolbar>
 </ion-footer>
 <div class="update-mask" *ngIf="uploading">

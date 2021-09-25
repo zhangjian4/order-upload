@@ -1,7 +1,21 @@
 ::ng-deep {
   .my-custom-class {
-    padding-top: 20px;
+    padding-top: var(--ion-safe-area-top, 20px);
     --border-radius: 12px 12px 0 0;
   }
-  
+}
+
+ion-header ion-toolbar:first-of-type{
+  padding-top: 0;
+}
+
+ion-button {
+  font-size: 14px;
+  &.upload {
+    --border-radius: 16px;
+    width: 80px;
+  }
+  &.create-dir ion-icon {
+    margin-right: 4px;
+  }
 }

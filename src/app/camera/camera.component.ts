@@ -98,6 +98,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (this.photoCount > 0) {
       const last = await this.database.preuploadFile.toCollection().last();
       this.lastFile = last.blob;
+    } else {
+      this.lastFile = null;
     }
   }
 

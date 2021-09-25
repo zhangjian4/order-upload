@@ -1,6 +1,11 @@
 <ion-header translucent>
   <ion-toolbar>
-    <ion-title>Modal Content</ion-title>
+    <ion-buttons slot="start">
+      <ion-button *ngIf="dir !== '/'" (click)="back()">
+        <ion-icon name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>上传到"{{ dir | fileName }}"</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="dismiss()">
         <ion-icon name="close"></ion-icon>
@@ -8,38 +13,50 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
-<ion-content fullscreen>
-  <ion-list>
-    <ion-item>
-      <ion-avatar slot="start"> </ion-avatar>
+<ion-content>
+  <ion-list *ngIf="loading">
+    <ion-item *ngFor="let skeleton of skeletons">
+      <ion-thumbnail slot="start">
+        <ion-skeleton-text></ion-skeleton-text>
+      </ion-thumbnail>
       <ion-label>
-        <h2>Gollum</h2>
-        <p>Sneaky little hobbitses!</p>
-      </ion-label>
-    </ion-item>
-    <ion-item>
-      <ion-avatar slot="start"> </ion-avatar>
-      <ion-label>
-        <h2>Frodo</h2>
-        <p>Go back, Sam! I'm going to Mordor alone!</p>
-      </ion-label>
-    </ion-item>
-    <ion-item>
-      <ion-avatar slot="start"> </ion-avatar>
-      <ion-label>
-        <h2>Samwise</h2>
-        <p>What we need is a few good taters.</p>
+        <h3>
+          <ion-skeleton-text animated style="width: 80%"></ion-skeleton-text>
+        </h3>
+        <p>
+          <ion-skeleton-text animated style="width: 60%"></ion-skeleton-text>
+        </p>
       </ion-label>
     </ion-item>
   </ion-list>
+  <ng-container *ngIf="!loading">
+    <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+    <ion-list>
+      <ion-virtual-scroll [items]="fileList" approxItemHeight="61.4px">
+        <ion-item *virtualItem="let item" lines="none" (click)="open(item.path)">
+          <ion-thumbnail slot="start">
+            <img src="/assets/img/ic_file2.png" />
+          </ion-thumbnail>
+          <ion-label>
+            <h3>{{ item.path | fileName }}</h3>
+          </ion-label>
+        </ion-item>
+      </ion-virtual-scroll>
+    </ion-list>
+  </ng-container>
 </ion-content>
 <ion-footer>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button>新建文件夹</ion-button>
+      <ion-button class="create-dir" color="secondary" (click)="createDir()">
+        <ion-icon name="folder-outline"></ion-icon>
+        新建文件夹
+      </ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
-      <ion-button>上传到此</ion-button>
+      <ion-button fill="solid" class="upload" color="primary" (click)="confirm()">上传到此</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>

@@ -121,7 +121,7 @@ export class BaiduAPIService {
     });
   }
 
-  async getFileList(dir: string, start: number, limit: number) {
+  async getFileList(dir: string, start: number, limit: number, folder = '0') {
     try {
       return await this.get(
         'https://pan.baidu.com/rest/2.0/xpan/file',
@@ -133,6 +133,7 @@ export class BaiduAPIService {
           desc: '1',
           start: start + '',
           limit: limit + '',
+          folder,
         },
         true,
         false
@@ -252,9 +253,12 @@ export class BaiduAPIService {
     // location.href = url;
   }
 
-  async upload(fileName: string, file: Blob) {
+  async upload(dir: string, fileName: string, file: Blob) {
     // const path = encodeURIComponent(this.defaultDir + '/' + fileName);
-    const path = this.defaultDir + '/' + fileName;
+    if (!dir.endsWith('/')) {
+      dir += '/';
+    }
+    const path = dir + fileName;
     const size = file.size;
     const spark = new SparkMD5.ArrayBuffer();
     spark.append(file);
@@ -264,7 +268,7 @@ export class BaiduAPIService {
     const uploadid = result.uploadid;
     const result2 = await this.superfile(path, uploadid, file);
     const blockList2 = [result2.md5];
-    const result3 = await this.create(path, size, uploadid, blockList2);
+    const result3 = await this.create(path, size, '0', uploadid, blockList2);
     this.fileChange.next();
   }
 
@@ -290,14 +294,25 @@ export class BaiduAPIService {
       form
     );
   }
-
-  create(path: string, size: number, uploadid: string, blockList: string[]) {
+  // await this.post(
+  //   'https://pan.baidu.com/rest/2.0/xpan/file?method=create',
+  //   { path: this.defaultDir, size: 0, isdir: 1 }
+  // );
+  create(
+    path: string,
+    size: number,
+    isdir: string,
+    uploadid?: string,
+    blockList?: string[]
+  ) {
     const form = new FormData();
     form.append('path', path);
     form.append('size', size.toString());
-    form.append('isdir', '0');
-    form.append('uploadid', uploadid);
-    form.append('block_list', JSON.stringify(blockList));
+    form.append('isdir', isdir);
+    if (isdir === '0') {
+      form.append('uploadid', uploadid);
+      form.append('block_list', JSON.stringify(blockList));
+    }
     return this.post(
       'https://pan.baidu.com/rest/2.0/xpan/file?method=create',
       form

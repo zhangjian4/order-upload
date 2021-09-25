@@ -38,3 +38,18 @@
 .safe-bottom {
   padding-bottom: var(--ion-safe-area-bottom, 0);
 }
+
+.header-md::after {
+  display: none;
+}
+.footer-md::before{
+  display: none;
+}
+
+.header-ios ion-toolbar:last-of-type {
+  --border-width: 0;
+}
+
+.footer-ios ion-toolbar:first-of-type {
+  --border-width: 0;
+}

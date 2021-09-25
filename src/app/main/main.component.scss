@@ -20,8 +20,9 @@ ion-thumbnail {
   width: 40px;
 }
 
-.sc-ion-label-md-s > p {
+ion-label > p {
   color: #999;
+  font-size: 12px;
 }
 
 :host::ng-deep {

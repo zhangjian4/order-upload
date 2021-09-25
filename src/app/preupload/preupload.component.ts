@@ -48,7 +48,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.reload();
-    this.setDir(this.fileService.dir);
+    this.dir = this.fileService.dir;
   }
 
   ngOnDestroy(): void {
@@ -59,14 +59,14 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     this.preuploadService.updateUrls();
   }
 
-  setDir(dir: string) {
-    this.dir = dir;
-    if (dir === '/') {
-      this.shortDir = '我的文件';
-    } else {
-      this.shortDir = dir.substr(dir.lastIndexOf('/') + 1);
-    }
-  }
+  // setDir(dir: string) {
+  //   this.dir = dir;
+  //   if (dir === '/') {
+  //     this.shortDir = '我的文件';
+  //   } else {
+  //     this.shortDir = dir.substr(dir.lastIndexOf('/') + 1);
+  //   }
+  // }
 
   async reload() {
     await this.preuploadService.reload();
@@ -94,10 +94,15 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     // }
     // this.data = data;
     this.length = this.preuploadService.data.length;
-    this.size = this.preuploadService.data.reduce(
-      (prev, cur) => prev + (cur.dest || cur.blob).size,
-      0
-    );
+    if (this.length === 0) {
+      this.navController.navigateBack('/camera');
+    } else {
+      this.size = this.preuploadService.data.reduce(
+        (prev, cur) => prev + (cur.dest || cur.blob).size,
+        0
+      );
+    }
+
     // this.title = `${this.data.length}个文件(${})`;
   }
 
@@ -163,6 +168,13 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   async selectDir() {
     const modal = await this.modalController.create({
       component: DirSelectComponent,
+      componentProps: {
+        dir: this.dir,
+        handler: (dir) => {
+          this.dir = dir;
+          this.save();
+        },
+      },
       cssClass: 'my-custom-class',
     });
     return await modal.present();
@@ -176,6 +188,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
       try {
         // await this.sleep(3000);
         await this.baiduAPIService.upload(
+          this.dir,
           item.name + '.jpg',
           item.dest || item.blob
         );
@@ -196,6 +209,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     this.uploading = false;
     await this.reload();
     if (this.preuploadService.data.length === 0) {
+      this.fileService.dir = this.dir;
       this.navController.navigateRoot('/main');
     }
   }

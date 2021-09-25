@@ -54,3 +54,22 @@ swiper {
     top: 50px;
   }
 }
+
+ion-toolbar {
+  --background: #000;
+  --border-width: 0 !important;
+}
+ion-title {
+  --color: #fff;
+  font-weight: 400;
+  &.ios {
+    padding-inline: 40px;
+  }
+}
+ion-back-button {
+  --color: #fff;
+}
+
+ion-content {
+  --background: #000;
+}
