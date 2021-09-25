@@ -5,8 +5,12 @@
   }
 }
 
-ion-header ion-toolbar:first-of-type{
+ion-header ion-toolbar:first-of-type {
   padding-top: 0;
+}
+
+ion-footer ion-buttons {
+  padding: 0 10px;
 }
 
 ion-button {
