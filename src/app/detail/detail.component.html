@@ -9,10 +9,11 @@
 </ion-header>
 <ion-content [forceOverscroll]="false">
   <swiper
+    *ngIf="inited"
     #swiperRef
     [zoom]="true"
     [initialSlide]="initIndex"
-    [virtual]="false"
+    [virtual]="true"
     [lazy]="{ loadPrevNext: true }"
     (slideChange)="onSlideChange($event)"
     class="mySwiper"

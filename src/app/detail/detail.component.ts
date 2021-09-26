@@ -27,6 +27,7 @@ export class DetailComponent implements OnInit {
   image: string;
   initIndex: number;
   items: any[];
+  inited: boolean;
   constructor(
     private route: ActivatedRoute,
     public fileService: FileService,
@@ -35,7 +36,7 @@ export class DetailComponent implements OnInit {
   ) {
     route.queryParams.subscribe((params) => {
       this.id = +params.id;
-      // this.index = this.initIndex = +params.index;
+      this.index = this.initIndex = +params.index;
       // this.reload();
     });
   }
@@ -50,6 +51,9 @@ export class DetailComponent implements OnInit {
           this.initIndex = this.items.length - 1;
         }
       }
+    });
+    setTimeout(() => {
+      this.inited = true;
     });
   }
 
@@ -66,16 +70,15 @@ export class DetailComponent implements OnInit {
     // console.log(result);
   }
 
-
   onSlideChange(event: any) {
-    // this.zone.run(() => {
-    //   this.index = event.activeIndex;
-    //   if (
-    //     this.fileService.fileList.length < this.index + 3 &&
-    //     this.fileService.hasMore
-    //   ) {
-    //     this.fileService.loadNextPage();
-    //   }
-    // });
+    this.zone.run(() => {
+      this.index = event.activeIndex;
+      // if (
+      //   this.fileService.fileList.length < this.index + 3 &&
+      //   this.fileService.hasMore
+      // ) {
+      //   this.fileService.loadNextPage();
+      // }
+    });
   }
 }

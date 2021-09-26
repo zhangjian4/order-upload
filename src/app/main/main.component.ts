@@ -27,6 +27,7 @@ import {
 import { VERSION } from '../core/version';
 import { Storage } from '@ionic/storage-angular';
 import { formatFileSize } from '../shared/util/unit.util';
+import { CommonService } from '../core/service/common.service';
 
 @Component({
   selector: 'app-main',
@@ -53,12 +54,10 @@ export class MainComponent implements OnInit {
     public fileService: FileService,
     private codePush: CodePush,
     private zone: NgZone,
-    public alertController: AlertController,
-    public toastController: ToastController,
-    public loadingController: LoadingController,
     private storage: Storage,
     private router: Router,
-    private platform: Platform
+    private platform: Platform,
+    private commonService: CommonService
   ) {
     // route.queryParams.subscribe((params) => {
     //   const dir = params.dir || '/';
@@ -139,101 +138,69 @@ export class MainComponent implements OnInit {
   }
 
   async update() {
-    const loading = await this.loadingController.create({
-      message: '正在检查更新',
-    });
-    loading.present();
     try {
-      await this.checkForUpdate();
+      await this.commonService.loading('正在检查更新', () =>
+        this.checkForUpdate()
+      );
     } catch (e) {
       console.error(e);
-      this.toast('检查更新失败');
+      this.commonService.toast('检查更新失败');
       return;
-    } finally {
-      loading.dismiss();
     }
 
     if (this.remotePackage != null) {
       const size = formatFileSize(this.remotePackage.packageSize);
-      const alert = await this.alertController.create({
-        header: '更新',
-        message: `检测到新版本，是否立即更新?
-(更新包大小${size}，建议在wifi下更新)`,
-        buttons: [
-          {
-            text: '取消',
-            role: 'cancel',
-            cssClass: 'secondary',
-          },
-          {
-            text: '确定',
-            handler: () => {
-              this.showProgress = true;
-              this.progress = 0;
-              this.codePush
-                .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
-                  this.zone.run(() => {
-                    this.progress =
-                      progress.receivedBytes / progress.totalBytes;
-                  });
-                })
-                .subscribe((status) => {
-                  switch (status) {
-                    case SyncStatus.DOWNLOADING_PACKAGE:
-                      break;
-                    case SyncStatus.INSTALLING_UPDATE:
-                      break;
-                    case SyncStatus.ERROR:
-                      this.zone.run(() => {
-                        this.showProgress = false;
-                        this.toast('更新失败');
-                      });
-                      break;
-                  }
+      const confirm = await this.commonService.confirm(
+        `检测到新版本，是否立即更新?(更新包大小${size}，建议在wifi下更新)`
+      );
+      if (confirm) {
+        this.showProgress = true;
+        this.progress = 0;
+        this.codePush
+          .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
+            this.zone.run(() => {
+              this.progress = progress.receivedBytes / progress.totalBytes;
+            });
+          })
+          .subscribe((status) => {
+            switch (status) {
+              case SyncStatus.DOWNLOADING_PACKAGE:
+                break;
+              case SyncStatus.INSTALLING_UPDATE:
+                break;
+              case SyncStatus.ERROR:
+                this.zone.run(() => {
+                  this.showProgress = false;
+                  this.commonService.toast('更新失败');
                 });
-            },
-          },
-        ],
-      });
-      await alert.present();
+                break;
+            }
+          });
+      }
     } else {
-      this.toast('当前已是最新版本');
+      this.commonService.toast('当前已是最新版本');
     }
   }
 
   async logout() {
-    const alert = await this.alertController.create({
-      message: `是否确认退出登录？`,
-      backdropDismiss: false,
-      buttons: [
-        {
-          text: '取消',
-          role: 'cancel',
-        },
-        {
-          text: '确定',
-          handler: () => {
-            this.baiduAPIService.logout();
-          },
-        },
-      ],
-    });
-    await alert.present();
+    if (await this.commonService.confirm('是否确认退出登录？')) {
+      this.baiduAPIService.logout();
+    }
   }
 
   trackItems(index: number, item: any) {
     return item.fs_id;
   }
 
-  async toast(message: string) {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      position: 'middle',
-      color: 'dark',
-    });
-    toast.present();
-  }
+  // async toast(message: string) {
+  //   const toast = await this.toastController.create({
+  //     message,
+  //     duration: 2000,
+  //     position: 'middle',
+  //     color: 'dark',
+  //   });
+  //   toast.present();
+  // }
 
   detail(item: any, id: number) {
     if (item.isdir) {
@@ -245,7 +212,7 @@ export class MainComponent implements OnInit {
   }
 
   back() {
-    let dir=this.fileService.dir;
+    let dir = this.fileService.dir;
     if (dir !== '/') {
       dir = dir.substr(0, dir.lastIndexOf('/'));
       if (dir === '') {

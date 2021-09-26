@@ -9,9 +9,10 @@ import { ActivatedRoute } from '@angular/router';
 import cv, { Point } from 'opencv-ts';
 import { fromEvent, Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
-import { IUploadFile } from 'src/app/core/service/database.service';
-import { PreuploadService } from '../preupload.service';
+import { Database, IUploadFile } from 'src/app/core/service/database.service';
 import SwiperCore, { Pagination, Navigation, Virtual } from 'swiper';
+import { AlertController, NavController } from '@ionic/angular';
+import { PreuploadService } from 'src/app/core/service/preupload.service';
 
 SwiperCore.use([Virtual, Pagination, Navigation]);
 
@@ -39,13 +40,16 @@ export class EditComponent implements OnInit, OnDestroy {
   magnifyTransform: string;
   magnifyWidth: number;
   magnifyPositionRight: boolean;
-  slides = Array.from({ length: 1000 }).map((_, index) => `Slide ${index + 1}`);
+  inited: boolean;
 
   constructor(
     public preuploadService: PreuploadService,
     private route: ActivatedRoute,
     private zone: NgZone,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private alertController: AlertController,
+    private database: Database,
+    private navController: NavController
   ) {
     route.queryParams.subscribe((params) => {
       if (params.index != null) {
@@ -61,6 +65,9 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    setTimeout(() => {
+      this.inited = true;
+    });
     // this.data = this.preuploadService.data[this.index];
   }
 
@@ -81,26 +88,27 @@ export class EditComponent implements OnInit, OnDestroy {
       naturalWidth,
       naturalHeight,
     } = img;
-    this.ratio = offsetWidth / naturalWidth;
-    this.magnifyWidth = naturalWidth * this.magnifyRatio;
-    this.top = offsetTop;
-    this.left = offsetLeft;
-    this.bottom = offsetTop + offsetHeight;
-    this.right = offsetLeft + offsetWidth;
-    if (!this.data.rect) {
-      this.data.rect = [
-        { x: 0, y: 0 },
-        { x: naturalWidth, y: 0 },
-        { x: naturalWidth, y: naturalHeight },
-        { x: 0, y: naturalHeight },
-      ];
+    if (naturalHeight && naturalWidth) {
+      this.ratio = offsetWidth / naturalWidth;
+      this.magnifyWidth = naturalWidth * this.magnifyRatio;
+      this.top = offsetTop;
+      this.left = offsetLeft;
+      this.bottom = offsetTop + offsetHeight;
+      this.right = offsetLeft + offsetWidth;
+      if (!this.data.rect) {
+        this.data.rect = [
+          { x: 0, y: 0 },
+          { x: naturalWidth, y: 0 },
+          { x: naturalWidth, y: naturalHeight },
+          { x: 0, y: naturalHeight },
+        ];
+      }
+      this.points = this.data.rect.map((p) => ({
+        x: p.x * this.ratio + this.left,
+        y: p.y * this.ratio + this.top,
+      }));
+      this.updatePolygon();
     }
-    this.points = this.data.rect.map((p) => ({
-      x: p.x * this.ratio + this.left,
-      y: p.y * this.ratio + this.top,
-    }));
-
-    this.updatePolygon();
   }
 
   onPointClick(event) {
@@ -178,22 +186,65 @@ export class EditComponent implements OnInit, OnDestroy {
   onSlideChange(event: any) {
     if (this.index !== event.activeIndex) {
       this.zone.run(() => {
-        this.index = event.activeIndex;
-        this.data = this.preuploadService.data[this.index];
-        const img = document.getElementById(
-          'image-' + this.index
-        ) as HTMLImageElement;
-        if (img) {
-          this.updateImage(img);
-        }
+        this.setIndex(event.activeIndex);
+        // this.index = event.activeIndex;
+        // this.data = this.preuploadService.data[this.index];
+        // const img = document.getElementById(
+        //   'image-' + this.index
+        // ) as HTMLImageElement;
+        // if (img) {
+        //   this.updateImage(img);
+        // }
       });
     }
+  }
 
-    // if (
-    //   this.fileService.fileList.length < this.index + 3 &&
-    //   this.fileService.hasMore
-    // ) {
-    //   this.fileService.loadNextPage();
-    // }
+  setIndex(index: number) {
+    this.index = index;
+    this.data = this.preuploadService.data[this.index];
+    if (this.data) {
+      const img = document.getElementById(
+        'image-' + this.data.id
+      ) as HTMLImageElement;
+      if (img) {
+        this.updateImage(img);
+      }
+    }
+  }
+
+  async remove() {
+    const alert = await this.alertController.create({
+      message: `是否确认删除？`,
+      backdropDismiss: false,
+      buttons: [
+        {
+          text: '取消',
+          role: 'cancel',
+        },
+        {
+          text: '确定',
+          handler: async () => {
+            await this.preuploadService.remove(this.data);
+            const length = this.preuploadService.data.length;
+            if (length === 0) {
+              this.navController.navigateBack('/camera');
+              return;
+            }
+            let index = this.index;
+            if (index >= length) {
+              index = length - 1;
+            }
+
+            this.initIndex = index;
+            this.setIndex(index);
+            this.inited = false;
+            setTimeout(() => {
+              this.inited = true;
+            });
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 }

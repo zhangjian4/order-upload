@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
 import { SharedModule } from '../shared/shared.module';
 import { EditComponent } from './edit/edit.component';
-import { PreuploadService } from './preupload.service';
 import { SwiperModule } from 'swiper/angular';
 import { DirSelectComponent } from './dir-select/dir-select.component';
 
@@ -31,6 +30,6 @@ import { DirSelectComponent } from './dir-select/dir-select.component';
     SharedModule,
     SwiperModule,
   ],
-  providers: [PreuploadService],
+  providers: [],
 })
 export class PreuploadModule {}

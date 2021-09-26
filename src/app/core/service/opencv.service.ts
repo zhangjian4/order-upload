@@ -257,20 +257,26 @@ export class OpenCVService {
 
   async getPagerRect(src: Blob | Mat) {
     await this.init();
+    let mat: Mat;
     if (src instanceof Blob) {
-      src = await this.fromBlob(src as Blob);
+      mat = await this.fromBlob(src as Blob);
+    } else {
+      mat = src;
     }
     let ratio = 1;
-    if (src.rows > 900) {
-      ratio = 900 / src.rows;
+    if (mat.rows > 900) {
+      ratio = 900 / mat.rows;
     }
-    const resize = this.resizeImg(src, ratio);
+    const resize = this.resizeImg(mat, ratio);
     const canny = this.getCanny(resize);
     resize.delete();
     const maxContour = this.findMaxContour(canny);
     canny.delete();
     const points = this.getBoxPoint(maxContour, ratio);
     maxContour.delete();
+    if (src instanceof Blob) {
+      mat.delete();
+    }
     return points;
   }
 

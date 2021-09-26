@@ -8,11 +8,12 @@ import {
 } from '@ionic/angular';
 import { take } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
+import { CommonService } from '../core/service/common.service';
 import { Database, IUploadFile } from '../core/service/database.service';
 import { FileService } from '../core/service/file.service';
 import { OpenCVService } from '../core/service/opencv.service';
+import { PreuploadService } from '../core/service/preupload.service';
 import { DirSelectComponent } from './dir-select/dir-select.component';
-import { PreuploadService } from './preupload.service';
 
 @Component({
   selector: 'app-preupload',
@@ -43,7 +44,8 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     public preuploadService: PreuploadService,
     private opencvService: OpenCVService,
     public modalController: ModalController,
-    private fileService: FileService
+    private fileService: FileService,
+    private commonService: CommonService
   ) {}
 
   ngOnInit() {
@@ -56,7 +58,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter() {
-    this.preuploadService.updateUrls();
+    this.update();
   }
 
   // setDir(dir: string) {
@@ -70,6 +72,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
 
   async reload() {
     await this.preuploadService.reload();
+    this.update();
     // this.preuploadService.data = data;
     // for (const item of data) {
     //   try {
@@ -93,38 +96,29 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     //   }
     // }
     // this.data = data;
-    this.length = this.preuploadService.data.length;
-    if (this.length === 0) {
-      this.navController.navigateBack('/camera');
-    } else {
-      this.size = this.preuploadService.data.reduce(
-        (prev, cur) => prev + (cur.dest || cur.blob).size,
-        0
-      );
-    }
 
     // this.title = `${this.data.length}个文件(${})`;
   }
 
+  async update() {
+    this.length = this.preuploadService.data.length;
+    await this.preuploadService.updateUrls();
+    this.size = this.preuploadService.data.reduce(
+      (prev, cur) => prev + (cur.dest || cur.blob).size,
+      0
+    );
+  }
+
   async remove(item: IUploadFile) {
-    const alert = await this.alertController.create({
-      message: `是否确认删除？`,
-      backdropDismiss: false,
-      buttons: [
-        {
-          text: '取消',
-          role: 'cancel',
-        },
-        {
-          text: '确定',
-          handler: async () => {
-            await this.database.preuploadFile.delete(item.id);
-            this.reload();
-          },
-        },
-      ],
-    });
-    await alert.present();
+    if (await this.commonService.confirm('是否确认删除？')) {
+      await this.preuploadService.remove(item);
+      this.length = this.preuploadService.data.length;
+      if (this.length === 0) {
+        this.navController.navigateBack('/camera');
+      } else {
+        this.update();
+      }
+    }
   }
 
   rename(item: IUploadFile) {
@@ -181,6 +175,10 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   }
 
   async save() {
+    if (this.dir === '/') {
+      this.commonService.alert('不能上传到根目录');
+      return;
+    }
     this.uploaded = 0;
     this.uploading = true;
     for (let i = 0; i < this.preuploadService.data.length; i++) {
@@ -211,6 +209,8 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     if (this.preuploadService.data.length === 0) {
       this.fileService.dir = this.dir;
       this.navController.navigateRoot('/main');
+    } else {
+      this.update();
     }
   }
 

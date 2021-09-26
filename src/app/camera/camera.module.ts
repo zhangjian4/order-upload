@@ -19,11 +19,16 @@ import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
         component: CameraComponent,
         canDeactivate: [ConfirmGuard],
       },
+      {
+        path: ':id',
+        component: CameraComponent,
+        canDeactivate: [ConfirmGuard],
+      },
     ]),
     IonicModule,
     FormsModule,
-    BlobSrcModule
+    BlobSrcModule,
   ],
-  providers: [CameraPreview, WebView,ConfirmGuard],
+  providers: [CameraPreview, WebView, ConfirmGuard],
 })
 export class CameraModule {}

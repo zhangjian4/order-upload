@@ -22,6 +22,11 @@ const routes: Routes = [
       import('./camera/camera.module').then((m) => m.CameraModule),
   },
   {
+    path: 'camera/:id',
+    loadChildren: () =>
+      import('./camera/camera.module').then((m) => m.CameraModule),
+  },
+  {
     path: 'detail',
     loadChildren: () =>
       import('./detail/detail.module').then((m) => m.DetailModule),

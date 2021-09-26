@@ -17,7 +17,7 @@
   </div>
   <div class="operations">
     <div class="photo-list">
-      <div *ngIf="lastFile" class="thumb-container">
+      <div *ngIf="!this.id && lastFile" class="thumb-container">
         <ion-thumbnail>
           <img [blob-src]="lastFile" />
         </ion-thumbnail>
@@ -28,7 +28,10 @@
       <div class="camera-touch-inner"></div>
     </div>
     <div class="submit">
-      <ion-button *ngIf="photoCount" color="primary" (click)="submit()"
+      <ion-button
+        *ngIf="!this.id && photoCount"
+        color="primary"
+        (click)="submit()"
         >完成</ion-button
       >
     </div>

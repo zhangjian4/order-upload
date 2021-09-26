@@ -27,7 +27,7 @@ import {
 } from '../core/service/indexeddb.service';
 import { Database } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
-import { RouterStateSnapshot } from '@angular/router';
+import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import * as SparkMD5 from 'spark-md5';
 import {
   base64ToArrayBuffer,
@@ -35,6 +35,7 @@ import {
   urlToBlob,
 } from '../shared/util/image.util';
 import { OpenCVService } from '../core/service/opencv.service';
+import { PreuploadService } from '../core/service/preupload.service';
 
 @Component({
   selector: 'app-camera',
@@ -57,6 +58,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   viewEntered: boolean;
   cameraStarted: boolean;
   promises: Promise<any>[] = [];
+  id: number;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -65,8 +67,16 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     public toastController: ToastController,
     public alertController: AlertController,
     private database: Database,
-    private opencvService: OpenCVService
-  ) {}
+    private opencvService: OpenCVService,
+    private route: ActivatedRoute,
+    private preuploadService: PreuploadService
+  ) {
+    this.route.params.subscribe((params) => {
+      if (params.id) {
+        this.id = +params.id;
+      }
+    });
+  }
 
   @HostBinding('class.hide-background')
   get hideBackground(): boolean {
@@ -152,6 +162,20 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     } else {
       blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
     }
+    if (this.id) {
+      await this.preuploadService.update(this.id, { blob });
+      // await this.database.preuploadFile.update(this.id, { blob });
+      this.back();
+    } else {
+      const name = format(new Date(), 'yyyyMMddHHmmssSSS');
+      this.photoCount++;
+      this.lastFile = blob;
+      const id = await this.database.preuploadFile.add({
+        name,
+        blob,
+      });
+      this.promises.push(this.handlePhoto(id, blob));
+    }
     // const buffer = base64ToArrayBuffer(base64);
     // const blob = new Blob([buffer], {
     //   type: 'image/jpeg',
@@ -160,14 +184,6 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // const spark = new SparkMD5.ArrayBuffer();
     // spark.append(blob);
     // const md5 = spark.end();
-    const name = format(new Date(), 'yyyyMMddHHmmssSSS');
-    this.photoCount++;
-    this.lastFile = blob;
-    const id = await this.database.preuploadFile.add({
-      name,
-      blob,
-    });
-    this.promises.push(this.handlePhoto(id, blob));
 
     // this.lastFileId = id;
     // this.zone.run(() => {
@@ -186,12 +202,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async handlePhoto(id: number, blob: Blob) {
     const src = await this.opencvService.fromBlob(blob);
     try {
-      const change: any = {};
       const rect = await this.opencvService.getPagerRect(src);
       if (rect.length === 4) {
         const dest = await this.opencvService.transform(src, rect);
-        const size = dest.size;
-        await this.database.preuploadFile.update(id, { rect, dest, size });
+        await this.database.preuploadFile.update(id, { rect, dest });
       }
       // await this.sleep();
     } catch (e) {
@@ -346,12 +360,16 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   // }
 
   async deactivateConfirm(nextState: RouterStateSnapshot) {
-    if (this.photoCount === 0 || nextState.url === '/preupload') {
+    if (nextState.url === '/preupload' || this.id != null) {
+      return true;
+    }
+    const count = await this.database.preuploadFile.count();
+    if (count === 0) {
       return true;
     }
     return new Promise<boolean>(async (resolve) => {
       const alert = await this.alertController.create({
-        message: '放弃拍摄的' + this.photoCount + '张图片?',
+        message: '放弃拍摄的' + count + '张图片?',
         buttons: [
           {
             text: '取消',

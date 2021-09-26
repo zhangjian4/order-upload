@@ -1,13 +1,16 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button text=""></ion-back-button>
+      <ion-back-button
+        text="{{ index + 1 }}/{{ preuploadService.data.length }}"
+      ></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ data?.name }}</ion-title>
+    <ion-title> {{ data?.name }}</ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [forceOverscroll]="false">
   <swiper
+    *ngIf="inited"
     #swiperRef
     [initialSlide]="initIndex"
     (transitionEnd)="onSlideChange($event)"
@@ -23,7 +26,7 @@
           <img
             [src]="item?.url | sanitizer: 'url'"
             (load)="onImageLoad($event, item, i)"
-            id="image-{{ i }}"
+            id="image-{{ item.id }}"
           />
         </div>
         <ng-container *ngIf="index === i">
@@ -73,6 +76,24 @@
 </ion-content>
 <ion-footer>
   <ion-toolbar>
-    <ion-title size="small">Small Title above a Default Title</ion-title>
+    <ion-buttons *ngIf="data">
+      <div><ion-icon name="color-filter-outline"></ion-icon>滤镜</div>
+      <div (click)="remove()">
+        <ion-icon name="trash-outline"></ion-icon>删除
+      </div>
+      <div>
+        <ion-icon
+          name="camera-outline"
+          routerLink="/camera/{{ data.id }}"
+        ></ion-icon
+        >重拍
+      </div>
+      <div><ion-icon name="refresh-outline"></ion-icon>旋转</div>
+      <!-- <a><ion-icon name="contract-outline"></ion-icon>自动</a>
+      <a><ion-icon name="expand-outline"></ion-icon>全部</a> -->
+      <ion-button fill="solid" routerLink="/preupload" routerDirection="back"
+        >完成</ion-button
+      >
+    </ion-buttons>
   </ion-toolbar>
 </ion-footer>
