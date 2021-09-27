@@ -21,25 +21,63 @@ export class PreuploadService implements OnDestroy {
     }
     this.data = await this.database.preuploadFile.toArray();
     this.data.forEach((item) => {
-      if (item.blob) {
-        item.url = URL.createObjectURL(item.blob);
-      }
-      if (item.dest) {
-        item.destUrl = URL.createObjectURL(item.dest);
-      }
+      this.createUrl(item);
     });
   }
 
-  async update(id: number, changes: any) {
-    const item = this.data.find((i) => i.id === id);
-    if (item) {
-      Object.keys(changes).forEach((key) => {
-        item[key] = changes[key];
-      });
-      await this.database.preuploadFile.update(id, changes);
-      this.updateUrl(item);
+  createUrl(item: IUploadFile) {
+    if (item.blob) {
+      item.url = URL.createObjectURL(item.blob);
+    }
+    if (item.dest) {
+      item.destUrl = URL.createObjectURL(item.dest);
     }
   }
+
+  async updateBlob(id: number, blob: Blob) {
+    const item = this.data.find((i) => i.id === id);
+    if (item) {
+      item.blob = blob;
+      item.dest = null;
+      this.revokeUrl(item);
+      this.database.preuploadFile.update(id, { blob });
+      const rect = await this.opencvService.getPagerRect(blob);
+      this.updateRect(item, rect);
+      this.createUrl(item);
+    }
+  }
+
+  // async transform(item: IUploadFile) {
+  //   const src = await this.opencvService.fromBlob(item.blob);
+  //   try {
+  //     const rect = await this.opencvService.getPagerRect(src);
+  //     if (rect.length === 4) {
+  //       const dest = await this.opencvService.transform(src, rect);
+  //       await this.database.preuploadFile.update(id, { rect, dest });
+  //     }
+  //     // await this.sleep();
+  //   } catch (e) {
+  //     console.error(e);
+  //   } finally {
+  //     src.delete();
+  //   }
+  // }
+
+  // async handlePhoto(id: number, blob: Blob) {
+  //   const src = await this.opencvService.fromBlob(blob);
+  //   try {
+  //     const rect = await this.opencvService.getPagerRect(src);
+  //     if (rect.length === 4) {
+  //       const dest = await this.opencvService.transform(src, rect);
+  //       await this.database.preuploadFile.update(id, { rect, dest });
+  //     }
+  //     // await this.sleep();
+  //   } catch (e) {
+  //     console.error(e);
+  //   } finally {
+  //     src.delete();
+  //   }
+  // }
 
   async remove(item: IUploadFile) {
     if (item) {
@@ -63,8 +101,15 @@ export class PreuploadService implements OnDestroy {
   }
 
   async updateUrl(item: any) {
-    item.dest = await this.opencvService.transform(item.blob, item.rect);
-    this.database.preuploadFile.update(item.id, { dest: item.dest });
+    if (item.rect) {
+      item.dest = await this.opencvService.transform(item.blob, item.rect);
+    } else {
+      item.dest = null;
+    }
+    this.database.preuploadFile.update(item.id, {
+      rect: item.rect,
+      dest: item.dest,
+    });
     if (item.destUrl) {
       URL.revokeObjectURL(item.destUrl);
     }
@@ -82,15 +127,16 @@ export class PreuploadService implements OnDestroy {
   revokeUrl(item: any) {
     if (item.url) {
       URL.revokeObjectURL(item.url);
+      delete item.url;
     }
     if (item.destUrl) {
       URL.revokeObjectURL(item.destUrl);
+      delete item.destUrl;
     }
   }
 
   updateRect(item: IUploadFile, points: Point[]) {
     item.rect = points;
-    this.database.preuploadFile.update(item.id, { rect: points });
     if (!this.updateData.has(item)) {
       this.updateData.add(item);
     }

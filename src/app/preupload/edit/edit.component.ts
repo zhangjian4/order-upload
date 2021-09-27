@@ -54,8 +54,6 @@ export class EditComponent implements OnInit, OnDestroy {
     route.queryParams.subscribe((params) => {
       if (params.index != null) {
         this.initIndex = +params.index;
-        this.index = this.initIndex;
-        this.data = this.preuploadService.data[this.index];
       }
     });
   }
@@ -65,6 +63,8 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.index = this.initIndex;
+    this.data = this.preuploadService.data[this.index];
     setTimeout(() => {
       this.inited = true;
     });

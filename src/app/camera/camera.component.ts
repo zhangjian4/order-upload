@@ -163,7 +163,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
     }
     if (this.id) {
-      await this.preuploadService.update(this.id, { blob });
+      this.preuploadService.updateBlob(this.id, blob);
       // await this.database.preuploadFile.update(this.id, { blob });
       this.back();
     } else {

@@ -277,7 +277,11 @@ export class OpenCVService {
     if (src instanceof Blob) {
       mat.delete();
     }
-    return points;
+    if (points.length === 4) {
+      return points;
+    } else {
+      return null;
+    }
   }
 
   async transform(src: Blob | Mat, points: Point[]) {

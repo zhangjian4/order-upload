@@ -21,10 +21,10 @@
       swiperSlide
       *ngFor="let item of preuploadService.data; let i = index"
     >
-      <div *ngIf="item" class="image-container">
+      <div *ngIf="item.url" class="image-container">
         <div class="image-cotainer-inner">
           <img
-            [src]="item?.url | sanitizer: 'url'"
+            [src]="item.url | sanitizer: 'url'"
             (load)="onImageLoad($event, item, i)"
             id="image-{{ item.id }}"
           />
