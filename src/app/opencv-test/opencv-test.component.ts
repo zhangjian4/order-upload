@@ -3,11 +3,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { Database } from '../core/service/database.service';
 import { LazyService } from '../core/service/lazy.service';
-import { OpenCVService } from '../core/service/opencv.service'
+import { OpenCVService } from '../core/service/opencv.service';
 import cv, { Mat, Point, Rect } from 'opencv-ts';
+import { OcradService } from '../core/service/ocrad.service';
+// import * as OCRAD from 'ocrad.js';
 
 // declare const cv: any;
-
+declare const OCRAD: any;
 @Component({
   selector: 'app-opencv-test',
   templateUrl: './opencv-test.component.html',
@@ -26,7 +28,8 @@ export class OpencvTestComponent implements OnInit {
     private zone: NgZone,
     private route: ActivatedRoute,
     private database: Database,
-    private opencvService: OpenCVService
+    private opencvService: OpenCVService,
+    private ocradService: OcradService
   ) {}
 
   async ngOnInit() {
@@ -35,6 +38,8 @@ export class OpencvTestComponent implements OnInit {
       this.id = +params.id;
       this.reload();
     });
+    await this.lazy.loadScript('/assets/js/ocrad.js');
+    console.log(OCRAD);
     // await this.lazy.loadScript('/assets/js/opencv.js');
     // cv.then(() => {
     //   this.zone.run(() => {
@@ -76,14 +81,14 @@ export class OpencvTestComponent implements OnInit {
     const dst = this.opencvService.warpImage(src, points);
     // const minColor = cv.matFromArray(1, 3, cv.CV_32S, [200, 200, 100]);
     // const maxColor = cv.matFromArray(1, 3, cv.CV_32S, [250, 250, 150]);
-    let low = new cv.Mat(src.rows, src.cols, src.type(), [150, 0, 0, 0] as any);
-    let high = new cv.Mat(src.rows, src.cols, src.type(), [
-      255, 150, 150, 255,
-    ] as any);
-    console.log(cv);
-    const dst3 = new cv.Mat();
-    cv.inRange(src, low, high, dst3);
-    cv.imshow('canvasOutput0', dst3);
+    // let low = new cv.Mat(src.rows, src.cols, src.type(), [150, 0, 0, 0] as any);
+    // let high = new cv.Mat(src.rows, src.cols, src.type(), [
+    //   255, 150, 150, 255,
+    // ] as any);
+    // console.log(cv);
+    // const dst3 = new cv.Mat();
+    // cv.inRange(src, low, high, dst3);
+    // cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
     resize.delete();
     // points.delete();
@@ -114,8 +119,36 @@ export class OpencvTestComponent implements OnInit {
 
   async imageLoad(e: Event) {
     const target = e.target as HTMLImageElement;
-    // await this.opencvService.init();
-    // const src = cv.imread(target);
+    await this.opencvService.init();
+    const src = cv.imread(target);
+    const dest = new cv.Mat(src.rows, src.cols, src.type());
+    const threshold1 = 50;
+    const threshold2 = 20;
+    for (let row = 0; row < src.rows; row++) {
+      for (let col = 0; col < src.cols; col++) {
+        const pixel = src.ucharPtr(row, col);
+        const destPixel = dest.ucharPtr(row, col);
+        const [r, g, b, a] = pixel;
+        if (
+          r - g > threshold1 &&
+          r - g > threshold1 &&
+          Math.abs(g - b) < threshold2
+        ) {
+          pixel.forEach((v, i) => {
+            destPixel[i] = v;
+          });
+          // destPixel[3] = 255;
+          // console.log([r, g, b, a]);
+        } else {
+          destPixel.fill(255);
+        }
+      }
+    }
+    const dst = new cv.Mat();
+    // You can try more different parameters
+    cv.cvtColor(dest, dst, cv.COLOR_RGBA2GRAY, 0);
+    cv.imshow('canvasOutput0', dst);
+
     // let ratio = 1;
     // if (src.rows > 900) {
     //   ratio = 900 / src.rows;
@@ -138,6 +171,17 @@ export class OpencvTestComponent implements OnInit {
     // points.delete();
     // src.delete();
     // dst.delete();
+  }
+
+  image2Load(e: Event) {
+    const target = e.target as HTMLImageElement;
+    this.ocradService
+      .execute(target, {
+        numeric: true,
+      })
+      .then((text) => {
+        console.log(text);
+      });
   }
 
   showCanny(canny: Mat) {
