@@ -61,7 +61,6 @@ export class OpencvTestComponent implements OnInit {
       ratio = 900 / src.rows;
     }
     const resize = this.opencvService.resizeImg(src, ratio);
-    const dst2 = new cv.Mat();
 
     // cv.cvtColor(resize, resize, cv.COLOR_RGBA2RGB, 0);
     // cv.bilateralFilter(resize, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
@@ -90,6 +89,33 @@ export class OpencvTestComponent implements OnInit {
     // cv.inRange(src, low, high, dst3);
     // cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
+    const dst2 = this.opencvService.extractColor(dst);
+    let dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+    cv.cvtColor(dst2, dst2, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(dst2, dst2, 177, 200, cv.THRESH_BINARY);
+    cv.imshow('canvasOutput5', dst2);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    cv.findContours(
+      dst2,
+      contours,
+      hierarchy,
+      cv.RETR_CCOMP,
+      cv.CHAIN_APPROX_SIMPLE
+    );
+    let contoursColor = new cv.Scalar(255, 255, 255);
+    let rectangleColor = new cv.Scalar(255, 0, 0);
+    for (let i = 0; i < contours.size(); ++i) {
+      let cnt = contours.get(i);
+      let rect = cv.boundingRect(cnt);
+      cv.drawContours(dst3, contours, 0, contoursColor, 1, 8, hierarchy, 100);
+      let point1 = new cv.Point(rect.x, rect.y);
+      let point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+      cv.rectangle(dst3, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
+    }
+    // You can try more different parameters
+
+    cv.imshow('canvasOutput7', dst3);
     resize.delete();
     // points.delete();
     src.delete();

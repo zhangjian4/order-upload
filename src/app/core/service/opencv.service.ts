@@ -298,4 +298,38 @@ export class OpenCVService {
     dst.delete();
     return result;
   }
+
+  /**
+   * 提取红色
+   *
+   * @param src
+   * @returns
+   */
+  extractColor(src: Mat) {
+    const dst = new cv.Mat(src.rows, src.cols, src.type());
+    const threshold1 = 20;
+    // const threshold2 = 20;
+    for (let row = 0; row < src.rows; row++) {
+      for (let col = 0; col < src.cols; col++) {
+        const pixel = src.ucharPtr(row, col);
+        const destPixel = dst.ucharPtr(row, col);
+        const [r, g, b, a] = pixel;
+        if (
+          r - g > threshold1 &&
+          r - b > threshold1 &&
+          r - Math.max(g, b) > Math.abs(g - b) * 1.5
+          // r - g > threshold1 &&
+          // r - b > threshold1 &&
+          // Math.abs(g - b) < threshold2
+        ) {
+          pixel.forEach((v, i) => {
+            destPixel[i] = v;
+          });
+        } else {
+          destPixel.fill(255);
+        }
+      }
+    }
+    return dst;
+  }
 }
