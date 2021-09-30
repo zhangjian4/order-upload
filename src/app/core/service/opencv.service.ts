@@ -6,13 +6,12 @@ import {
   canvasToBlob,
   loadImage,
 } from 'src/app/shared/util/image.util';
-
-// declare const cv: any;
+import { OcradService } from './ocrad.service';
 
 @Injectable({ providedIn: 'root' })
 export class OpenCVService {
   private initPromise: Promise<void>;
-  constructor() {
+  constructor(private ocradService: OcradService) {
     this.initPromise = new Promise<void>((resolve) => {
       (cv as any).then(() => {
         resolve();
@@ -43,7 +42,6 @@ export class OpenCVService {
    * @returns
    */
   resizeImg(image: Mat, radio: number) {
-    console.log(image.cols, image.rows);
     const dst = new cv.Mat();
     const dsize = new cv.Size(
       Math.round(image.cols * radio),
@@ -51,11 +49,6 @@ export class OpenCVService {
     );
     cv.resize(image, dst, dsize, 0, 0, cv.INTER_AREA);
     return dst;
-    // h, w = image.shape[:2]
-    // pro = height / h
-    // size = (int(w * pro), int(height))
-    // img = cv2.resize(image, size)
-    // return img
   }
 
   /**
@@ -158,24 +151,7 @@ export class OpenCVService {
     }
     approx.delete();
     return points;
-    // const points: Point[] = [];
-    // for (let i = 0; i < approx.rows; ++i) {
-    //   const point = new cv.Point(
-    //     approx.data32S[i * 2],
-    //     approx.data32S[i * 2 + 1]
-    //   );
-    //   console.log(point);
-    //   points.push(point);
-    // }
-    // return points;
   }
-
-  // getDistance(contour: number[], index1: number, index2: number) {
-  //   return Math.sqrt(
-  //     Math.pow(contour[index1 * 2] - contour[index2 * 2], 2) +
-  //       Math.pow(contour[index1 * 2 + 1] - contour[index2 * 2 + 1], 2)
-  //   );
-  // }
 
   getDistance(point1: Point, point2: Point) {
     return Math.sqrt(
@@ -184,51 +160,24 @@ export class OpenCVService {
   }
 
   warpImage(src: Mat, points: Point[]) {
-    // let data = points.data32S;
-    // if (ratio !== 1) {
-    //   data = data.map((value) => Math.round(value / ratio));
-    // }
-    // const width = Math.round(
-    //   Math.max(this.getDistance(data, 0, 1), this.getDistance(data, 2, 3))
-    // );
-    // const height = Math.round(
-    //   Math.max(this.getDistance(data, 1, 2), this.getDistance(data, 3, 0))
-    // );
     points = this.orderPoints(points);
+    const [p0, p1, p2, p3] = points;
     const width = Math.round(
-      Math.max(
-        this.getDistance(points[0], points[1]),
-        this.getDistance(points[2], points[3])
-      )
+      Math.max(this.getDistance(p0, p1), this.getDistance(p2, p3))
     );
     const height = Math.round(
-      Math.max(
-        this.getDistance(points[1], points[2]),
-        this.getDistance(points[3], points[0])
-      )
+      Math.max(this.getDistance(p1, p2), this.getDistance(p3, p0))
     );
     const srcArray = [];
     points.forEach((point) => {
       srcArray.push(point.x, point.y);
     });
     const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, srcArray);
-    const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      0,
-      0,
-      width,
-      0,
-      width,
-      height,
-      0,
-      height,
-    ]);
+    const dstArray = [0, 0, width, 0, width, height, 0, height];
+    const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, dstArray);
     const dst = new cv.Mat();
     const dsize = new cv.Size(width, height);
-    const M: Mat = cv.getPerspectiveTransform(
-      srcTri,
-      dstTri,
-      cv.DECOMP_LU
-    ) as any;
+    const M: any = cv.getPerspectiveTransform(srcTri, dstTri, cv.DECOMP_LU);
     srcTri.delete();
     dstTri.delete();
     cv.warpPerspective(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT);
@@ -318,9 +267,6 @@ export class OpenCVService {
           r - g > threshold1 &&
           r - b > threshold1 &&
           r - Math.max(g, b) > Math.abs(g - b) * 1.5
-          // r - g > threshold1 &&
-          // r - b > threshold1 &&
-          // Math.abs(g - b) < threshold2
         ) {
           pixel.forEach((v, i) => {
             destPixel[i] = v;
@@ -330,6 +276,104 @@ export class OpenCVService {
         }
       }
     }
+    cv.cvtColor(dst, dst, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(dst, dst, 177, 255, cv.THRESH_BINARY);
     return dst;
+  }
+
+  /**
+   * 获取距离中心最近的矩形
+   */
+  getCenterRect(src: Mat) {
+    const dst1 = new cv.Mat();
+    // 取反色
+    cv.bitwise_not(src, dst1);
+    // 膨胀
+    const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+    const anchor = new cv.Point(-1, -1);
+    cv.dilate(
+      dst1,
+      dst1,
+      kernel,
+      anchor,
+      3,
+      cv.BORDER_CONSTANT,
+      cv.morphologyDefaultBorderValue()
+    );
+    kernel.delete();
+    const contours = new cv.MatVector();
+    const hierarchy = new cv.Mat();
+    cv.findContours(
+      dst1,
+      contours,
+      hierarchy,
+      cv.RETR_CCOMP,
+      cv.CHAIN_APPROX_SIMPLE
+    );
+    hierarchy.delete();
+    let minDistance: number;
+    let nearestRect = null; // 离中心最近的矩形
+    const centerX = src.cols / 2;
+    for (let i = 0; i < contours.size(); ++i) {
+      const cnt = contours.get(i);
+      const rect = cv.boundingRect(cnt);
+      const currentArea = cv.contourArea(cnt);
+      if (currentArea / (rect.width * rect.height) > 0.5) {
+        let distance: number;
+        if (rect.x > centerX) {
+          distance = rect.x - centerX;
+        } else if (rect.x + rect.width < centerX) {
+          distance = centerX - (rect.x + rect.width);
+        }
+        if (distance && (!minDistance || distance < minDistance)) {
+          nearestRect = rect;
+          minDistance = distance;
+        }
+      }
+    }
+    contours.delete();
+    dst1.delete();
+    return nearestRect;
+  }
+
+  crop(src: Mat, rect: Rect) {
+    const dst = new cv.Mat(rect.height, rect.width, cv.CV_8UC1);
+    for (let row = 0; row < dst.rows; row++) {
+      for (let col = 0; col < dst.cols; col++) {
+        const pixel = src.ucharPtr(rect.y + row, rect.x + col);
+        const destPixel = dst.ucharPtr(row, col);
+        destPixel[0] = pixel[0];
+      }
+    }
+    return dst;
+  }
+
+  resizeTo(src: Mat, minHeight: number) {
+    if (src.rows < minHeight) {
+      const ratio = Math.ceil(minHeight / src.rows);
+      const dsize = new cv.Size(src.cols * ratio, src.rows * ratio);
+      // You can try more different parameters
+      cv.resize(src, src, dsize, 0, 0, cv.INTER_LINEAR);
+    }
+  }
+
+  async getOrderNo(src: Mat) {
+    const dst1 = this.extractColor(src);
+    const rect = this.getCenterRect(dst1);
+    try {
+      if (rect) {
+        const dst2 = this.crop(dst1, rect);
+        this.resizeTo(dst2, 50);
+        const canvas = document.createElement('canvas');
+        cv.imshow(canvas, dst2);
+        dst2.delete();
+        const text = await this.ocradService.execute(canvas, {
+          numeric: true,
+        });
+        return text.trim();
+      }
+    } finally {
+      dst1.delete();
+    }
   }
 }

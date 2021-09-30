@@ -17,9 +17,9 @@ export class OcradService {
     return this.init$;
   }
 
-  async execute(image: HTMLImageElement | HTMLCanvasElement, options: any) {
+  async execute(image: HTMLImageElement | HTMLCanvasElement, options?: any) {
     await this.init();
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       OCRAD(
         image,
         options,

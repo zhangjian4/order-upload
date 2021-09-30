@@ -90,32 +90,29 @@ export class OpencvTestComponent implements OnInit {
     // cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
     const dst2 = this.opencvService.extractColor(dst);
-    let dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
-    cv.cvtColor(dst2, dst2, cv.COLOR_RGBA2GRAY, 0);
-    cv.threshold(dst2, dst2, 177, 200, cv.THRESH_BINARY);
     cv.imshow('canvasOutput5', dst2);
-    let contours = new cv.MatVector();
-    let hierarchy = new cv.Mat();
-    cv.findContours(
-      dst2,
-      contours,
-      hierarchy,
-      cv.RETR_CCOMP,
-      cv.CHAIN_APPROX_SIMPLE
-    );
-    let contoursColor = new cv.Scalar(255, 255, 255);
-    let rectangleColor = new cv.Scalar(255, 0, 0);
-    for (let i = 0; i < contours.size(); ++i) {
-      let cnt = contours.get(i);
-      let rect = cv.boundingRect(cnt);
-      cv.drawContours(dst3, contours, 0, contoursColor, 1, 8, hierarchy, 100);
-      let point1 = new cv.Point(rect.x, rect.y);
-      let point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-      cv.rectangle(dst3, point1, point2, rectangleColor, 2, cv.LINE_AA, 0);
+    const rect = this.opencvService.getCenterRect(dst2);
+    if (rect) {
+      const rectangleColor = new cv.Scalar(255, 0, 0);
+      const dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+      const point1 = new cv.Point(rect.x, rect.y);
+      const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+      cv.rectangle(dst3, point1, point2, rectangleColor, -1);
+      cv.imshow('canvasOutput7', dst3);
+      const dst4 = this.opencvService.crop(dst2, rect);
+      console.log(dst4.rows);
+      this.opencvService.resizeTo(dst4, 50);
+      cv.imshow('canvasOutput8', dst4);
+      const canvas8 = document.getElementById(
+        'canvasOutput8'
+      ) as HTMLCanvasElement;
+      const text = await this.ocradService.execute(canvas8, {
+        numeric: true,
+      });
+      console.log(text);
     }
     // You can try more different parameters
 
-    cv.imshow('canvasOutput7', dst3);
     resize.delete();
     // points.delete();
     src.delete();
