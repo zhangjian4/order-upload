@@ -202,10 +202,19 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async handlePhoto(id: number, blob: Blob) {
     const src = await this.opencvService.fromBlob(blob);
     try {
+      const changes: any = {};
       const rect = await this.opencvService.getPagerRect(src);
       if (rect.length === 4) {
         const dest = await this.opencvService.transform(src, rect);
-        await this.database.preuploadFile.update(id, { rect, dest });
+        changes.rect = rect;
+        changes.dest = dest;
+      }
+      const orderNo = await this.opencvService.getOrderNo(src);
+      if (orderNo && orderNo.length >= 7) {
+        changes.name = orderNo;
+      }
+      if (Object.keys(changes).length) {
+        await this.database.preuploadFile.update(id, changes);
       }
       // await this.sleep();
     } catch (e) {
