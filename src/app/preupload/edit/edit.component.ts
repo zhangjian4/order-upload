@@ -6,7 +6,6 @@ import {
   OnInit,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import cv, { Point } from 'opencv-ts';
 import { fromEvent, Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
 import { Database, IUploadFile } from 'src/app/core/service/database.service';
@@ -129,7 +128,7 @@ export class EditComponent implements OnInit, OnDestroy {
       fromEvent(document, 'touchmove')
         .pipe(takeUntil(mouseup))
         .subscribe((e: TouchEvent) => {
-          console.log(e);
+          // console.log(e);
           const touchMove = e.touches.item(0);
           point.x = this.limit(
             startX + touchMove.clientX,
@@ -170,7 +169,7 @@ export class EditComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateMagnify({ x, y }: Point) {
+  updateMagnify({ x, y }: { x: number; y: number }) {
     if (y < 150) {
       const center = (this.left + this.right) / 2;
       if (!this.magnifyPositionRight && x < center) {
