@@ -160,61 +160,61 @@ export class OpencvTestComponent implements OnInit {
   //   return [...top, ...bottom];
   // }
 
-  async imageLoad(e: Event) {
-    const target = e.target as HTMLImageElement;
-    await this.opencvService.init();
-    const src = cv.imread(target);
-    const dest = new cv.Mat(src.rows, src.cols, src.type());
-    const threshold1 = 50;
-    const threshold2 = 20;
-    for (let row = 0; row < src.rows; row++) {
-      for (let col = 0; col < src.cols; col++) {
-        const pixel = src.ucharPtr(row, col);
-        const destPixel = dest.ucharPtr(row, col);
-        const [r, g, b, a] = pixel;
-        if (
-          r - g > threshold1 &&
-          r - g > threshold1 &&
-          Math.abs(g - b) < threshold2
-        ) {
-          pixel.forEach((v, i) => {
-            destPixel[i] = v;
-          });
-          // destPixel[3] = 255;
-          // console.log([r, g, b, a]);
-        } else {
-          destPixel.fill(255);
-        }
-      }
-    }
-    const dst = new cv.Mat();
-    // You can try more different parameters
-    cv.cvtColor(dest, dst, cv.COLOR_RGBA2GRAY, 0);
-    cv.imshow('canvasOutput0', dst);
+  // async imageLoad(e: Event) {
+  //   const target = e.target as HTMLImageElement;
+  //   await this.opencvService.init();
+  //   const src = cv.imread(target);
+  //   const dest = new cv.Mat(src.rows, src.cols, src.type());
+  //   const threshold1 = 50;
+  //   const threshold2 = 20;
+  //   for (let row = 0; row < src.rows; row++) {
+  //     for (let col = 0; col < src.cols; col++) {
+  //       const pixel = src.ucharPtr(row, col);
+  //       const destPixel = dest.ucharPtr(row, col);
+  //       const [r, g, b, a] = pixel;
+  //       if (
+  //         r - g > threshold1 &&
+  //         r - g > threshold1 &&
+  //         Math.abs(g - b) < threshold2
+  //       ) {
+  //         pixel.forEach((v, i) => {
+  //           destPixel[i] = v;
+  //         });
+  //         // destPixel[3] = 255;
+  //         // console.log([r, g, b, a]);
+  //       } else {
+  //         destPixel.fill(255);
+  //       }
+  //     }
+  //   }
+  //   const dst = new cv.Mat();
+  //   // You can try more different parameters
+  //   cv.cvtColor(dest, dst, cv.COLOR_RGBA2GRAY, 0);
+  //   cv.imshow('canvasOutput0', dst);
 
-    // let ratio = 1;
-    // if (src.rows > 900) {
-    //   ratio = 900 / src.rows;
-    // }
-    // const resize = this.opencvService.resizeImg(src, ratio);
-    // const canny = this.opencvService.getCanny(resize);
-    // this.showCanny(canny);
-    // const maxContour = this.opencvService.findMaxContour(canny);
-    // canny.delete();
-    // this.showMaxContour(resize, maxContour);
-    // // let dst4 = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
-    // const points = this.opencvService.getBoxPoint(maxContour);
-    // maxContour.delete();
-    // this.showPoints(resize, points);
-    // // points = this.orderPoints(points);
-    // // console.log(points);
-    // const dst = this.opencvService.warpImage(resize, points);
-    // this.showWarp(dst);
-    // resize.delete();
-    // points.delete();
-    // src.delete();
-    // dst.delete();
-  }
+  //   // let ratio = 1;
+  //   // if (src.rows > 900) {
+  //   //   ratio = 900 / src.rows;
+  //   // }
+  //   // const resize = this.opencvService.resizeImg(src, ratio);
+  //   // const canny = this.opencvService.getCanny(resize);
+  //   // this.showCanny(canny);
+  //   // const maxContour = this.opencvService.findMaxContour(canny);
+  //   // canny.delete();
+  //   // this.showMaxContour(resize, maxContour);
+  //   // // let dst4 = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
+  //   // const points = this.opencvService.getBoxPoint(maxContour);
+  //   // maxContour.delete();
+  //   // this.showPoints(resize, points);
+  //   // // points = this.orderPoints(points);
+  //   // // console.log(points);
+  //   // const dst = this.opencvService.warpImage(resize, points);
+  //   // this.showWarp(dst);
+  //   // resize.delete();
+  //   // points.delete();
+  //   // src.delete();
+  //   // dst.delete();
+  // }
 
   image2Load(e: Event) {
     const target = e.target as HTMLImageElement;

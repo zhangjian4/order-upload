@@ -145,13 +145,10 @@ export class EditComponent implements OnInit, OnDestroy {
         });
       mouseup.subscribe(() => {
         this.moving = false;
-        const points = this.points.map(
-          (p) =>
-            new cv.Point(
-              (p.x - this.left) / this.ratio,
-              (p.y - this.top) / this.ratio
-            )
-        );
+        const points = this.points.map((p) => ({
+          x: (p.x - this.left) / this.ratio,
+          y: (p.y - this.top) / this.ratio,
+        }));
         this.preuploadService.updateRect(this.data, points);
       });
     });
