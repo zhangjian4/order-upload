@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "lib": ["WebWorker"],
+    "sourceMap": false,
+    "rootDir": "src/worker",
+    "outDir": "src/assets/js"
+  },
+  "files": ["src/worker/opencv.worker.ts"],
+  "exclude": ["node_modules"]
+}

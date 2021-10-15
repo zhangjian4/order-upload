@@ -18,6 +18,14 @@ export const loadImage = (url: string) =>
       reject(e);
     };
   });
+export const imageToImageData = (image: HTMLImageElement) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, image.width, image.height);
+  return ctx.getImageData(0, 0, image.width, image.height);
+};
 
 export const urlToBlob = async (url: string) => {
   const image = await loadImage(url);

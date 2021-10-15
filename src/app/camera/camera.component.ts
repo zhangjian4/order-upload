@@ -25,7 +25,7 @@ import {
   IndexedDBService,
   PREUPLOAD_PHOTO,
 } from '../core/service/indexeddb.service';
-import { Database } from '../core/service/database.service';
+import { Database, IUploadFile } from '../core/service/database.service';
 import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import * as SparkMD5 from 'spark-md5';
@@ -170,11 +170,12 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       const name = format(new Date(), 'yyyyMMddHHmmssSSS');
       this.photoCount++;
       this.lastFile = blob;
-      const id = await this.database.preuploadFile.add({
+      const item: IUploadFile = {
         name,
         blob,
-      });
-      this.promises.push(this.handlePhoto(id, blob));
+      };
+      item.id = await this.database.preuploadFile.add(item);
+      this.promises.push(this.preuploadService.process(item));
     }
     // const buffer = base64ToArrayBuffer(base64);
     // const blob = new Blob([buffer], {
@@ -199,30 +200,30 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // });
   }
 
-  async handlePhoto(id: number, blob: Blob) {
-    const src = await this.opencvService.fromBlob(blob);
-    try {
-      const changes: any = {};
-      const rect = await this.opencvService.getPagerRect(src);
-      if (rect.length === 4) {
-        const dest = await this.opencvService.transform(src, rect);
-        changes.rect = rect;
-        changes.dest = dest;
-      }
-      const orderNo = await this.opencvService.getOrderNo(src);
-      if (orderNo && orderNo.length >= 7) {
-        changes.name = orderNo;
-      }
-      if (Object.keys(changes).length) {
-        await this.database.preuploadFile.update(id, changes);
-      }
-      // await this.sleep();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      src.delete();
-    }
-  }
+  // async handlePhoto(id: number, blob: Blob) {
+  //   const src = await this.opencvService.fromBlob(blob);
+  //   try {
+  //     const changes: any = {};
+  //     const rect = await this.opencvService.getPagerRect(src);
+  //     if (rect.length === 4) {
+  //       const dest = await this.opencvService.transform(src, rect);
+  //       changes.rect = rect;
+  //       changes.dest = dest;
+  //     }
+  //     const orderNo = await this.opencvService.getOrderNo(src);
+  //     if (orderNo && orderNo.length >= 7) {
+  //       changes.name = orderNo;
+  //     }
+  //     if (Object.keys(changes).length) {
+  //       await this.database.preuploadFile.update(id, changes);
+  //     }
+  //     // await this.sleep();
+  //   } catch (e) {
+  //     console.error(e);
+  //   } finally {
+  //     src.delete();
+  //   }
+  // }
 
   sleep() {
     return new Promise((resolve) => {

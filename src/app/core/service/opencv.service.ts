@@ -1,25 +1,37 @@
 import { Injectable } from '@angular/core';
 import { LazyService } from './lazy.service';
-import cv, { Mat, Point, Rect } from 'opencv-ts';
+import cv, { Mat, Point, Rect, Size } from 'opencv-ts';
 import {
   base64ToBlob,
   canvasToBlob,
+  imageToImageData,
   loadImage,
 } from 'src/app/shared/util/image.util';
 import { OcradService } from './ocrad.service';
 
 @Injectable({ providedIn: 'root' })
 export class OpenCVService {
+  worker: Worker;
+  private messageId = 0;
   private initPromise: Promise<void>;
+  private resolveMap = {};
   constructor(private ocradService: OcradService) {
-    this.initPromise = new Promise<void>((resolve) => {
-      (cv as any).then(() => {
-        resolve();
-      });
-    });
+    this.worker = new Worker('/assets/js/opencv.worker.js');
+    this.worker.onmessage = (event: MessageEvent) => {
+      console.log(event);
+      const data = event.data;
+      const resolve = this.resolveMap[data.messageId];
+      if (resolve) {
+        resolve(data.result);
+        delete this.resolveMap[data.messageId];
+      }
+    };
   }
 
   init() {
+    if (!this.initPromise) {
+      this.initPromise = this.execute('init');
+    }
     return this.initPromise;
   }
 
@@ -27,10 +39,38 @@ export class OpenCVService {
     const url = URL.createObjectURL(blob);
     try {
       const image = await loadImage(url);
-      const src = cv.imread(image);
+      const imageData = imageToImageData(image);
+      console.log(imageData);
+      const src = await this.fromImageData(imageData);
       return src;
     } finally {
       URL.revokeObjectURL(url);
+    }
+  }
+
+  fromImageData(imageData: ImageData) {
+    return this.execute('fromImageData', imageData);
+  }
+
+  /**
+   * 旋转
+   *
+   * @param src
+   * @param angle
+   */
+  rotate(src: Mat, angle: 0 | 90 | 180 | 270) {
+    switch (angle) {
+      case 90:
+        cv.transpose(src, src);
+        cv.flip(src, src, 0);
+        break;
+      case 180:
+        cv.flip(src, src, -1);
+        break;
+      case 270:
+        cv.transpose(src, src);
+        cv.flip(src, src, 1);
+        break;
     }
   }
 
@@ -65,7 +105,7 @@ export class OpenCVService {
     // 高斯模糊
     // cv.GaussianBlur(image, dst2, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
     // 中值滤波
-    cv.medianBlur(image, dst2, 5);
+    cv.medianBlur(image, dst2, 1);
     // 双边滤波
     // cv.cvtColor(image, image, cv.COLOR_RGBA2RGB, 0);
     // cv.bilateralFilter(image, dst2, 9, 75, 75, cv.BORDER_DEFAULT);
@@ -73,7 +113,7 @@ export class OpenCVService {
     // dst1.delete();
     const dst3 = new cv.Mat();
     // 边缘检测
-    cv.Canny(dst2, dst3, 100, 300);
+    cv.Canny(dst2, dst3, 50, 200);
     dst2.delete();
     const dst4 = new cv.Mat();
     const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
@@ -212,10 +252,8 @@ export class OpenCVService {
     } else {
       mat = src;
     }
-    let ratio = 1;
-    if (mat.rows > 900) {
-      ratio = 900 / mat.rows;
-    }
+    this.rotate(mat, 90);
+    const ratio = 900 / mat.rows;
     const resize = this.resizeImg(mat, ratio);
     const canny = this.getCanny(resize);
     resize.delete();
@@ -237,14 +275,24 @@ export class OpenCVService {
     if (src instanceof Blob) {
       src = await this.fromBlob(src as Blob);
     }
-    const dst = this.warpImage(src, points);
-    const canvas = document.createElement('canvas');
-    cv.imshow(canvas, dst);
-    const result = await canvasToBlob(canvas);
+    const dst = this.warpImage(src as Mat, points);
+    const result = await this.toBlob(dst);
     // let base64 = canvas.toDataURL('image/jpeg');
     // base64 = base64.substr(base64.indexOf(',') + 1);
     // const result = base64ToBlob(base64);
     dst.delete();
+    return result;
+  }
+
+  toCanvas(src: Mat) {
+    const canvas = document.createElement('canvas');
+    cv.imshow(canvas, src);
+    return canvas;
+  }
+
+  async toBlob(src: Mat) {
+    const canvas = this.toCanvas(src);
+    const result = await canvasToBlob(canvas);
     return result;
   }
 
@@ -296,11 +344,12 @@ export class OpenCVService {
       dst1,
       kernel,
       anchor,
-      3,
+      6,
       cv.BORDER_CONSTANT,
       cv.morphologyDefaultBorderValue()
     );
     kernel.delete();
+    // cv.imshow('canvasOutput6', dst1);
     const contours = new cv.MatVector();
     const hierarchy = new cv.Mat();
     cv.findContours(
@@ -318,7 +367,10 @@ export class OpenCVService {
       const cnt = contours.get(i);
       const rect = cv.boundingRect(cnt);
       const currentArea = cv.contourArea(cnt);
-      if (currentArea / (rect.width * rect.height) > 0.5) {
+      if (
+        currentArea > 1000 &&
+        currentArea / (rect.width * rect.height) > 0.5
+      ) {
         let distance: number;
         if (rect.x > centerX) {
           distance = rect.x - centerX;
@@ -348,11 +400,24 @@ export class OpenCVService {
     return dst;
   }
 
-  resizeTo(src: Mat, minHeight: number) {
-    if (src.rows < minHeight) {
+  resizeTo(
+    src: Mat,
+    { maxHeight, minHeight }: { maxHeight?: number; minHeight?: number }
+  ) {
+    let dsize: Size;
+    if (maxHeight && src.rows > maxHeight) {
+      const ratio = maxHeight / src.rows;
+      dsize = new cv.Size(
+        Math.round(src.cols * ratio),
+        Math.round(src.rows * ratio)
+      );
+    }
+    if (minHeight && src.rows < minHeight) {
+      // 放大整数倍
       const ratio = Math.ceil(minHeight / src.rows);
-      const dsize = new cv.Size(src.cols * ratio, src.rows * ratio);
-      // You can try more different parameters
+      dsize = new cv.Size(src.cols * ratio, src.rows * ratio);
+    }
+    if (dsize) {
       cv.resize(src, src, dsize, 0, 0, cv.INTER_LINEAR);
     }
   }
@@ -363,7 +428,7 @@ export class OpenCVService {
     try {
       if (rect) {
         const dst2 = this.crop(dst1, rect);
-        this.resizeTo(dst2, 50);
+        this.resizeTo(dst2, { minHeight: 50 });
         const canvas = document.createElement('canvas');
         cv.imshow(canvas, dst2);
         dst2.delete();
@@ -375,5 +440,12 @@ export class OpenCVService {
     } finally {
       dst1.delete();
     }
+  }
+  private execute(method: string, ...args: any[]): Promise<any> {
+    const messageId = this.messageId++;
+    this.worker.postMessage({ messageId, method, args });
+    return new Promise((resolve) => {
+      this.resolveMap[messageId] = resolve;
+    });
   }
 }

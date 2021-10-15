@@ -56,10 +56,11 @@ export class OpencvTestComponent implements OnInit {
     // this.blob = data.blob;
     await this.opencvService.init();
     const src = await this.opencvService.fromBlob(data.blob);
-    let ratio = 1;
-    if (src.rows > 900) {
-      ratio = 900 / src.rows;
+    console.log(src);
+    if(src.rows>src.cols){
+      this.opencvService.rotate(src,90);
     }
+    const ratio = 900 / src.rows;
     const resize = this.opencvService.resizeImg(src, ratio);
 
     // cv.cvtColor(resize, resize, cv.COLOR_RGBA2RGB, 0);
@@ -72,9 +73,17 @@ export class OpencvTestComponent implements OnInit {
     canny.delete();
     this.showMaxContour(resize, maxContour);
     // let dst4 = cv.Mat.zeros(src.cols, src.rows, cv.CV_8UC3);
-    const points = this.opencvService.getBoxPoint(maxContour, ratio);
+    let points = this.opencvService.getBoxPoint(maxContour, ratio);
     maxContour.delete();
-    this.showPoints(resize, points);
+    if (points.length !== 4) {
+      points = [
+        new cv.Point(0, 0),
+        new cv.Point(src.cols, 0),
+        new cv.Point(src.cols, src.rows),
+        new cv.Point(0, src.rows),
+      ];
+    }
+    this.showPoints(src, points);
     // points = this.orderPoints(points);
     // console.log(points);
     const dst = this.opencvService.warpImage(src, points);
@@ -89,19 +98,20 @@ export class OpencvTestComponent implements OnInit {
     // cv.inRange(src, low, high, dst3);
     // cv.imshow('canvasOutput0', dst3);
     this.showWarp(dst);
-    const dst2 = this.opencvService.extractColor(dst);
+    // this.opencvService.resizeTo(dst, { maxHeight: 900 });
+    const dst2 = this.opencvService.extractColor(resize);
     cv.imshow('canvasOutput5', dst2);
     const rect = this.opencvService.getCenterRect(dst2);
     if (rect) {
       const rectangleColor = new cv.Scalar(255, 0, 0);
-      const dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+      const dst3 = cv.Mat.zeros(resize.rows, resize.cols, cv.CV_8UC3);
       const point1 = new cv.Point(rect.x, rect.y);
       const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
       cv.rectangle(dst3, point1, point2, rectangleColor, -1);
       cv.imshow('canvasOutput7', dst3);
       const dst4 = this.opencvService.crop(dst2, rect);
       console.log(dst4.rows);
-      this.opencvService.resizeTo(dst4, 50);
+      this.opencvService.resizeTo(dst4, { minHeight: 50 });
       cv.imshow('canvasOutput8', dst4);
       const canvas8 = document.getElementById(
         'canvasOutput8'

@@ -31,14 +31,9 @@
                 "output": "./svg"
               },
               {
-                "glob": "worker.min.js",
-                "input": "node_modules/tesseract.js/dist",
-                "output": "assets/tesseract"
-              },
-              {
-                "glob": "tesseract-core.wasm.js",
-                "input": "node_modules/tesseract.js-core",
-                "output": "assets/tesseract"
+                "glob": "opencv.js",
+                "input": "node_modules/opencv-ts/src",
+                "output": "assets/js"
               }
             ],
             "styles": ["src/theme/variables.scss", "src/global.scss"],

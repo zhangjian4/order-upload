@@ -3,10 +3,12 @@
   display: block;
 }
 
-img{
+img {
   max-width: initial;
 }
-
+canvas {
+  max-width: 100%;
+}
 // canvas{
 //   width: 100%;
 // }

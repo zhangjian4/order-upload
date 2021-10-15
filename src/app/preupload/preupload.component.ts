@@ -146,10 +146,11 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   async renameEnd(item: IUploadFile) {
     this.renameId = null;
     if (this.editName) {
-      item.name = this.editName;
-      await this.database.preuploadFile.update(item.id, {
-        name: this.editName,
-      });
+      await this.preuploadService.rename(item, this.editName);
+      // item.name = this.editName;
+      // await this.database.preuploadFile.update(item.id, {
+      //   name: this.editName,
+      // });
     }
   }
 

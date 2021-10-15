@@ -77,18 +77,15 @@
 <ion-footer>
   <ion-toolbar>
     <ion-buttons *ngIf="data">
-      <div><ion-icon name="color-filter-outline"></ion-icon>滤镜</div>
+      <div (click)="rotate()"><ion-icon name="color-filter-outline"></ion-icon>滤镜</div>
       <div (click)="remove()">
         <ion-icon name="trash-outline"></ion-icon>删除
       </div>
-      <div>
-        <ion-icon
-          name="camera-outline"
-          routerLink="/camera/{{ data.id }}"
-        ></ion-icon
-        >重拍
+      <div routerLink="/camera/{{ data.id }}">
+        <ion-icon name="camera-outline"></ion-icon>重拍
       </div>
-      <div><ion-icon name="refresh-outline"></ion-icon>旋转</div>
+      <div (click)="rotate()"><ion-icon name="refresh-outline" ></ion-icon>旋转</div>
+      <div (click)="rename()"><ion-icon name="create-outline"></ion-icon>重命名</div>
       <!-- <a><ion-icon name="contract-outline"></ion-icon>自动</a>
       <a><ion-icon name="expand-outline"></ion-icon>全部</a> -->
       <ion-button fill="solid" routerLink="/preupload" routerDirection="back"

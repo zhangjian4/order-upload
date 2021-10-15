@@ -13,6 +13,7 @@ import { Database, IUploadFile } from 'src/app/core/service/database.service';
 import SwiperCore, { Pagination, Navigation, Virtual } from 'swiper';
 import { AlertController, NavController } from '@ionic/angular';
 import { PreuploadService } from 'src/app/core/service/preupload.service';
+import { CommonService } from 'src/app/core/service/common.service';
 
 SwiperCore.use([Virtual, Pagination, Navigation]);
 
@@ -49,7 +50,8 @@ export class EditComponent implements OnInit, OnDestroy {
     private cd: ChangeDetectorRef,
     private alertController: AlertController,
     private database: Database,
-    private navController: NavController
+    private navController: NavController,
+    private commonService: CommonService
   ) {
     route.queryParams.subscribe((params) => {
       if (params.index != null) {
@@ -246,5 +248,43 @@ export class EditComponent implements OnInit, OnDestroy {
       ],
     });
     await alert.present();
+  }
+
+  async rename() {
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: '重命名',
+      inputs: [
+        {
+          name: 'name',
+          type: 'text',
+          value: this.data.name,
+        },
+      ],
+      buttons: [
+        {
+          text: '取消',
+          role: 'cancel',
+          cssClass: 'secondary',
+        },
+        {
+          text: '确定',
+          handler: ({ name }) => {
+            if (name) {
+              this.preuploadService.rename(this.data, name);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
+    const input: HTMLInputElement = document.querySelector('ion-alert input');
+    // console.log(input);
+    input.focus();
+    input.select();
+  }
+
+  rotate() {
+    this.commonService.toast('功能还未完成');
   }
 }
