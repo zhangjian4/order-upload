@@ -1,10 +1,12 @@
 import {
   Component,
+  ElementRef,
   HostBinding,
   HostListener,
   NgZone,
   OnDestroy,
   OnInit,
+  ViewChild,
 } from '@angular/core';
 import {
   CameraPreview,
@@ -59,6 +61,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   cameraStarted: boolean;
   promises: Promise<any>[] = [];
   id: number;
+  @ViewChild('fileInput')
+  fileInput: ElementRef;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -155,28 +159,32 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async takePicture() {
-    let blob: Blob;
-    if (this.platform.is('cordova')) {
-      const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
-      blob = base64ToBlob(base64);
-    } else {
-      blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
-    }
-    if (this.id) {
-      this.preuploadService.updateBlob(this.id, blob);
-      // await this.database.preuploadFile.update(this.id, { blob });
-      this.back();
-    } else {
-      const name = format(new Date(), 'yyyyMMddHHmmssSSS');
-      this.photoCount++;
-      this.lastFile = blob;
-      const item: IUploadFile = {
-        name,
-        blob,
-      };
-      item.id = await this.database.preuploadFile.add(item);
-      this.promises.push(this.preuploadService.process(item));
-    }
+    const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
+    const blob = base64ToBlob(base64);
+    await this.add(blob);
+    // if (this.platform.is('cordova')) {
+    //   const input = document.createElement('input');
+    //   input.type = 'file';
+    //   const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
+    //   blob = base64ToBlob(base64);
+    // } else {
+    //   blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
+    // }
+    // if (this.id) {
+    //   this.preuploadService.updateBlob(this.id, blob);
+    //   // await this.database.preuploadFile.update(this.id, { blob });
+    //   this.back();
+    // } else {
+    //   const name = format(new Date(), 'yyyyMMddHHmmssSSS');
+    //   this.photoCount++;
+    //   this.lastFile = blob;
+    //   const item: IUploadFile = {
+    //     name,
+    //     blob,
+    //   };
+    //   item.id = await this.database.preuploadFile.add(item);
+    //   this.promises.push(this.preuploadService.process(item));
+    // }
     // const buffer = base64ToArrayBuffer(base64);
     // const blob = new Blob([buffer], {
     //   type: 'image/jpeg',
@@ -198,6 +206,26 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     //   // this.preview = true;
     //   // this.hideBackground = false;
     // });
+  }
+
+  async add(blob: Blob, name?: string) {
+    if (this.id) {
+      this.preuploadService.updateBlob(this.id, blob);
+      // await this.database.preuploadFile.update(this.id, { blob });
+      this.back();
+    } else {
+      if (!name) {
+        name = format(new Date(), 'yyyyMMddHHmmssSSS');
+      }
+      this.photoCount++;
+      this.lastFile = blob;
+      const item: IUploadFile = {
+        name,
+        blob,
+      };
+      item.id = await this.database.preuploadFile.add(item);
+      this.promises.push(this.preuploadService.process(item));
+    }
   }
 
   // async handlePhoto(id: number, blob: Blob) {
@@ -419,4 +447,18 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   //     this.footerStyle = {};
   //   });
   // }
+
+  selectFile() {
+    this.fileInput.nativeElement.click();
+  }
+
+  async fileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    const file = files[0];
+    if (file) {
+      await this.add(file, file.name);
+    }
+    input.value = null;
+  }
 }
