@@ -39,8 +39,9 @@ export class OpenCVService {
     const url = URL.createObjectURL(blob);
     try {
       const image = await loadImage(url);
-      const imageData = imageToImageData(image);
+      const imageData = await imageToImageData(image);
       console.log(imageData);
+      
       const src = await this.fromImageData(imageData);
       return src;
     } finally {
@@ -48,7 +49,7 @@ export class OpenCVService {
     }
   }
 
-  fromImageData(imageData: ImageData) {
+  fromImageData(imageData: ImageBitmap) {
     return this.execute('fromImageData', imageData);
   }
 
@@ -443,7 +444,13 @@ export class OpenCVService {
   }
   private execute(method: string, ...args: any[]): Promise<any> {
     const messageId = this.messageId++;
-    this.worker.postMessage({ messageId, method, args });
+    const transfer = [];
+    args.forEach((arg) => {
+      if (arg instanceof ImageBitmap ) {
+        transfer.push(arg);
+      }
+    });
+    this.worker.postMessage({ messageId, method, args }, transfer);
     return new Promise((resolve) => {
       this.resolveMap[messageId] = resolve;
     });

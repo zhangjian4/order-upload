@@ -73,6 +73,7 @@ self.addEventListener('message', function (e) { return __awaiter(_this, void 0, 
                     result = result.data;
                     transfers.push(result.buffer);
                 }
+                console.log(123);
                 self.postMessage({ messageId: data.messageId, result: result }, transfers);
                 _a.label = 2;
             case 2: return [2 /*return*/];

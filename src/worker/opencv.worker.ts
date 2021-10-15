@@ -38,6 +38,7 @@ self.addEventListener(
         result = result.data;
         transfers.push(result.buffer);
       }
+      console.log(123);
       self.postMessage({ messageId: data.messageId, result }, transfers);
     }
   },
