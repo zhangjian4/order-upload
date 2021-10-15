@@ -223,7 +223,7 @@ var OpenCVService = /** @class */ (function () {
      */
     OpenCVService.prototype.extractColor = function (src) {
         var dst = new cv.Mat(src.rows, src.cols, src.type());
-        var threshold1 = 20;
+        var threshold1 = 40;
         // const threshold2 = 20;
         for (var row = 0; row < src.rows; row++) {
             var _loop_1 = function (col) {

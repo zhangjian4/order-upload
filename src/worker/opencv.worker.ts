@@ -233,7 +233,7 @@ class OpenCVService {
    */
   extractColor(src: any) {
     const dst = new cv.Mat(src.rows, src.cols, src.type());
-    const threshold1 = 20;
+    const threshold1 = 40;
     // const threshold2 = 20;
     for (let row = 0; row < src.rows; row++) {
       for (let col = 0; col < src.cols; col++) {
