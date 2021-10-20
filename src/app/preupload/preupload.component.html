@@ -22,48 +22,45 @@
       class="item"
       [attr.item-id]="item.id"
     >
-      <ion-card>
-        <div
-          class="img-container"
-          routerLink="edit"
-          [queryParams]="{ index: i }"
-        >
-          <!-- <div
+      <div class="img-container" routerLink="edit" [queryParams]="{ index: i }">
+        <!-- <div
           class="img-container"
           routerLink="/opencv-test"
           [queryParams]="{ id: item.id }"
         > -->
-          <img *ngIf="item.destUrl || item.url as url" [src]="url | sanitizer: 'url'" />
-        </div>
-        <!-- <ion-thumbnail
+        <img
+          *ngIf="item.destUrl || item.url as url"
+          [src]="url | sanitizer: 'url'"
+        />
+      </div>
+      <!-- <ion-thumbnail
           routerLink="edit"
           [queryParams]="{ id: item.id }"
         >
           <img [blob-src]="item.blob" />
         </ion-thumbnail> -->
-        <a class="remove-btn" (click)="remove(item)">
-          <ion-icon name="close"></ion-icon>
-        </a>
+      <a class="remove-btn" (click)="remove(item)">
+        <ion-icon name="close"></ion-icon>
+      </a>
 
-        <!-- <ion-card-header>
+      <!-- <ion-card-header>
           <ion-card-subtitle>Destination</ion-card-subtitle>
           <ion-card-title>Madison, WI</ion-card-title>
         </ion-card-header> -->
-        <ion-card-content (click)="rename(item)">
-          <ion-input
-            #nameInput
-            *ngIf="renameId === item.id"
-            [ngModel]="item.name"
-            enterkeyhint="done"
-            (ngModelChange)="editName = $event"
-            (ionBlur)="renameEnd(item)"
-            (keydown)="onKeydown(item, $event)"
-          ></ion-input>
-          <ng-container *ngIf="renameId !== item.id">
-            {{ item.name }}.jpg</ng-container
-          >
-        </ion-card-content>
-      </ion-card>
+      <div (click)="rename(item)" class="file-name">
+        <ion-input
+          #nameInput
+          *ngIf="renameId === item.id"
+          [ngModel]="item.name"
+          enterkeyhint="done"
+          (ngModelChange)="editName = $event"
+          (ionBlur)="renameEnd(item)"
+          (keydown)="onKeydown(item, $event)"
+        ></ion-input>
+        <ng-container *ngIf="renameId !== item.id">
+          {{ item.name }}.jpg</ng-container
+        >
+      </div>
       <!-- <div class="image-container">
         <img  appDbImage table="preuploadFile" [index]="item.id">
       </div>
@@ -93,11 +90,7 @@
         </span>
         <ion-icon name="chevron-forward-outline"></ion-icon>
       </ion-button>
-      <ion-button
-        color="primary"
-        fill="solid"
-        class="upload"
-        (click)="save()"
+      <ion-button color="primary" fill="solid" class="upload" (click)="save()"
         >上传</ion-button
       >
     </ion-buttons>

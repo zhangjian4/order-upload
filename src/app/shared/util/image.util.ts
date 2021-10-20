@@ -1,9 +1,17 @@
-export const imageToBlob = (image: HTMLImageElement) => {
+export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
   const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
+  canvas.width = image.width * scale;
+  canvas.height = image.height * scale;
   const ctx = canvas.getContext('2d');
+  if (scale) {
+    ctx.scale(scale, scale);
+  }
   ctx.drawImage(image, 0, 0, image.width, image.height);
+  return canvas;
+};
+
+export const imageToBlob = (image: HTMLImageElement) => {
+  const canvas = imageToCanvas(image);
   return canvasToBlob(canvas);
 };
 
@@ -18,13 +26,10 @@ export const loadImage = (url: string) =>
       reject(e);
     };
   });
+
 export const imageToImageData = (image: HTMLImageElement) => {
-  // return createImageBitmap(image);
-  const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
+  const canvas = imageToCanvas(image);
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, 0, 0, image.width, image.height);
   return ctx.getImageData(0, 0, image.width, image.height);
 };
 
@@ -35,16 +40,16 @@ export const urlToBlob = async (url: string) => {
 
 export const base64ToArrayBuffer = (base64: string) => {
   const binStr = atob(base64);
-  let len = binStr.length;
+  const len = binStr.length;
   const arr = new Uint8Array(len);
-  for (var i = 0; i < len; i++) {
+  for (let i = 0; i < len; i++) {
     arr[i] = binStr.charCodeAt(i);
   }
   return arr;
 };
 
-export const canvasToBlob = (canvas: HTMLCanvasElement) => {
-  return new Promise<Blob>((resolve) => {
+export const canvasToBlob = (canvas: HTMLCanvasElement) =>
+  new Promise<Blob>((resolve) => {
     canvas.toBlob(
       (blob) => {
         resolve(blob);
@@ -53,7 +58,6 @@ export const canvasToBlob = (canvas: HTMLCanvasElement) => {
       1
     );
   });
-};
 export const base64ToBlob = (base64: string) => {
   const buffer = base64ToArrayBuffer(base64);
   const blob = new Blob([buffer], {

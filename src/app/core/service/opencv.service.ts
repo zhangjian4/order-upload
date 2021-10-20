@@ -40,8 +40,8 @@ export class OpenCVService {
     const url = URL.createObjectURL(blob);
     try {
       const image = await loadImage(url);
-      const imageData = await imageToImageData(image);
-      return imageData as any;
+      const imageData = imageToImageData(image);
+      return imageData;
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -438,6 +438,7 @@ export class OpenCVService {
   async process(blob: Blob) {
     const imageData = await this.fromBlob(blob);
     const result = await this.execute('process', imageData);
+    console.log(imageData);
     if (result.blob) {
       result.blob = await this.toBlob(result.blob);
     }
@@ -454,8 +455,8 @@ export class OpenCVService {
     const messageId = this.messageId++;
     const transfer = [];
     args.forEach((arg) => {
-      if (arg instanceof ImageBitmap) {
-        transfer.push(arg);
+      if (arg instanceof ImageData) {
+        transfer.push(arg.data.buffer);
       }
     });
     this.worker.postMessage({ messageId, method, args }, transfer);

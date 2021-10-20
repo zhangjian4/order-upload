@@ -34,6 +34,9 @@ import * as SparkMD5 from 'spark-md5';
 import {
   base64ToArrayBuffer,
   base64ToBlob,
+  canvasToBlob,
+  imageToCanvas,
+  loadImage,
   urlToBlob,
 } from '../shared/util/image.util';
 import { OpenCVService } from '../core/service/opencv.service';
@@ -455,9 +458,28 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async fileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const files = input.files;
-    const file = files[0];
-    if (file) {
-      await this.add(file, file.name);
+    for (let i = 0; i < files.length; i++) {
+      const file = files.item(i);
+      if (file.size > 1024 * 1024) {
+        const url = URL.createObjectURL(file);
+        try {
+          const image = await loadImage(url);
+
+          let scale: number;
+          if (image.height >= image.width && image.width > 1080) {
+            scale = 1080 / image.width;
+          } else if (image.height < image.width && image.height > 1080) {
+            scale = 1080 / image.height;
+          }
+          const canvas = imageToCanvas(image, scale);
+          const blob = await canvasToBlob(canvas);
+          await this.add(blob, file.name);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      } else {
+        await this.add(file, file.name);
+      }
     }
     input.value = null;
   }
