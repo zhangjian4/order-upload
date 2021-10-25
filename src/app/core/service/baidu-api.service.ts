@@ -5,6 +5,7 @@ import { Storage } from '@ionic/storage-angular';
 import { HttpService } from './http.service';
 import * as SparkMD5 from 'spark-md5';
 import { Subject } from 'rxjs';
+import { CommonService } from './common.service';
 const ErrorMessage = {
   0: '成功',
   '-1': '用户名和密码验证失败',
@@ -84,7 +85,8 @@ export class BaiduAPIService {
     private platform: Platform,
     private zone: NgZone,
     private storage: Storage,
-    public toastController: ToastController
+    // public toastController: ToastController,
+    private commonService: CommonService
   ) {}
 
   get redirectUri() {
@@ -210,12 +212,13 @@ export class BaiduAPIService {
       error = '错误码:' + errno;
     }
     if (error) {
-      const toast = await this.toastController.create({
-        message: error,
-        position: 'top',
-        duration: 2000,
-      });
-      toast.present();
+      this.commonService.toast(error);
+      // const toast = await this.toastController.create({
+      //   message: error,
+      //   position: 'top',
+      //   duration: 2000,
+      // });
+      // toast.present();
     }
   }
 

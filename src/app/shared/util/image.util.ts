@@ -3,7 +3,7 @@ export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
   canvas.width = image.width * scale;
   canvas.height = image.height * scale;
   const ctx = canvas.getContext('2d');
-  if (scale) {
+  if (scale !== 1) {
     ctx.scale(scale, scale);
   }
   ctx.drawImage(image, 0, 0, image.width, image.height);

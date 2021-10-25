@@ -41,6 +41,7 @@ import {
 } from '../shared/util/image.util';
 import { OpenCVService } from '../core/service/opencv.service';
 import { PreuploadService } from '../core/service/preupload.service';
+import { CommonService } from '../core/service/common.service';
 
 @Component({
   selector: 'app-camera',
@@ -76,7 +77,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private database: Database,
     private opencvService: OpenCVService,
     private route: ActivatedRoute,
-    private preuploadService: PreuploadService
+    private preuploadService: PreuploadService,
+    private commonService: CommonService
   ) {
     this.route.params.subscribe((params) => {
       if (params.id) {
@@ -227,8 +229,15 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         blob,
       };
       item.id = await this.database.preuploadFile.add(item);
-      this.promises.push(this.preuploadService.process(item));
+      this.process(item);
     }
+  }
+
+  async process(item: IUploadFile) {
+    const promise = this.preuploadService.process(item);
+    this.promises.push(promise);
+    await promise;
+    this.promises = this.promises.filter((p) => p !== promise);
   }
 
   // async handlePhoto(id: number, blob: Blob) {
@@ -290,7 +299,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async submit() {
-    await Promise.all(this.promises);
+    if (this.promises.length) {
+      await this.commonService.loading('正在处理图像',()=>Promise.all(this.promises));
+    }
     this.navController.navigateForward('/preupload');
   }
 

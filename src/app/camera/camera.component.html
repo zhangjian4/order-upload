@@ -19,7 +19,8 @@
       style="display: none"
       #fileInput
       type="file"
-      multiple 
+      [multiple]="!id"
+      accept="image/*"
       (change)="fileChange($event)"
     />
   </div>

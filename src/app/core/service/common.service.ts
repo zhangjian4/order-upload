@@ -61,7 +61,7 @@ export class CommonService {
     });
   }
 
-  async loading(message: string, method: () => void | Promise<void>) {
+  async loading(message: string, method: () => any | Promise<any>) {
     const loading = await this.loadingController.create({ message });
     loading.present();
     try {

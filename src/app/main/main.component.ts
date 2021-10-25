@@ -57,7 +57,8 @@ export class MainComponent implements OnInit {
     private storage: Storage,
     private router: Router,
     private platform: Platform,
-    private commonService: CommonService
+    private commonService: CommonService,
+    public loadingController: LoadingController,
   ) {
     // route.queryParams.subscribe((params) => {
     //   const dir = params.dir || '/';
@@ -154,13 +155,17 @@ export class MainComponent implements OnInit {
         `检测到新版本，是否立即更新?(更新包大小${size}，建议在wifi下更新)`
       );
       if (confirm) {
-        this.showProgress = true;
-        this.progress = 0;
+        const loading = await this.loadingController.create({
+          message: '正在更新...',
+        });
+        await loading.present();
+        // this.showProgress = true;
+        // this.progress = 0;
         this.codePush
           .sync({ installMode: InstallMode.IMMEDIATE }, (progress) => {
-            this.zone.run(() => {
-              this.progress = progress.receivedBytes / progress.totalBytes;
-            });
+            // this.zone.run(() => {
+            //   this.progress = progress.receivedBytes / progress.totalBytes;
+            // });
           })
           .subscribe((status) => {
             switch (status) {
@@ -170,7 +175,8 @@ export class MainComponent implements OnInit {
                 break;
               case SyncStatus.ERROR:
                 this.zone.run(() => {
-                  this.showProgress = false;
+                  // this.showProgress = false;
+                  loading.dismiss();
                   this.commonService.toast('更新失败');
                 });
                 break;

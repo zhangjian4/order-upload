@@ -19,6 +19,12 @@ export class OpenCVService {
       const result = event.data;
       const resolve = this.resolveMap[result.messageId];
       if (resolve) {
+        console.log(
+          'execute ' +
+            resolve.method +
+            ' end:' +
+            (new Date().getTime() - resolve.start)
+        );
         if (result.success) {
           resolve.resolve(result.data);
         } else {
@@ -270,7 +276,7 @@ export class OpenCVService {
 
   async transform(src: Blob, points: { x: number; y: number }[]) {
     const imageData = await this.fromBlob(src);
-    const dst = await this.execute('transform', imageData, points);
+    const dst: ImageData = await this.execute('warpImage', imageData, points);
     return this.toBlob(dst);
   }
 
@@ -438,7 +444,6 @@ export class OpenCVService {
   async process(blob: Blob) {
     const imageData = await this.fromBlob(blob);
     const result = await this.execute('process', imageData);
-    console.log(imageData);
     if (result.blob) {
       result.blob = await this.toBlob(result.blob);
     }
@@ -459,9 +464,11 @@ export class OpenCVService {
         transfer.push(arg.data.buffer);
       }
     });
+    const start = new Date().getTime();
+    console.log('execute ' + method + ' start:' + start);
     this.worker.postMessage({ messageId, method, args }, transfer);
     return new Promise((resolve, reject) => {
-      this.resolveMap[messageId] = { resolve, reject };
+      this.resolveMap[messageId] = { resolve, reject, start, method };
     });
   }
 }

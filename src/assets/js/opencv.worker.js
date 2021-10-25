@@ -104,12 +104,12 @@ var OpenCVService = /** @class */ (function () {
     OpenCVService.prototype.blur = function (image) {
         var dst = new cv.Mat();
         // 高斯模糊
-        // cv.GaussianBlur(image, dst, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
+        cv.GaussianBlur(image, dst, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
         // 中值滤波
         // cv.medianBlur(image, dst, 1);
         // 双边滤波
-        cv.cvtColor(image, image, cv.COLOR_RGBA2RGB, 0);
-        cv.bilateralFilter(image, dst, 9, 75, 75, cv.BORDER_DEFAULT);
+        // cv.cvtColor(image, image, cv.COLOR_RGBA2RGB, 0);
+        // cv.bilateralFilter(image, dst, 9, 75, 75, cv.BORDER_DEFAULT);
         return dst;
     };
     OpenCVService.prototype.sharpen = function (src) {
@@ -118,6 +118,7 @@ var OpenCVService = /** @class */ (function () {
         var M = cv.matFromArray(3, 3, cv.CV_32FC1, array);
         // You can try more different parameters
         cv.filter2D(src, dst, src.depth(), M);
+        M.delete();
         return dst;
     };
     OpenCVService.prototype.getCanny = function (image) {
@@ -134,18 +135,18 @@ var OpenCVService = /** @class */ (function () {
         // cv.bilateralFilter(image, dst2, 5, 75, 75, cv.BORDER_DEFAULT);
         // cv.imshow('canvasOutput0', dst2);
         // dst1.delete();
-        var dst3 = new cv.Mat();
+        var dst = new cv.Mat();
         // 边缘检测
-        cv.Canny(image, dst3, 50, 200);
+        cv.Canny(image, dst, 50, 200);
         // dst2.delete();
-        var dst4 = new cv.Mat();
+        // const dst4 = new cv.Mat();
         var kernel = cv.Mat.ones(3, 3, cv.CV_8U);
         var anchor = new cv.Point(-1, -1);
         // 膨胀操作，尽量使边缘闭合
-        cv.dilate(dst3, dst4, kernel, anchor, 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+        cv.dilate(dst, dst, kernel, anchor, 3, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
         kernel.delete();
         // dst3.delete();
-        return dst4;
+        return dst;
     };
     /**
      * 求出面积最大的轮廓
@@ -159,7 +160,7 @@ var OpenCVService = /** @class */ (function () {
         cv.findContours(image, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
         var maxArea = 0.0;
         var maxContour = null;
-        for (var i = 0; i < contours.size(); ++i) {
+        for (var i = 0; i < contours.size(); i++) {
             var contour = contours.get(i);
             var rect = cv.boundingRect(contour);
             var currentArea = rect.width * rect.height;
@@ -250,60 +251,68 @@ var OpenCVService = /** @class */ (function () {
      */
     OpenCVService.prototype.extractColor = function (src) {
         // const dst = new cv.Mat(src.rows, src.cols, src.type());
-        var hsv = new cv.Mat();
-        cv.cvtColor(src, hsv, cv.COLOR_RGBA2RGB);
-        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-        for (var row = 0; row < hsv.rows; row++) {
-            for (var col = 0; col < hsv.cols; col++) {
-                var s_hsv = hsv.ucharPtr(row, col);
-                if (!((s_hsv[0] > 0 && s_hsv[0] < 8) ||
-                    (s_hsv[0] > 120 && s_hsv[0] < 180))) {
-                    s_hsv[0] = 0;
-                    s_hsv[1] = 0;
-                    s_hsv[2] = 0;
-                }
-            }
-        }
-        cv.cvtColor(hsv, hsv, cv.COLOR_HSV2RGB, 0);
-        cv.cvtColor(hsv, hsv, cv.COLOR_RGB2GRAY, 0);
-        cv.threshold(hsv, hsv, 177, 255, cv.THRESH_BINARY);
-        return hsv;
-        // const dst = new cv.Mat(src.rows, src.cols, src.type());
-        // const threshold1 = 40;
-        // // const threshold2 = 20;
-        // for (let row = 0; row < src.rows; row++) {
-        //   for (let col = 0; col < src.cols; col++) {
-        //     const pixel = src.ucharPtr(row, col);
-        //     const destPixel = dst.ucharPtr(row, col);
-        //     const [r, g, b, a] = pixel;
+        // const hsv = new cv.Mat();
+        // cv.cvtColor(src, hsv, cv.COLOR_RGBA2RGB);
+        // cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
+        // for (let row = 0; row < hsv.rows; row++) {
+        //   for (let col = 0; col < hsv.cols; col++) {
+        //     const s_hsv = hsv.ucharPtr(row, col);
         //     if (
-        //       r - g > threshold1 &&
-        //       r - b > threshold1 &&
-        //       r - Math.max(g, b) > Math.abs(g - b) * 3
+        //       !(
+        //         ((s_hsv[0] >= 0 && s_hsv[0] <= 15) ||
+        //           (s_hsv[0] >= 125 && s_hsv[0] <= 180)) &&
+        //         s_hsv[2] >= 46 &&
+        //         s_hsv[1] >= 43
+        //       )
         //     ) {
-        //       pixel.forEach((v, i) => {
-        //         destPixel[i] = v;
-        //       });
-        //     } else {
-        //       destPixel.fill(255);
+        //       s_hsv[0] = 0;
+        //       s_hsv[1] = 0;
+        //       s_hsv[2] = 0;
         //     }
         //   }
         // }
+        // cv.cvtColor(hsv, hsv, cv.COLOR_HSV2RGB);
+        // cv.cvtColor(hsv, hsv, cv.COLOR_RGB2GRAY, 0);
+        // cv.threshold(hsv, hsv, 177, 255, cv.THRESH_BINARY);
+        // return hsv;
+        var dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
+        var threshold1 = 35;
+        // const threshold2 = 20;
+        var srcData = src.data;
+        var index = 0;
+        for (var row = 0; row < src.rows; row++) {
+            for (var col = 0; col < src.cols; col++) {
+                var r = srcData[index];
+                var g = srcData[index + 1];
+                var b = srcData[index + 2];
+                // const pixel = src.ucharPtr(row, col);
+                // const destPixel = dst.ucharPtr(row, col);
+                // const [r, g, b, _a] = pixel;
+                if (r - g > threshold1 &&
+                    r - b > threshold1 &&
+                    r - Math.max(g, b) > Math.abs(g - b) * 1.5) {
+                    dst.ucharPtr(row, col)[0] = 255;
+                }
+                index += 4;
+            }
+        }
         // cv.cvtColor(dst, dst, cv.COLOR_RGBA2GRAY, 0);
         // cv.threshold(dst, dst, 177, 255, cv.THRESH_BINARY);
-        // return dst;
+        return dst;
     };
     /**
      * 获取距离中心最近的矩形
      */
     OpenCVService.prototype.getCenterRect = function (src) {
         var dst1 = new cv.Mat();
+        // cv.threshold(dst1, dst1, 177, 255, cv.THRESH_BINARY);
         // 取反色
-        cv.bitwise_not(src, dst1);
+        // cv.bitwise_not(src, dst1);
         // 膨胀
         var kernel = cv.Mat.ones(3, 3, cv.CV_8U);
         var anchor = new cv.Point(-1, -1);
-        cv.dilate(dst1, dst1, kernel, anchor, 6, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+        // cv.erode(src, dst1, kernel, anchor, 9, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+        cv.dilate(src, dst1, kernel, anchor, 9, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
         kernel.delete();
         // cv.imshow('canvasOutput6', dst1);
         var contours = new cv.MatVector();
@@ -313,19 +322,21 @@ var OpenCVService = /** @class */ (function () {
         var minDistance;
         var nearestRect = null; // 离中心最近的矩形
         var centerX = src.cols / 2;
+        var centerY = src.rows / 2;
         for (var i = 0; i < contours.size(); ++i) {
             var cnt = contours.get(i);
             var rect = cv.boundingRect(cnt);
             var currentArea = cv.contourArea(cnt);
             if (currentArea > 1000 &&
                 currentArea / (rect.width * rect.height) > 0.5) {
-                var distance = void 0;
-                if (rect.x > centerX) {
-                    distance = rect.x - centerX;
-                }
-                else if (rect.x + rect.width < centerX) {
-                    distance = centerX - (rect.x + rect.width);
-                }
+                var dx = Math.abs(rect.x + rect.width / 2 - centerX) / src.cols;
+                var dy = Math.abs(rect.y + rect.height / 2 - centerY) / src.rows;
+                var distance = Math.max(dx, dy);
+                // if (rect.x > centerX) {
+                //   distance = rect.x - centerX;
+                // } else if (rect.x + rect.width < centerX) {
+                //   distance = centerX - (rect.x + rect.width);
+                // }
                 if (distance && (!minDistance || distance < minDistance)) {
                     nearestRect = rect;
                     minDistance = distance;
@@ -363,29 +374,37 @@ var OpenCVService = /** @class */ (function () {
             cv.resize(src, src, dsize, 0, 0, cv.INTER_LINEAR);
         }
     };
-    OpenCVService.prototype.transform = function (imageData, points) {
-        var src = cv.matFromImageData(imageData);
-        var dest = this.warpImage(src, points);
-        var result = this.imageDataFromMat(dest);
-        src.delete();
-        dest.delete();
-        return result;
+    // transform(src: any, points: any[]) {
+    //   const dest = this.warpImage(src, points);
+    //   const result = this.imageDataFromMat(dest);
+    //   src.delete();
+    //   dest.delete();
+    //   return result;
+    // }
+    OpenCVService.prototype.ocr = function (src) {
+        var imageData = this.imageDataFromMat(src);
+        var text = OCRAD(imageData, {
+            numeric: true,
+        });
+        text = text.trim();
+        console.log(text);
+        return text;
     };
     OpenCVService.prototype.process = function (mat) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, ratio, resize, sharpen, blur, canny, maxContour, points, dest, dst1, rect, dst2, textImage, text;
+            var result, ratio, resize, sharpen, blur, canny, maxContour, points, dest, dst1, rect, dst2, text;
             return __generator(this, function (_a) {
                 result = {};
                 if (mat.rows > mat.cols) {
                     this.rotate(mat, 90);
                     result.blob = mat;
                 }
-                ratio = 900 / mat.rows;
+                ratio = 1080 / mat.rows;
                 resize = this.resizeImg(mat, ratio);
-                sharpen = this.sharpen(resize);
-                resize.delete();
                 try {
+                    sharpen = this.sharpen(resize);
                     blur = this.blur(sharpen);
+                    sharpen.delete();
                     canny = this.getCanny(blur);
                     blur.delete();
                     maxContour = this.findMaxContour(canny);
@@ -403,21 +422,19 @@ var OpenCVService = /** @class */ (function () {
                 catch (e) {
                     console.error(e);
                 }
-                dst1 = this.extractColor(sharpen);
-                sharpen.delete();
-                rect = this.getCenterRect(dst1);
+                dst1 = this.extractColor(resize);
+                resize.delete();
                 try {
+                    rect = this.getCenterRect(dst1);
                     if (rect) {
                         dst2 = this.crop(dst1, rect);
                         this.resizeTo(dst2, { minHeight: 50 });
-                        textImage = this.imageDataFromMat(dst2);
+                        cv.bitwise_not(dst2, dst2);
+                        text = this.ocr(dst2);
+                        if (text) {
+                            result.name = text;
+                        }
                         dst2.delete();
-                        text = OCRAD(textImage, {
-                            numeric: true,
-                        });
-                        text = text.trim();
-                        console.log(text);
-                        result.name = text;
                     }
                 }
                 catch (e) {
@@ -432,54 +449,78 @@ var OpenCVService = /** @class */ (function () {
     };
     OpenCVService.prototype.debug = function (src) {
         var result = [];
-        if (src.rows > src.cols) {
-            this.rotate(src, 90);
+        var start = new Date().getTime();
+        var debugTime = function (method) {
+            var current = new Date().getTime();
+            console.log(method + ' use time:' + (current - start) + 'ms');
+            start = current;
+        };
+        try {
+            if (src.rows > src.cols) {
+                this.rotate(src, 90);
+                debugTime('rotate');
+            }
+            var ratio = 1080 / src.rows;
+            var resize = this.resizeImg(src, ratio);
+            debugTime('resizeImg');
+            var sharpen = this.sharpen(resize);
+            debugTime('sharpen');
+            result.push(sharpen);
+            var blur = this.blur(sharpen);
+            debugTime('blur');
+            result.push(blur);
+            var canny = this.getCanny(blur);
+            debugTime('getCanny');
+            result.push(canny);
+            var maxContour = this.findMaxContour(canny);
+            debugTime('findMaxContour');
+            result.push(this.showMaxContour(resize, maxContour));
+            debugTime('showMaxContour');
+            var points = this.getBoxPoint(maxContour, ratio);
+            debugTime('getBoxPoint');
+            maxContour.delete();
+            if (points.length !== 4) {
+                points = [
+                    new cv.Point(0, 0),
+                    new cv.Point(src.cols, 0),
+                    new cv.Point(src.cols, src.rows),
+                    new cv.Point(0, src.rows),
+                ];
+            }
+            result.push(this.showPoints(src, points));
+            var dst = this.warpImage(src, points);
+            debugTime('warpImage');
+            result.push(dst);
+            var dst2 = this.extractColor(resize);
+            debugTime('extractColor');
+            result.push(dst2);
+            var rect = this.getCenterRect(dst2);
+            debugTime('getCenterRect');
+            if (rect) {
+                var rectangleColor = new cv.Scalar(255, 0, 0);
+                var dst3 = cv.Mat.zeros(resize.rows, resize.cols, cv.CV_8UC3);
+                var point1 = new cv.Point(rect.x, rect.y);
+                var point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                cv.rectangle(dst3, point1, point2, rectangleColor, -1);
+                debugTime('rectangle');
+                result.push(dst3);
+                var dst4 = this.crop(dst2, rect);
+                debugTime('crop');
+                this.resizeTo(dst4, { minHeight: 50 });
+                debugTime('resizeTo');
+                cv.bitwise_not(dst4, dst4);
+                debugTime('bitwise_not');
+                result.push(dst4);
+                var text = this.ocr(dst4);
+                debugTime('ocr');
+                console.log(text);
+            }
+            resize.delete();
+            src.delete();
         }
-        var ratio = 1080 / src.rows;
-        var resize = this.resizeImg(src, ratio);
-        var sharpen = this.sharpen(resize);
-        result.push(sharpen);
-        var blur = this.blur(sharpen);
-        result.push(blur);
-        var canny = this.getCanny(blur);
-        result.push(canny);
-        var maxContour = this.findMaxContour(canny);
-        result.push(this.showMaxContour(resize, maxContour));
-        var points = this.getBoxPoint(maxContour, ratio);
-        maxContour.delete();
-        if (points.length !== 4) {
-            points = [
-                new cv.Point(0, 0),
-                new cv.Point(src.cols, 0),
-                new cv.Point(src.cols, src.rows),
-                new cv.Point(0, src.rows),
-            ];
+        catch (e) {
+            console.error(e);
         }
-        result.push(this.showPoints(src, points));
-        var dst = this.warpImage(src, points);
-        result.push(dst);
-        var dst2 = this.extractColor(sharpen);
-        result.push(dst2);
-        var rect = this.getCenterRect(dst2);
-        if (rect) {
-            var rectangleColor = new cv.Scalar(255, 0, 0);
-            var dst3 = cv.Mat.zeros(resize.rows, resize.cols, cv.CV_8UC3);
-            var point1 = new cv.Point(rect.x, rect.y);
-            var point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-            cv.rectangle(dst3, point1, point2, rectangleColor, -1);
-            result.push(dst3);
-            var dst4 = this.crop(dst2, rect);
-            this.resizeTo(dst4, { minHeight: 50 });
-            result.push(dst4);
-        }
-        var textImage = this.imageDataFromMat(dst2);
-        var text = OCRAD(textImage, {
-            numeric: true,
-        });
-        text = text.trim();
-        console.log(text);
-        resize.delete();
-        src.delete();
         return result;
     };
     OpenCVService.prototype.showMaxContour = function (src, maxContour) {
@@ -512,7 +553,7 @@ var OpenCVService = /** @class */ (function () {
 }());
 var openCVService = new OpenCVService();
 self.addEventListener('message', function (event) { return __awaiter(_this, void 0, void 0, function () {
-    var _a, messageId, args, m, result, mats, transfer, params, data_1, e_1;
+    var _a, messageId, args, m, result, mats, transfer, start, params, data_1, imageData, e_1;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -526,6 +567,8 @@ self.addEventListener('message', function (event) { return __awaiter(_this, void
                 return [4 /*yield*/, openCVService.init()];
             case 2:
                 _b.sent();
+                start = new Date().getTime();
+                console.log('[worker]execute ' + m + ' start:' + start);
                 params = args.map(function (arg) {
                     if (arg instanceof ImageData) {
                         var mat = cv.matFromImageData(arg);
@@ -539,8 +582,15 @@ self.addEventListener('message', function (event) { return __awaiter(_this, void
                 return [4 /*yield*/, openCVService[m].apply(openCVService, params)];
             case 3:
                 data_1 = _b.sent();
+                console.log('[worker]execute ' + m + ' end:' + (new Date().getTime() - start));
                 if (data_1) {
-                    if (Array.isArray(data_1)) {
+                    if (data_1 instanceof cv.Mat) {
+                        imageData = openCVService.imageDataFromMat(data_1);
+                        data_1.delete();
+                        transfer.push(imageData.data.buffer);
+                        data_1 = imageData;
+                    }
+                    else if (Array.isArray(data_1)) {
                         data_1.forEach(function (item, i) {
                             if (item instanceof cv.Mat) {
                                 var imageData = openCVService.imageDataFromMat(item);
