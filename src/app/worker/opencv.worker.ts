@@ -451,7 +451,7 @@ class OpenCVService {
       this.rotate(mat, 90);
       result.blob = mat;
     }
-    const ratio = 1080 / mat.rows;
+    const ratio = 900 / mat.cols;
     const resize = this.resizeImg(mat, ratio);
     try {
       const sharpen = this.sharpen(resize);
@@ -475,7 +475,7 @@ class OpenCVService {
       console.error(e);
     }
     // mat.delete();
-    const dst1 = this.extractColor(resize);
+    const dst1 = this.extractColor(mat);
     resize.delete();
     try {
       const rect = this.getCenterRect(dst1);
@@ -511,7 +511,7 @@ class OpenCVService {
       if (src.rows > src.cols) {
         this.rotate(src, 90);
       }
-      const ratio = 1080 / src.rows;
+      const ratio = 900 / src.cols;
       const resize = this.resizeImg(src, ratio);
       const sharpen = this.sharpen(resize);
       result.push(sharpen);
@@ -534,12 +534,12 @@ class OpenCVService {
       result.push(this.showPoints(src, points));
       const dst = this.warpImage(src, points);
       result.push(dst);
-      const dst2 = this.extractColor(resize);
+      const dst2 = this.extractColor(src);
       result.push(dst2);
       const rect = this.getCenterRect(dst2);
       if (rect) {
         const rectangleColor = new cv.Scalar(255, 0, 0);
-        const dst3 = cv.Mat.zeros(resize.rows, resize.cols, cv.CV_8UC3);
+        const dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
         const point1 = new cv.Point(rect.x, rect.y);
         const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
         cv.rectangle(dst3, point1, point2, rectangleColor, -1);

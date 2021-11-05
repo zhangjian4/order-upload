@@ -9,6 +9,7 @@ import { SharedModule } from '../shared/shared.module';
 import { EditComponent } from './edit/edit.component';
 import { SwiperModule } from 'swiper/angular';
 import { DirSelectComponent } from './dir-select/dir-select.component';
+import { ImageDataModule } from '../shared/directive/image-data/image-data.module';
 
 @NgModule({
   declarations: [PreuploadComponent, EditComponent, DirSelectComponent],
@@ -29,6 +30,7 @@ import { DirSelectComponent } from './dir-select/dir-select.component';
     FormsModule,
     SharedModule,
     SwiperModule,
+    ImageDataModule,
   ],
   providers: [],
 })

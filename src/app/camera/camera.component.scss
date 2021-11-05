@@ -40,14 +40,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  .thumb-container{
+  .thumb-container {
     height: 50px;
     width: 50px;
     position: relative;
-    ion-badge{
+    ion-badge {
       position: absolute;
       top: -10px;
       left: 35px;
+    }
+    canvas {
+      max-width: 50px;
+      max-height: 50px;
     }
   }
 }
@@ -115,6 +119,6 @@ ion-footer {
 .footer-inner {
   height: 60.8px;
 }
-.upload{
+.upload {
   float: right;
 }

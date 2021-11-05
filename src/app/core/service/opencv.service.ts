@@ -14,7 +14,9 @@ export class OpenCVService {
   private initPromise: Promise<void>;
   private resolveMap = {};
   constructor() {
-    this.worker = new Worker(new URL('../../worker/opencv.worker', import.meta.url));
+    this.worker = new Worker(
+      new URL('../../worker/opencv.worker', import.meta.url)
+    );
     // worker.onmessage = ({ data }) => {
     //   console.log(`page got message: ${data}`);
     // };
@@ -24,12 +26,12 @@ export class OpenCVService {
       const result = event.data;
       const resolve = this.resolveMap[result.messageId];
       if (resolve) {
-        console.log(
-          'execute ' +
-            resolve.method +
-            ' end:' +
-            (new Date().getTime() - resolve.start)
-        );
+        // console.log(
+        //   'execute ' +
+        //     resolve.method +
+        //     ' end:' +
+        //     (new Date().getTime() - resolve.start)
+        // );
         if (result.success) {
           resolve.resolve(result.data);
         } else {
@@ -446,14 +448,14 @@ export class OpenCVService {
   //   }
   // }
 
-  async process(blob: Blob) {
-    const imageData = await this.fromBlob(blob);
+  async process(imageData: ImageData) {
+    // const imageData = await this.fromBlob(blob);
     const result = await this.execute('process', imageData);
     if (result.blob) {
       result.blob = await this.toBlob(result.blob);
     }
     if (result.dest) {
-      result.dest = await this.toBlob(result.dest);
+      result.dest = result.dest;
     }
     return result;
   }
@@ -464,16 +466,14 @@ export class OpenCVService {
   private execute(method: string, ...args: any[]): Promise<any> {
     const messageId = this.messageId++;
     const transfer = [];
-    args.forEach((arg) => {
-      if (arg instanceof ImageData) {
-        transfer.push(arg.data.buffer);
-      }
-    });
-    const start = new Date().getTime();
-    console.log('execute ' + method + ' start:' + start);
+    // args.forEach((arg) => {
+    //   if (arg instanceof ImageData) {
+    //     transfer.push(arg.data.buffer);
+    //   }
+    // });
     this.worker.postMessage({ messageId, method, args }, transfer);
     return new Promise((resolve, reject) => {
-      this.resolveMap[messageId] = { resolve, reject, start, method };
+      this.resolveMap[messageId] = { resolve, reject };
     });
   }
 }

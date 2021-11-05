@@ -28,10 +28,11 @@
           routerLink="/opencv-test"
           [queryParams]="{ id: item.id }"
         > -->
-        <img
+        <canvas [imageData]="item.dest || item.origin"></canvas>
+        <!-- <img
           *ngIf="item.destUrl || item.url as url"
           [src]="url | sanitizer: 'url'"
-        />
+        /> -->
       </div>
       <!-- <ion-thumbnail
           routerLink="edit"

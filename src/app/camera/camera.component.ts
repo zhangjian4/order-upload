@@ -49,6 +49,10 @@ import { CommonService } from '../core/service/common.service';
   styleUrls: ['./camera.component.scss'],
 })
 export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
+  @ViewChild('fileInput')
+  fileInput: ElementRef;
+  @ViewChild('canvas')
+  canvas: HTMLCanvasElement;
   preview: boolean;
   file: string;
   imageSrc: string;
@@ -60,13 +64,11 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   last: any;
   db: any;
   objectStore: any;
-  lastFile: Blob;
+  lastFile: ImageData;
   viewEntered: boolean;
   cameraStarted: boolean;
   promises: Promise<any>[] = [];
   id: number;
-  @ViewChild('fileInput')
-  fileInput: ElementRef;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -116,7 +118,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     this.photoCount = await this.database.preuploadFile.count();
     if (this.photoCount > 0) {
       const last = await this.database.preuploadFile.toCollection().last();
-      this.lastFile = last.blob;
+      // TODO this.lastFile = last.blob;
     } else {
       this.lastFile = null;
     }
@@ -166,7 +168,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async takePicture() {
     const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
     const blob = base64ToBlob(base64);
-    await this.add(blob);
+    // TODO await this.add(blob);
     // if (this.platform.is('cordova')) {
     //   const input = document.createElement('input');
     //   input.type = 'file';
@@ -213,20 +215,21 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // });
   }
 
-  async add(blob: Blob, name?: string) {
+  async add(origin: ImageData, name?: string) {
     if (this.id) {
-      this.preuploadService.updateBlob(this.id, blob);
-      // await this.database.preuploadFile.update(this.id, { blob });
+      // TODO
+      // this.preuploadService.updateBlob(this.id, blob);
       this.back();
     } else {
       if (!name) {
         name = format(new Date(), 'yyyyMMddHHmmssSSS');
       }
       this.photoCount++;
-      this.lastFile = blob;
+      this.lastFile = origin;
+      // const origin = await this.opencvService.fromBlob(blob);
       const item: IUploadFile = {
         name,
-        blob,
+        origin,
       };
       item.id = await this.database.preuploadFile.add(item);
       this.process(item);
@@ -300,7 +303,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async submit() {
     if (this.promises.length) {
-      await this.commonService.loading('正在处理图像',()=>Promise.all(this.promises));
+      await this.commonService.loading('正在处理图像', () =>
+        Promise.all(this.promises)
+      );
     }
     this.navController.navigateForward('/preupload');
   }
@@ -483,13 +488,16 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
             scale = 1080 / image.height;
           }
           const canvas = imageToCanvas(image, scale);
-          const blob = await canvasToBlob(canvas);
-          await this.add(blob, file.name);
+          const ctx = canvas.getContext('2d');
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          // const blob = await canvasToBlob(canvas);
+          await this.add(imageData, file.name);
         } finally {
           URL.revokeObjectURL(url);
         }
       } else {
-        await this.add(file, file.name);
+        // TODO
+        // await this.add(file, file.name);
       }
     }
     input.value = null;

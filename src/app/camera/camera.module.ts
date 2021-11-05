@@ -8,6 +8,7 @@ import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ConfirmGuard } from '../shared/router-guard/confirm.guard';
 import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
+import { ImageDataModule } from '../shared/directive/image-data/image-data.module';
 
 @NgModule({
   declarations: [CameraComponent],
@@ -28,6 +29,7 @@ import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
     IonicModule,
     FormsModule,
     BlobSrcModule,
+    ImageDataModule
   ],
   providers: [CameraPreview, WebView, ConfirmGuard],
 })

@@ -103,10 +103,11 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   async update() {
     this.length = this.preuploadService.data.length;
     await this.preuploadService.updateUrls();
-    this.size = this.preuploadService.data.reduce(
-      (prev, cur) => prev + (cur.dest || cur.blob).size,
-      0
-    );
+    // TODO
+    // this.size = this.preuploadService.data.reduce(
+    //   (prev, cur) => prev + (cur.dest || cur.blob).size,
+    //   0
+    // );
   }
 
   async remove(item: IUploadFile) {
@@ -189,7 +190,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
         await this.baiduAPIService.upload(
           this.dir,
           item.name + '.jpg',
-          item.dest || item.blob
+          item.blob
         );
         await this.database.preuploadFile.delete(item.id);
         this.uploaded++;
