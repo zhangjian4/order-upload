@@ -14,7 +14,12 @@ export class OpenCVService {
   private initPromise: Promise<void>;
   private resolveMap = {};
   constructor() {
-    this.worker = new Worker('/assets/js/opencv.worker.js');
+    this.worker = new Worker(new URL('../../worker/opencv.worker', import.meta.url));
+    // worker.onmessage = ({ data }) => {
+    //   console.log(`page got message: ${data}`);
+    // };
+    // worker.postMessage('hello');
+    // this.worker = new Worker('/assets/js/opencv.worker.js');
     this.worker.onmessage = (event: MessageEvent) => {
       const result = event.data;
       const resolve = this.resolveMap[result.messageId];

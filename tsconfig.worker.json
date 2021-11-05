@@ -1,12 +1,16 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
-    "lib": ["WebWorker"],
-    "sourceMap": false,
-    "rootDir": "src/worker",
-    "outDir": "src/assets/js"
+    "outDir": "./out-tsc/worker",
+    "lib": [
+      "es2018",
+      "webworker"
+    ],
+    "types": [],
+    "skipLibCheck": true
   },
-  "files": ["src/worker/opencv.worker.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.worker.ts"
+  ]
 }
