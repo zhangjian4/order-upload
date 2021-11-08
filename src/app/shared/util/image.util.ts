@@ -65,3 +65,22 @@ export const base64ToBlob = (base64: string) => {
   });
   return blob;
 };
+
+export const base64ToImageData = async (base64: string) => {
+  const image = await loadImage('data:image/jpeg;base64,' + base64);
+  const imageData = imageToImageData(image);
+  return imageData;
+};
+
+export const imageDataToBlob = async (imageData: ImageData) => {
+  const start = new Date().getTime();
+  const canvas = document.createElement('canvas');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  const ctx = canvas.getContext('2d');
+  ctx.putImageData(imageData, 0, 0);
+  const blob = await canvasToBlob(canvas);
+  const end = new Date().getTime();
+  console.log('imageDataToBlob use ' + (end - start) + 'ms');
+  return blob;
+};

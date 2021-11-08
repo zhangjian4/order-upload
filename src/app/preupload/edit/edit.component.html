@@ -21,13 +21,13 @@
       swiperSlide
       *ngFor="let item of preuploadService.data; let i = index"
     >
-      <div *ngIf="item.url" class="image-container">
+      <div *ngIf="item.origin" class="image-container">
         <div class="image-cotainer-inner">
-          <img
-            [src]="item.url | sanitizer: 'url'"
-            (load)="onImageLoad($event, item, i)"
+          <canvas
+            [imageData]="item.origin"
+            (imageLoad)="onImageLoad($event, item, i)"
             id="image-{{ item.id }}"
-          />
+          ></canvas>
         </div>
         <ng-container *ngIf="index === i">
           <div
@@ -35,11 +35,11 @@
             [class.hidden]="!moving"
             [class.right]="magnifyPositionRight"
           >
-            <img
-              [src]="item?.url | sanitizer: 'url'"
+            <canvas
+              [imageData]="item.origin"
               [style.transform]="magnifyTransform"
               [style.width.px]="magnifyWidth"
-            />
+            ></canvas>
             <ion-icon name="add"></ion-icon>
           </div>
           <svg
@@ -77,15 +77,21 @@
 <ion-footer>
   <ion-toolbar>
     <ion-buttons *ngIf="data">
-      <div (click)="rotate()"><ion-icon name="color-filter-outline"></ion-icon>滤镜</div>
+      <div (click)="rotate()">
+        <ion-icon name="color-filter-outline"></ion-icon>滤镜
+      </div>
       <div (click)="remove()">
         <ion-icon name="trash-outline"></ion-icon>删除
       </div>
       <div routerLink="/camera/{{ data.id }}">
         <ion-icon name="camera-outline"></ion-icon>重拍
       </div>
-      <div (click)="rotate()"><ion-icon name="refresh-outline" ></ion-icon>旋转</div>
-      <div (click)="rename()"><ion-icon name="create-outline"></ion-icon>重命名</div>
+      <div (click)="rotate()">
+        <ion-icon name="refresh-outline"></ion-icon>旋转
+      </div>
+      <div (click)="rename()">
+        <ion-icon name="create-outline"></ion-icon>重命名
+      </div>
       <!-- <a><ion-icon name="contract-outline"></ion-icon>自动</a>
       <a><ion-icon name="expand-outline"></ion-icon>全部</a> -->
       <ion-button fill="solid" routerLink="/preupload" routerDirection="back"

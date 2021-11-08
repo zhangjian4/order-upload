@@ -34,6 +34,7 @@ import * as SparkMD5 from 'spark-md5';
 import {
   base64ToArrayBuffer,
   base64ToBlob,
+  base64ToImageData,
   canvasToBlob,
   imageToCanvas,
   loadImage,
@@ -115,10 +116,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async ionViewWillEnter() {
     this.startCamera();
-    this.photoCount = await this.database.preuploadFile.count();
+    this.photoCount = this.preuploadService.data.length;
     if (this.photoCount > 0) {
-      const last = await this.database.preuploadFile.toCollection().last();
-      // TODO this.lastFile = last.blob;
+      const last = this.preuploadService.data[this.photoCount - 1];
+      this.lastFile = last.origin;
     } else {
       this.lastFile = null;
     }
@@ -167,8 +168,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async takePicture() {
     const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
-    const blob = base64ToBlob(base64);
-    // TODO await this.add(blob);
+    const imageData = await base64ToImageData(base64);
+    await this.add(imageData);
     // if (this.platform.is('cordova')) {
     //   const input = document.createElement('input');
     //   input.type = 'file';
@@ -217,8 +218,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async add(origin: ImageData, name?: string) {
     if (this.id) {
-      // TODO
-      // this.preuploadService.updateBlob(this.id, blob);
+      this.preuploadService.updateOrigin(this.id, origin);
       this.back();
     } else {
       if (!name) {
@@ -231,6 +231,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         name,
         origin,
       };
+      this.preuploadService.add(item);
       item.id = await this.database.preuploadFile.add(item);
       this.process(item);
     }
@@ -267,12 +268,6 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   //     src.delete();
   //   }
   // }
-
-  sleep() {
-    return new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
-  }
 
   async back() {
     this.navController.pop();
@@ -313,7 +308,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   clear() {
     this.photoCount = 0;
     this.lastFile = null;
-    this.database.preuploadFile.clear();
+    this.preuploadService.clear();
   }
 
   continue() {
@@ -420,7 +415,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (nextState.url === '/preupload' || this.id != null) {
       return true;
     }
-    const count = await this.database.preuploadFile.count();
+    const count = this.preuploadService.data.length;
     if (count === 0) {
       return true;
     }

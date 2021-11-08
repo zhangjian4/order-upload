@@ -281,10 +281,9 @@ export class OpenCVService {
   //   }
   // }
 
-  async transform(src: Blob, points: { x: number; y: number }[]) {
-    const imageData = await this.fromBlob(src);
+  async transform(imageData: ImageData, points: { x: number; y: number }[]) {
     const dst: ImageData = await this.execute('warpImage', imageData, points);
-    return this.toBlob(dst);
+    return dst;
   }
 
   toCanvas(imageData: ImageData) {

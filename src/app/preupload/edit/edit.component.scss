@@ -18,7 +18,7 @@ swiper {
     align-items: center;
     justify-content: center;
     display: flex;
-    img {
+    canvas {
       max-height: 100%;
       max-width: 100%;
     }
@@ -52,7 +52,7 @@ swiper {
   ion-icon {
     color: #3880ff;
   }
-  img {
+  canvas {
     position: absolute;
     max-width: none;
     image-rendering: pixelated;

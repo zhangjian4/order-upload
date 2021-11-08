@@ -33,4 +33,5 @@ export interface IUploadFile {
   origin?: ImageData;
   blob?: Blob;
   dest?: ImageData;
+  deleted?: boolean;
 }

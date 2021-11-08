@@ -449,7 +449,7 @@ class OpenCVService {
     const result: any = {};
     if (mat.rows > mat.cols) {
       this.rotate(mat, 90);
-      result.blob = mat;
+      result.origin = mat;
     }
     const ratio = 900 / mat.cols;
     const resize = this.resizeImg(mat, ratio);
@@ -606,7 +606,6 @@ self.addEventListener(
     try {
       await openCVService.init();
       const start = new Date().getTime();
-      console.log('[worker]execute ' + m + ' start:' + start);
       const params = args.map((arg) => {
         if (arg instanceof ImageData) {
           const mat = cv.matFromImageData(arg);
@@ -617,9 +616,6 @@ self.addEventListener(
         }
       });
       let data = await openCVService[m](...params);
-      console.log(
-        '[worker]execute ' + m + ' end:' + (new Date().getTime() - start)
-      );
       if (data) {
         if (data instanceof cv.Mat) {
           const imageData = openCVService.imageDataFromMat(data);

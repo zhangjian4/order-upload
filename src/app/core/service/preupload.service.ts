@@ -8,6 +8,7 @@ import { OpenCVService } from './opencv.service';
 export class PreuploadService implements OnDestroy {
   data: IUploadFile[] = [];
   updateData = new Set<IUploadFile>();
+  private readonly persistent = false;
 
   constructor(
     private database: Database,
@@ -17,88 +18,103 @@ export class PreuploadService implements OnDestroy {
   ) {}
 
   async reload() {
-    if (this.data.length) {
-      this.clear();
-    }
-    this.data = await this.database.preuploadFile.toArray();
-    this.data.forEach((item) => {
-      this.createUrl(item);
-    });
-  }
-
-  createUrl(item: IUploadFile) {
-    if (item.blob) {
-      item.url = URL.createObjectURL(item.blob);
-    }
-    if (item.dest) {
-      item.destUrl = URL.createObjectURL(item.dest);
+    if (this.persistent) {
+      this.data = await this.database.preuploadFile.toArray();
+      // this.data.forEach((item) => {
+      //   this.createUrl(item);
+      // });
+    } else {
+      this.data = this.data.filter((item) => !item.deleted);
     }
   }
 
-  async updateBlob(id: number, blob: Blob) {
+  async add(item: IUploadFile) {
+    this.data.push(item);
+    if (this.persistent) {
+      await this.database.preuploadFile.add(item);
+    }
+  }
+
+  // createUrl(item: IUploadFile) {
+  //   if (item.blob) {
+  //     item.url = URL.createObjectURL(item.blob);
+  //   }
+  //   if (item.dest) {
+  //     item.destUrl = URL.createObjectURL(item.dest);
+  //   }
+  // }
+
+  async updateOrigin(id: number, origin: ImageData) {
     const item = this.data.find((i) => i.id === id);
     if (item) {
-      item.blob = blob;
+      item.origin = origin;
       item.dest = null;
-      this.revokeUrl(item);
+      // this.revokeUrl(item);
       await this.process(item);
-      if (item.blob === blob) {
-        this.database.preuploadFile.update(id, { blob });
+      if (this.persistent && item.origin === origin) {
+        this.database.preuploadFile.update(id, { origin });
       }
-      this.createUrl(item);
+      // this.createUrl(item);
     }
   }
 
   async remove(item: IUploadFile) {
     if (item) {
-      this.revokeUrl(item);
-      await this.database.preuploadFile.delete(item.id);
-      this.data = this.data.filter((i) => i !== item);
-      if (this.updateData.has(item)) {
-        this.updateData.delete(item);
+      item.deleted = true;
+      if (this.persistent) {
+        await this.database.preuploadFile.delete(item.id);
       }
+      // this.revokeUrl(item);
+      // this.data = this.data.filter((i) => i !== item);
+      // if (this.updateData.has(item)) {
+      //   this.updateData.delete(item);
+      // }
     }
   }
 
   async rename(item: IUploadFile, name: string) {
     item.name = name;
-    await this.database.preuploadFile.update(item.id, {
-      name,
-    });
-  }
-
-  async updateUrls() {
-    if (this.updateData.size) {
-      const promises = [];
-      this.updateData.forEach((item) => {
-        promises.push(this.updateUrl(item));
+    if (this.persistent) {
+      await this.database.preuploadFile.update(item.id, {
+        name,
       });
-      await Promise.all(promises);
     }
   }
 
-  async updateUrl(item: any) {
-    if (item.rect) {
-      item.dest = await this.opencvService.transform(item.blob, item.rect);
-    } else {
-      item.dest = null;
-    }
-    this.database.preuploadFile.update(item.id, {
-      rect: item.rect,
-      dest: item.dest,
-    });
-    if (item.destUrl) {
-      URL.revokeObjectURL(item.destUrl);
-    }
-    item.destUrl = URL.createObjectURL(item.dest);
-    this.updateData.delete(item);
-  }
+  // async updateUrls() {
+  //   if (this.updateData.size) {
+  //     const promises = [];
+  //     this.updateData.forEach((item) => {
+  //       promises.push(this.updateUrl(item));
+  //     });
+  //     await Promise.all(promises);
+  //   }
+  // }
+
+  // async updateUrl(item: any) {
+  //   if (item.rect) {
+  //     item.dest = await this.opencvService.transform(item.blob, item.rect);
+  //   } else {
+  //     item.dest = null;
+  //   }
+  //   this.database.preuploadFile.update(item.id, {
+  //     rect: item.rect,
+  //     dest: item.dest,
+  //   });
+  //   if (item.destUrl) {
+  //     URL.revokeObjectURL(item.destUrl);
+  //   }
+  //   item.destUrl = URL.createObjectURL(item.dest);
+  //   this.updateData.delete(item);
+  // }
 
   clear() {
-    this.data.forEach((item) => {
-      this.revokeUrl(item);
-    });
     this.data = [];
+    if (this.persistent) {
+      if (this.persistent) {
+        this.database.preuploadFile.clear();
+      }
+    }
   }
 
   revokeUrl(item: any) {
@@ -112,10 +128,11 @@ export class PreuploadService implements OnDestroy {
     }
   }
 
-  updateRect(item: IUploadFile, points: { x: number; y: number }[]) {
+  async updateRect(item: IUploadFile, points: { x: number; y: number }[]) {
     item.rect = points;
-    if (!this.updateData.has(item)) {
-      this.updateData.add(item);
+    const dest = await this.opencvService.transform(item.origin, points);
+    if (item.rect === points) {
+      item.dest = dest;
     }
   }
 

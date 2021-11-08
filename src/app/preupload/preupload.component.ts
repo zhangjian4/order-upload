@@ -13,6 +13,7 @@ import { Database, IUploadFile } from '../core/service/database.service';
 import { FileService } from '../core/service/file.service';
 import { OpenCVService } from '../core/service/opencv.service';
 import { PreuploadService } from '../core/service/preupload.service';
+import { imageDataToBlob } from '../shared/util/image.util';
 import { DirSelectComponent } from './dir-select/dir-select.component';
 
 @Component({
@@ -54,7 +55,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.preuploadService.clear();
+    // this.preuploadService.clear();
   }
 
   ionViewWillEnter() {
@@ -102,7 +103,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
 
   async update() {
     this.length = this.preuploadService.data.length;
-    await this.preuploadService.updateUrls();
+    // await this.preuploadService.updateUrls();
     // TODO
     // this.size = this.preuploadService.data.reduce(
     //   (prev, cur) => prev + (cur.dest || cur.blob).size,
@@ -187,12 +188,9 @@ export class PreuploadComponent implements OnInit, OnDestroy {
       const item = this.preuploadService.data[i];
       try {
         // await this.sleep(3000);
-        await this.baiduAPIService.upload(
-          this.dir,
-          item.name + '.jpg',
-          item.blob
-        );
-        await this.database.preuploadFile.delete(item.id);
+        const blob = await imageDataToBlob(item.dest || item.origin);
+        await this.baiduAPIService.upload(this.dir, item.name + '.jpg', blob);
+        this.preuploadService.remove(item);
         this.uploaded++;
       } catch (e) {
         alert(e);
@@ -214,14 +212,6 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     } else {
       this.update();
     }
-  }
-
-  sleep(time: number) {
-    return new Promise<void>((resolve, reject) => {
-      setTimeout(() => {
-        reject();
-      }, time);
-    });
   }
 
   retryConfirm(index: number) {

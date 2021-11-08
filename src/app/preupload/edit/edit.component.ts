@@ -72,26 +72,25 @@ export class EditComponent implements OnInit, OnDestroy {
     // this.data = this.preuploadService.data[this.index];
   }
 
-  onImageLoad(event: Event, item: IUploadFile, index: number) {
+  onImageLoad(canvas: HTMLCanvasElement, item: IUploadFile, index: number) {
     if (index === this.index) {
-      const img = event.target as HTMLImageElement;
       this.data = item;
-      this.updateImage(img);
+      this.updateImage(canvas);
     }
   }
 
-  updateImage(img: HTMLImageElement) {
+  updateImage(img: HTMLCanvasElement) {
     const {
       offsetTop,
       offsetLeft,
       offsetHeight,
       offsetWidth,
-      naturalWidth,
-      naturalHeight,
+      width,
+      height,
     } = img;
-    if (naturalHeight && naturalWidth) {
-      this.ratio = offsetWidth / naturalWidth;
-      this.magnifyWidth = naturalWidth * this.magnifyRatio;
+    if (height && width) {
+      this.ratio = offsetWidth / width;
+      this.magnifyWidth = width * this.magnifyRatio;
       this.top = offsetTop;
       this.left = offsetLeft;
       this.bottom = offsetTop + offsetHeight;
@@ -99,9 +98,9 @@ export class EditComponent implements OnInit, OnDestroy {
       if (!this.data.rect) {
         this.data.rect = [
           { x: 0, y: 0 },
-          { x: naturalWidth, y: 0 },
-          { x: naturalWidth, y: naturalHeight },
-          { x: 0, y: naturalHeight },
+          { x: width, y: 0 },
+          { x: width, y: height },
+          { x: 0, y: height },
         ];
       }
       this.points = this.data.rect.map((p) => ({
@@ -203,7 +202,7 @@ export class EditComponent implements OnInit, OnDestroy {
     if (this.data) {
       const img = document.getElementById(
         'image-' + this.data.id
-      ) as HTMLImageElement;
+      ) as HTMLCanvasElement;
       if (img) {
         this.updateImage(img);
       }
