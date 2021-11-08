@@ -113,7 +113,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
 
   async remove(item: IUploadFile) {
     if (await this.commonService.confirm('是否确认删除？')) {
-      await this.preuploadService.remove(item);
+      await this.preuploadService.remove(item, true);
       this.length = this.preuploadService.data.length;
       if (this.length === 0) {
         this.navController.navigateBack('/camera');

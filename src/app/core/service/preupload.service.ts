@@ -58,11 +58,14 @@ export class PreuploadService implements OnDestroy {
     }
   }
 
-  async remove(item: IUploadFile) {
+  async remove(item: IUploadFile, reload?: boolean) {
     if (item) {
       item.deleted = true;
       if (this.persistent) {
         await this.database.preuploadFile.delete(item.id);
+      }
+      if (reload) {
+        this.data = this.data.filter((i) => i !== item);
       }
       // this.revokeUrl(item);
       // this.data = this.data.filter((i) => i !== item);
