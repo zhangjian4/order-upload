@@ -22,6 +22,15 @@ export class FileService {
     });
   }
 
+  setDir(dir: string) {
+    if (dir) {
+      if (!dir.startsWith('/')) {
+        dir = '/' + dir;
+      }
+      this.dir = dir;
+    }
+  }
+
   async loadData(page: number) {
     let list: any[];
     let hasMore: boolean;

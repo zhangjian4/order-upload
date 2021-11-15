@@ -42,7 +42,7 @@
 .header-md::after {
   display: none;
 }
-.footer-md::before{
+.footer-md::before {
   display: none;
 }
 
@@ -52,4 +52,10 @@
 
 .footer-ios ion-toolbar:first-of-type {
   --border-width: 0;
+}
+
+ion-toast.auto-width {
+  --width: fit-content;
+  --max-width: 90%;
+  opacity: 0.8;
 }

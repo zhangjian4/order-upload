@@ -80,14 +80,8 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   updateImage(img: HTMLCanvasElement) {
-    const {
-      offsetTop,
-      offsetLeft,
-      offsetHeight,
-      offsetWidth,
-      width,
-      height,
-    } = img;
+    const { offsetTop, offsetLeft, offsetHeight, offsetWidth, width, height } =
+      img;
     if (height && width) {
       this.ratio = offsetWidth / width;
       this.magnifyWidth = width * this.magnifyRatio;
@@ -201,7 +195,7 @@ export class EditComponent implements OnInit, OnDestroy {
     this.data = this.preuploadService.data[this.index];
     if (this.data) {
       const img = document.getElementById(
-        'image-' + this.data.id
+        'image-' + index
       ) as HTMLCanvasElement;
       if (img) {
         this.updateImage(img);
@@ -210,44 +204,29 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   async remove() {
-    const alert = await this.alertController.create({
-      message: `是否确认删除？`,
-      backdropDismiss: false,
-      buttons: [
-        {
-          text: '取消',
-          role: 'cancel',
-        },
-        {
-          text: '确定',
-          handler: async () => {
-            await this.preuploadService.remove(this.data);
-            const length = this.preuploadService.data.length;
-            if (length === 0) {
-              this.navController.navigateBack('/camera');
-              return;
-            }
-            let index = this.index;
-            if (index >= length) {
-              index = length - 1;
-            }
+    if (await this.commonService.confirm(`是否确认删除？`)) {
+      await this.preuploadService.remove(this.data);
+      const length = this.preuploadService.data.length;
+      if (length === 0) {
+        this.navController.navigateBack('/camera');
+        return;
+      }
+      let index = this.index;
+      if (index >= length) {
+        index = length - 1;
+      }
 
-            this.initIndex = index;
-            this.setIndex(index);
-            this.inited = false;
-            setTimeout(() => {
-              this.inited = true;
-            });
-          },
-        },
-      ],
-    });
-    await alert.present();
+      this.initIndex = index;
+      this.setIndex(index);
+      this.inited = false;
+      setTimeout(() => {
+        this.inited = true;
+      });
+    }
   }
 
   async rename() {
     const alert = await this.alertController.create({
-      cssClass: 'my-custom-class',
       header: '重命名',
       inputs: [
         {

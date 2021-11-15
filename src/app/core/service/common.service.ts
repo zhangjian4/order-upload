@@ -19,6 +19,7 @@ export class CommonService {
       duration: 2000,
       position: 'middle',
       color: 'dark',
+      cssClass:'auto-width'
     });
     toast.present();
   }

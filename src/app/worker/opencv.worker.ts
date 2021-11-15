@@ -4,11 +4,11 @@
 import cv, { Mat, Point, Rect, Size } from 'opencv-ts/src/opencv';
 import { Log } from '../shared/decorator/debug';
 // declare let cv;
-declare const OCRAD;
 const initPromise = new Promise<void>((resolve) => {
   cv.onRuntimeInitialized = resolve;
 });
 self.importScripts('/assets/js/ocrad.js');
+declare const OCRAD;
 
 class OpenCVService {
   init() {
@@ -455,7 +455,6 @@ class OpenCVService {
     const resize = this.resizeImg(mat, ratio);
     try {
       const sharpen = this.sharpen(resize);
-
       const blur = this.blur(sharpen);
       sharpen.delete();
       const canny = this.getCanny(blur);
@@ -484,8 +483,8 @@ class OpenCVService {
         this.resizeTo(dst2, { minHeight: 50 });
         cv.bitwise_not(dst2, dst2);
         const text = this.ocr(dst2);
-        if (text) {
-          result.name = text;
+        if (text && text.length === 7) {
+          result.name = text.substr(3, 7);
         }
         dst2.delete();
       }

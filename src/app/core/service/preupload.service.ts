@@ -149,7 +149,9 @@ export class PreuploadService implements OnDestroy {
     const changes = await this.opencvService.process(item.origin);
     const keys = Object.keys(changes);
     if (keys.length) {
-      await this.database.preuploadFile.update(item.id, changes);
+      if(this.persistent){
+        await this.database.preuploadFile.update(item.id, changes);
+      }
       keys.forEach((key) => {
         item[key] = changes[key];
       });

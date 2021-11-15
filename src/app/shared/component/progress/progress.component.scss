@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  height: 100px;
+  width: 80%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  background-color: #fff;
+  border-radius: 16px !important;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.message {
+  margin-bottom: 10px;
+}

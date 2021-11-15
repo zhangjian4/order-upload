@@ -6,6 +6,7 @@ import {
   ModalController,
   NavController,
 } from '@ionic/angular';
+import { format } from 'date-fns';
 import { take } from 'rxjs/operators';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import { CommonService } from '../core/service/common.service';
@@ -13,6 +14,7 @@ import { Database, IUploadFile } from '../core/service/database.service';
 import { FileService } from '../core/service/file.service';
 import { OpenCVService } from '../core/service/opencv.service';
 import { PreuploadService } from '../core/service/preupload.service';
+import { ProgressService } from '../shared/component/progress/progress.service';
 import { imageDataToBlob } from '../shared/util/image.util';
 import { DirSelectComponent } from './dir-select/dir-select.component';
 
@@ -29,29 +31,28 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   // data: IUploadFile[];
   renameId: number;
   editName: string;
-  uploading: boolean;
-  uploaded: number;
+  // uploading: boolean;
+  // uploaded: number;
   length = 0;
   size = 0;
   dir: string;
   shortDir: string;
 
   constructor(
-    private database: Database,
     private zone: NgZone,
     private baiduAPIService: BaiduAPIService,
     private alertController: AlertController,
     private navController: NavController,
     public preuploadService: PreuploadService,
-    private opencvService: OpenCVService,
     public modalController: ModalController,
     private fileService: FileService,
-    private commonService: CommonService
+    private commonService: CommonService,
+    private progressService: ProgressService
   ) {}
 
   ngOnInit() {
     this.reload();
-    this.dir = this.fileService.dir;
+    this.dir = format(new Date(), 'yyyy/MM');
   }
 
   ngOnDestroy(): void {
@@ -166,8 +167,8 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     const modal = await this.modalController.create({
       component: DirSelectComponent,
       componentProps: {
-        dir: this.dir,
-        handler: (dir) => {
+        dir: '/',
+        handler: (dir: string) => {
           this.dir = dir;
           this.save();
         },
@@ -178,12 +179,13 @@ export class PreuploadComponent implements OnInit, OnDestroy {
   }
 
   async save() {
-    if (this.dir === '/') {
-      this.commonService.alert('不能上传到根目录');
-      return;
-    }
-    this.uploaded = 0;
-    this.uploading = true;
+    // if (this.dir === '/') {
+    //   this.commonService.alert('不能上传到根目录');
+    //   return;
+    // }
+    let uploaded = 0;
+    // this.uploading = true;
+    const progress = await this.progressService.create('正在上传');
     for (let i = 0; i < this.preuploadService.data.length; i++) {
       const item = this.preuploadService.data[i];
       try {
@@ -191,7 +193,8 @@ export class PreuploadComponent implements OnInit, OnDestroy {
         const blob = await imageDataToBlob(item.dest || item.origin);
         await this.baiduAPIService.upload(this.dir, item.name + '.jpg', blob);
         this.preuploadService.remove(item);
-        this.uploaded++;
+        uploaded++;
+        progress.next(uploaded / this.preuploadService.data.length);
       } catch (e) {
         alert(e);
         const select = await this.retryConfirm(i);
@@ -204,10 +207,11 @@ export class PreuploadComponent implements OnInit, OnDestroy {
         }
       }
     }
-    this.uploading = false;
+    progress.complete();
+    // this.uploading = false;
     await this.reload();
     if (this.preuploadService.data.length === 0) {
-      this.fileService.dir = this.dir;
+      this.fileService.setDir(this.dir);
       this.navController.navigateRoot('/main');
     } else {
       this.update();

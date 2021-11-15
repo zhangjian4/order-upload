@@ -10,6 +10,7 @@ import { EditComponent } from './edit/edit.component';
 import { SwiperModule } from 'swiper/angular';
 import { DirSelectComponent } from './dir-select/dir-select.component';
 import { ImageDataModule } from '../shared/directive/image-data/image-data.module';
+import { ProgressModule } from '../shared/component/progress/progress.module';
 
 @NgModule({
   declarations: [PreuploadComponent, EditComponent, DirSelectComponent],
@@ -31,6 +32,7 @@ import { ImageDataModule } from '../shared/directive/image-data/image-data.modul
     SharedModule,
     SwiperModule,
     ImageDataModule,
+    ProgressModule,
   ],
   providers: [],
 })

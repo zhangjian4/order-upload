@@ -3,7 +3,10 @@
     <ion-buttons slot="start">
       <ion-back-button [text]="''"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ length }}个文件(共{{ size | fileSize }})</ion-title>
+    <ion-title>
+      {{ length }}个文件
+      <ng-container *ngIf="size">(共{{ size | fileSize }})</ng-container>
+    </ion-title>
     <!-- <ion-buttons slot="end">
       <ion-button fill="clear" (click)="selectDir()">
         <ion-icon name="save"></ion-icon>
@@ -87,7 +90,7 @@
       >
         <span class="upload-to-inner">
           上传到：
-          <a>{{ dir | fileName }}</a>
+          <a>{{ dir  }}</a>
         </span>
         <ion-icon name="chevron-forward-outline"></ion-icon>
       </ion-button>
@@ -97,11 +100,3 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>
-<div class="update-mask" *ngIf="uploading">
-  <div class="progress-container">
-    <ion-progress-bar
-      [value]="uploaded / preuploadService.data.length"
-    ></ion-progress-bar>
-    <div>{{ uploaded }}/{{ preuploadService.data.length }}</div>
-  </div>
-</div>

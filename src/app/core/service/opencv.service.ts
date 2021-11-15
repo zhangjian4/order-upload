@@ -49,16 +49,7 @@ export class OpenCVService {
     return this.initPromise;
   }
 
-  async fromBlob(blob: Blob) {
-    const url = URL.createObjectURL(blob);
-    try {
-      const image = await loadImage(url);
-      const imageData = imageToImageData(image);
-      return imageData;
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
+
   // /**
   //  * 旋转
   //  *
@@ -458,8 +449,7 @@ export class OpenCVService {
     }
     return result;
   }
-  async debug(blob: Blob) {
-    const imageData = await this.fromBlob(blob);
+  async debug(imageData: ImageData) {
     return this.execute('debug', imageData);
   }
   private execute(method: string, ...args: any[]): Promise<any> {

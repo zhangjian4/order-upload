@@ -12,6 +12,7 @@ import { LazyService } from '../core/service/lazy.service';
 import { OpenCVService } from '../core/service/opencv.service';
 import { OcradService } from '../core/service/ocrad.service';
 import {
+  blobToImageData,
   canvasToBlob,
   imageToCanvas,
   loadImage,
@@ -96,7 +97,8 @@ export class OpencvTestComponent implements OnInit {
     // const data = await this.database.preuploadFile.get(this.id);
     // console.log(data);
     // this.blob = data.blob;
-    const result = await this.opencvService.debug(blob);
+    const imageData = await blobToImageData(blob);
+    const result = await this.opencvService.debug(imageData);
 
     const container = this.container.nativeElement as HTMLDivElement;
     for (const img of result) {

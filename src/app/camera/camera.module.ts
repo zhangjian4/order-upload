@@ -7,8 +7,8 @@ import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ConfirmGuard } from '../shared/router-guard/confirm.guard';
-import { BlobSrcModule } from '../shared/directive/blob-src/blob-src.module';
 import { ImageDataModule } from '../shared/directive/image-data/image-data.module';
+import { ProgressModule } from '../shared/component/progress/progress.module';
 
 @NgModule({
   declarations: [CameraComponent],
@@ -28,8 +28,8 @@ import { ImageDataModule } from '../shared/directive/image-data/image-data.modul
     ]),
     IonicModule,
     FormsModule,
-    BlobSrcModule,
-    ImageDataModule
+    ImageDataModule,
+    ProgressModule
   ],
   providers: [CameraPreview, WebView, ConfirmGuard],
 })

@@ -43,6 +43,7 @@ import {
 import { OpenCVService } from '../core/service/opencv.service';
 import { PreuploadService } from '../core/service/preupload.service';
 import { CommonService } from '../core/service/common.service';
+import { ProgressService } from '../shared/component/progress/progress.service';
 
 @Component({
   selector: 'app-camera',
@@ -81,7 +82,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private opencvService: OpenCVService,
     private route: ActivatedRoute,
     private preuploadService: PreuploadService,
-    private commonService: CommonService
+    private commonService: CommonService,
+    private progressService: ProgressService
   ) {
     this.route.params.subscribe((params) => {
       if (params.id) {
@@ -232,7 +234,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         origin,
       };
       this.preuploadService.add(item);
-      item.id = await this.database.preuploadFile.add(item);
+      // item.id = await this.database.preuploadFile.add(item);
       this.process(item);
     }
   }
@@ -469,32 +471,57 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   async fileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     const files = input.files;
+    const progress = await this.progressService.create('正在加载图片');
+    const promises = [];
+    let finished = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files.item(i);
-      if (file.size > 1024 * 1024) {
-        const url = URL.createObjectURL(file);
-        try {
-          const image = await loadImage(url);
-
-          let scale: number;
-          if (image.height >= image.width && image.width > 1080) {
-            scale = 1080 / image.width;
-          } else if (image.height < image.width && image.height > 1080) {
-            scale = 1080 / image.height;
-          }
-          const canvas = imageToCanvas(image, scale);
-          const ctx = canvas.getContext('2d');
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          // const blob = await canvasToBlob(canvas);
-          await this.add(imageData, file.name);
-        } finally {
-          URL.revokeObjectURL(url);
-        }
-      } else {
-        // TODO
-        // await this.add(file, file.name);
-      }
+      promises.push(
+        this.addFile(file)
+          .then((item) => {
+            finished++;
+            progress.next(finished / files.length);
+            return item;
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+      );
     }
+    const result = await Promise.all(promises);
+    result.forEach((item) => {
+      if (item) {
+        this.photoCount++;
+        this.lastFile = item.origin;
+        this.preuploadService.add(item);
+      }
+    });
+    progress.complete();
+    // progress.close();
     input.value = null;
+  }
+
+  async addFile(file: File) {
+    const url = URL.createObjectURL(file);
+    try {
+      const image = await loadImage(url);
+      let scale: number;
+      if (image.height >= image.width && image.width > 1080) {
+        scale = 1080 / image.width;
+      } else if (image.height < image.width && image.height > 1080) {
+        scale = 1080 / image.height;
+      }
+      const canvas = imageToCanvas(image, scale);
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const item: IUploadFile = {
+        name: file.name,
+        origin: imageData,
+      };
+      this.process(item);
+      return item;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 }

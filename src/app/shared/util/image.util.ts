@@ -1,3 +1,5 @@
+import { Log } from "../decorator/debug";
+
 export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
   const canvas = document.createElement('canvas');
   canvas.width = image.width * scale;
@@ -28,8 +30,11 @@ export const loadImage = (url: string) =>
   });
 
 export const imageToImageData = (image: HTMLImageElement) => {
-  const canvas = imageToCanvas(image);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
   const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, image.width, image.height);
   return ctx.getImageData(0, 0, image.width, image.height);
 };
 
@@ -58,6 +63,7 @@ export const canvasToBlob = (canvas: HTMLCanvasElement) =>
       1
     );
   });
+
 export const base64ToBlob = (base64: string) => {
   const buffer = base64ToArrayBuffer(base64);
   const blob = new Blob([buffer], {
@@ -73,14 +79,25 @@ export const base64ToImageData = async (base64: string) => {
 };
 
 export const imageDataToBlob = async (imageData: ImageData) => {
-  const start = new Date().getTime();
+  // const start = new Date().getTime();
   const canvas = document.createElement('canvas');
   canvas.width = imageData.width;
   canvas.height = imageData.height;
   const ctx = canvas.getContext('2d');
   ctx.putImageData(imageData, 0, 0);
   const blob = await canvasToBlob(canvas);
-  const end = new Date().getTime();
-  console.log('imageDataToBlob use ' + (end - start) + 'ms');
+  // const end = new Date().getTime();
+  // console.log('imageDataToBlob use ' + (end - start) + 'ms');
   return blob;
+};
+
+export const blobToImageData = async (blob: Blob) => {
+  const url = URL.createObjectURL(blob);
+  try {
+    const image = await loadImage(url);
+    const imageData = imageToImageData(image);
+    return imageData;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 };

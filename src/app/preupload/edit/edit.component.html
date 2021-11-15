@@ -26,7 +26,7 @@
           <canvas
             [imageData]="item.origin"
             (imageLoad)="onImageLoad($event, item, i)"
-            id="image-{{ item.id }}"
+            id="image-{{ i }}"
           ></canvas>
         </div>
         <ng-container *ngIf="index === i">
@@ -94,9 +94,14 @@
       </div>
       <!-- <a><ion-icon name="contract-outline"></ion-icon>自动</a>
       <a><ion-icon name="expand-outline"></ion-icon>全部</a> -->
-      <ion-button fill="solid" routerLink="/preupload" routerDirection="back"
-        >完成</ion-button
+      <ion-button
+        color="primary"
+        fill="solid"
+        routerLink="/preupload"
+        routerDirection="back"
       >
+        完成
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>
