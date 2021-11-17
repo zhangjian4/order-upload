@@ -11,7 +11,8 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "es2015",
-    "module": "es2020"
+    "module": "es2020",
+    "skipLibCheck": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

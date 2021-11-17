@@ -10,7 +10,7 @@ export class BlobSrcDirective {
 
   @Input('blob-src')
   blob: Blob;
-  destroy$ = new Subject();
+  destroy$ = new Subject<void>();
   objectUrl: string;
   constructor(private database: Database, private elementRef: ElementRef) {}
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 /// <reference lib="webworker" />
 
-import cv, { Mat, Point, Rect, Size } from 'opencv-ts/src/opencv';
+import cv, { Mat, Point, Rect, Size } from 'opencv-ts';
 import { Log } from '../shared/decorator/debug';
 // declare let cv;
 const initPromise = new Promise<void>((resolve) => {
@@ -134,7 +134,7 @@ class OpenCVService {
     cv.Canny(image, dst, 50, 200);
     // dst2.delete();
     // const dst4 = new cv.Mat();
-    const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+    const kernel = new cv.Mat.ones(3, 3, cv.CV_8U);
     const anchor = new cv.Point(-1, -1);
     // 膨胀操作，尽量使边缘闭合
     cv.dilate(
@@ -300,7 +300,7 @@ class OpenCVService {
     // cv.cvtColor(hsv, hsv, cv.COLOR_RGB2GRAY, 0);
     // cv.threshold(hsv, hsv, 177, 255, cv.THRESH_BINARY);
     // return hsv;
-    const dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
+    const dst = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
     const threshold1 = 35;
     // const threshold2 = 20;
     const srcData = src.data;
@@ -338,7 +338,7 @@ class OpenCVService {
     // 取反色
     // cv.bitwise_not(src, dst1);
     // 膨胀
-    const kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+    const kernel = new cv.Mat.ones(3, 3, cv.CV_8U);
     const anchor = new cv.Point(-1, -1);
     // cv.erode(src, dst1, kernel, anchor, 9, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
     cv.dilate(
@@ -538,7 +538,7 @@ class OpenCVService {
       const rect = this.getCenterRect(dst2);
       if (rect) {
         const rectangleColor = new cv.Scalar(255, 0, 0);
-        const dst3 = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+        const dst3 = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
         const point1 = new cv.Point(rect.x, rect.y);
         const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
         cv.rectangle(dst3, point1, point2, rectangleColor, -1);

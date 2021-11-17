@@ -78,7 +78,7 @@ export class BaiduAPIService {
   appKey = 'GwSU34r2Ni23OEObLFU637VipOlhzh5r';
   secretKey = 'U6z8Z3FOLQnFyYANZMdtPgxcfNHwLMhj';
   defaultDir = '/票据上传';
-  fileChange = new Subject();
+  fileChange = new Subject<void>();
 
   constructor(
     private http: HttpService,

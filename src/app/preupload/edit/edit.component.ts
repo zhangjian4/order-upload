@@ -34,7 +34,7 @@ export class EditComponent implements OnInit, OnDestroy {
   initIndex: number;
   index: number;
 
-  destroy$ = new Subject();
+  destroy$ = new Subject<void>();
   moving: boolean;
   magnifyRatio = 2; // 放大镜放大倍数
   magnifyTransform: string;
