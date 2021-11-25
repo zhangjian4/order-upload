@@ -44,15 +44,17 @@ export class PreuploadService implements OnDestroy {
   //   }
   // }
 
-  async updateOrigin(id: number, origin: ImageData) {
+  async updateOrigin(id: number, imageData: ImageData) {
     const item = this.data.find((i) => i.id === id);
     if (item) {
-      item.origin = origin;
+      this.database.imageData.delete(item.origin);
+      const imageId = await this.saveImageData(imageData);
+      item.origin = imageId;
       item.dest = null;
       // this.revokeUrl(item);
-      await this.process(item);
-      if (this.persistent && item.origin === origin) {
-        this.database.preuploadFile.update(id, { origin });
+      await this.process(item, imageData);
+      if (this.persistent && item.origin === imageId) {
+        this.database.preuploadFile.update(id, { origin: imageId });
       }
       // this.createUrl(item);
     }
@@ -113,6 +115,7 @@ export class PreuploadService implements OnDestroy {
 
   clear() {
     this.data = [];
+    this.database.imageData.clear();
     if (this.persistent) {
       if (this.persistent) {
         this.database.preuploadFile.clear();
@@ -133,9 +136,11 @@ export class PreuploadService implements OnDestroy {
 
   async updateRect(item: IUploadFile, points: { x: number; y: number }[]) {
     item.rect = points;
-    const dest = await this.opencvService.transform(item.origin, points);
+    const imageData = await this.getImageData(item.origin);
+    const dest = await this.opencvService.transform(imageData, points);
+    const imageId = await this.saveImageData(dest);
     if (item.rect === points) {
-      item.dest = dest;
+      item.dest = imageId;
     }
   }
 
@@ -143,18 +148,41 @@ export class PreuploadService implements OnDestroy {
     console.log('destroy');
   }
 
-  async process(item: IUploadFile) {
+  async process(item: IUploadFile, imageData: ImageData) {
     // const changes: any = {};
     await this.opencvService.init();
-    const changes = await this.opencvService.process(item.origin);
+    const changes = await this.opencvService.process(imageData);
     const keys = Object.keys(changes);
     if (keys.length) {
-      if(this.persistent){
+      for (const key of keys) {
+        let value = changes[key];
+        if (value instanceof ImageData) {
+          value = await this.saveImageData(value);
+          changes[key] = value;
+          const oldValue = item[key];
+          if (oldValue) {
+            this.deleteImageData(oldValue);
+          }
+        }
+        item[key] = value;
+      }
+      if (this.persistent) {
         await this.database.preuploadFile.update(item.id, changes);
       }
-      keys.forEach((key) => {
-        item[key] = changes[key];
-      });
     }
+  }
+
+  async saveImageData(data: ImageData) {
+    const id = await this.database.imageData.add({ data });
+    return id;
+  }
+
+  async getImageData(id: number) {
+    const record = await this.database.imageData.get(id);
+    return record.data;
+  }
+
+  deleteImageData(id: number) {
+    return this.database.imageData.delete(id);
   }
 }

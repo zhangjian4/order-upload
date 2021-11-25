@@ -5,14 +5,16 @@
             "storePassword": "123456",
             "alias": "bbj-app",
             "password" : "123456",
-            "keystoreType": ""
+            "keystoreType": "",
+            "packageType": "apk"
         },
         "release": {
             "keystore": "./bbj-app.keystore",
             "storePassword": "123456",
             "alias": "bbj-app",
             "password" : "123456",
-            "keystoreType": ""
+            "keystoreType": "",
+            "packageType": "apk"
         }
     },
     "ios": {

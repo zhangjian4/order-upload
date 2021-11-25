@@ -441,12 +441,6 @@ export class OpenCVService {
   async process(imageData: ImageData) {
     // const imageData = await this.fromBlob(blob);
     const result = await this.execute('process', imageData);
-    if (result.blob) {
-      result.blob = await this.toBlob(result.blob);
-    }
-    if (result.dest) {
-      result.dest = result.dest;
-    }
     return result;
   }
   async debug(imageData: ImageData) {
@@ -455,11 +449,11 @@ export class OpenCVService {
   private execute(method: string, ...args: any[]): Promise<any> {
     const messageId = this.messageId++;
     const transfer = [];
-    // args.forEach((arg) => {
-    //   if (arg instanceof ImageData) {
-    //     transfer.push(arg.data.buffer);
-    //   }
-    // });
+    args.forEach((arg) => {
+      if (arg instanceof ImageData) {
+        transfer.push(arg.data.buffer);
+      }
+    });
     this.worker.postMessage({ messageId, method, args }, transfer);
     return new Promise((resolve, reject) => {
       this.resolveMap[messageId] = { resolve, reject };

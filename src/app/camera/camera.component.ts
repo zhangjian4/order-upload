@@ -44,6 +44,7 @@ import { OpenCVService } from '../core/service/opencv.service';
 import { PreuploadService } from '../core/service/preupload.service';
 import { CommonService } from '../core/service/common.service';
 import { ProgressService } from '../shared/component/progress/progress.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-camera',
@@ -66,11 +67,12 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   last: any;
   db: any;
   objectStore: any;
-  lastFile: ImageData;
+  lastFile: number;
   viewEntered: boolean;
   cameraStarted: boolean;
   promises: Promise<any>[] = [];
   id: number;
+  destroy$ = new Subject<void>();
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -85,7 +87,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private commonService: CommonService,
     private progressService: ProgressService
   ) {
-    this.route.params.subscribe((params) => {
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       if (params.id) {
         this.id = +params.id;
       }
@@ -137,35 +139,40 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     // this.stopCamera();
   }
 
   async startCamera() {
     // this.image = await this.urlToBase64('/assets/img/lake.jpg');
-    const cameraPreviewOpts: CameraPreviewOptions = {
-      x: 0,
-      y: 0,
-      width: window.screen.width,
-      height: window.screen.height,
-      camera: 'rear',
-      tapPhoto: true,
-      previewDrag: true,
-      toBack: true,
-      alpha: 1,
-    };
-
-    // start camera
-    await this.cameraPreview.startCamera(cameraPreviewOpts);
-    this.zone.run(() => {
-      this.cameraStarted = true;
-    });
+    if (this.platform.is('cordova')) {
+      const cameraPreviewOpts: CameraPreviewOptions = {
+        x: 0,
+        y: 0,
+        width: window.screen.width,
+        height: window.screen.height,
+        camera: 'rear',
+        tapPhoto: true,
+        previewDrag: true,
+        toBack: true,
+        alpha: 1,
+      };
+      // start camera
+      await this.cameraPreview.startCamera(cameraPreviewOpts);
+      this.zone.run(() => {
+        this.cameraStarted = true;
+      });
+    }
   }
 
   async stopCamera() {
-    await this.cameraPreview.stopCamera();
-    this.zone.run(() => {
-      this.cameraStarted = false;
-    });
+    if (this.platform.is('cordova')) {
+      await this.cameraPreview.stopCamera();
+      this.zone.run(() => {
+        this.cameraStarted = false;
+      });
+    }
   }
 
   async takePicture() {
@@ -218,29 +225,30 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // });
   }
 
-  async add(origin: ImageData, name?: string) {
+  async add(imageData: ImageData, name?: string) {
     if (this.id) {
-      this.preuploadService.updateOrigin(this.id, origin);
+      this.preuploadService.updateOrigin(this.id, imageData);
       this.back();
     } else {
       if (!name) {
         name = format(new Date(), 'yyyyMMddHHmmssSSS');
       }
       this.photoCount++;
-      this.lastFile = origin;
       // const origin = await this.opencvService.fromBlob(blob);
+      const imageId = await this.preuploadService.saveImageData(imageData);
       const item: IUploadFile = {
         name,
-        origin,
+        origin: imageId,
       };
+      this.lastFile = imageId;
       this.preuploadService.add(item);
       // item.id = await this.database.preuploadFile.add(item);
-      this.process(item);
+      this.process(item, imageData);
     }
   }
 
-  async process(item: IUploadFile) {
-    const promise = this.preuploadService.process(item);
+  async process(item: IUploadFile, imageData: ImageData) {
+    const promise = this.preuploadService.process(item, imageData);
     this.promises.push(promise);
     await promise;
     this.promises = this.promises.filter((p) => p !== promise);
@@ -514,11 +522,12 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       const canvas = imageToCanvas(image, scale);
       const ctx = canvas.getContext('2d');
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const imageId = await this.preuploadService.saveImageData(imageData);
       const item: IUploadFile = {
         name: file.name,
-        origin: imageData,
+        origin: imageId,
       };
-      this.process(item);
+      this.process(item, imageData);
       return item;
     } finally {
       URL.revokeObjectURL(url);

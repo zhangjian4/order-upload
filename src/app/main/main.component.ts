@@ -58,7 +58,7 @@ export class MainComponent implements OnInit {
     private router: Router,
     private platform: Platform,
     private commonService: CommonService,
-    public loadingController: LoadingController,
+    public loadingController: LoadingController
   ) {
     // route.queryParams.subscribe((params) => {
     //   const dir = params.dir || '/';
@@ -132,10 +132,12 @@ export class MainComponent implements OnInit {
   }
 
   async checkForUpdate() {
-    const remote = await this.codePush.checkForUpdate();
-    this.zone.run(() => {
-      this.remotePackage = remote;
-    });
+    if (this.platform.is('cordova')) {
+      const remote = await this.codePush.checkForUpdate();
+      this.zone.run(() => {
+        this.remotePackage = remote;
+      });
+    }
   }
 
   async update() {

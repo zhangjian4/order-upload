@@ -79,6 +79,7 @@ export class BaiduAPIService {
   secretKey = 'U6z8Z3FOLQnFyYANZMdtPgxcfNHwLMhj';
   defaultDir = '/票据上传';
   fileChange = new Subject<void>();
+  oauthPromise: Promise<void>;
 
   constructor(
     private http: HttpService,
@@ -99,7 +100,25 @@ export class BaiduAPIService {
     this.oauth();
   }
 
-  oauth() {
+  async oauth() {
+    if (!this.oauthPromise) {
+      this.oauthPromise = this._oauth();
+    }
+    await this.oauthPromise;
+    this.oauthPromise = null;
+  }
+
+  async _oauth() {
+    const refresh_token = await this.storage.get('refresh_token');
+    if (refresh_token) {
+      try {
+        await this.refreshToken(refresh_token);
+        location.reload();
+        return;
+      } catch (e) {
+        console.error(e);
+      }
+    }
     const redirectUri = encodeURIComponent(this.redirectUri);
     const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${this.appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&display=mobile&force_login=1`;
     location.href = url;
@@ -170,7 +189,7 @@ export class BaiduAPIService {
       url = url + '?access_token=' + token;
     }
     const response = await this.http.post(url, body);
-    return this.handleResponse(response);
+    return await this.handleResponse(response);
   }
 
   async get(url: string, params?: any, withToken = true, showError = true) {
@@ -183,7 +202,7 @@ export class BaiduAPIService {
     }
     try {
       const response = await this.http.get(url, params);
-      return this.handleResponse(response, showError);
+      return await this.handleResponse(response, showError);
     } catch (e) {
       this.handleError(e);
     }
@@ -194,7 +213,7 @@ export class BaiduAPIService {
     throw e;
   }
 
-  handleResponse(response: any, showError = true) {
+  async handleResponse(response: any, showError = true) {
     if (response.errno != null && response.errno !== 0) {
       if (response.errno === -6) {
         this.oauth();
@@ -254,6 +273,21 @@ export class BaiduAPIService {
     // );
     // const url = `https://openapi.baidu.com/oauth/2.0/token?grant_type=authorization_code&code=${code}&client_id=${this.appKey}&client_secret=${this.secretKey}&redirect_uri=${redirectUri}`;
     // location.href = url;
+  }
+
+  async refreshToken(refresh_token: string) {
+    const data = await this.get(
+      'https://openapi.baidu.com/oauth/2.0/token',
+      {
+        grant_type: 'refresh_token',
+        refresh_token,
+        client_id: this.appKey,
+        client_secret: this.secretKey,
+      },
+      false
+    );
+    await this.storage.set('refresh_token', data.refresh_token);
+    await this.storage.set('access_token', data.access_token);
   }
 
   async upload(dir: string, fileName: string, file: Blob) {

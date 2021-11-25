@@ -190,7 +190,9 @@ export class PreuploadComponent implements OnInit, OnDestroy {
       const item = this.preuploadService.data[i];
       try {
         // await this.sleep(3000);
-        const blob = await imageDataToBlob(item.dest || item.origin);
+        const imageId = item.dest || item.origin;
+        const imageData = await this.preuploadService.getImageData(imageId);
+        const blob = await imageDataToBlob(imageData);
         await this.baiduAPIService.upload(this.dir, item.name + '.jpg', blob);
         this.preuploadService.remove(item);
         uploaded++;
@@ -212,6 +214,7 @@ export class PreuploadComponent implements OnInit, OnDestroy {
     await this.reload();
     if (this.preuploadService.data.length === 0) {
       this.fileService.setDir(this.dir);
+      this.preuploadService.clear();
       this.navController.navigateRoot('/main');
     } else {
       this.update();

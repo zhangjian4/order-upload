@@ -4,11 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
-import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
-import androidx.annotation.RequiresApi;
 import android.util.Log;
 import android.webkit.ServiceWorkerController;
 import android.webkit.ServiceWorkerClient;
@@ -134,37 +132,19 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
       this.parser = parser;
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
       return localServer.shouldInterceptRequest(request.getUrl(), request);
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-      return localServer.shouldInterceptRequest(Uri.parse(url), null);
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
       String url=request.getUrl().toString();
-      if(url.startsWith("http://localhost/oauth")){
+      if(url.startsWith("https://localhost/oauth")||url.startsWith("http://localhost/oauth")){
         view.loadUrl(url);
         return true;
       }
       return super.shouldOverrideUrlLoading(view, request);
-    }
-
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-      if(url.startsWith("http://localhost/oauth")){
-        view.loadUrl(url);
-        return true;
-      }
-      return super.shouldOverrideUrlLoading(view, url);
     }
 
     @Override
