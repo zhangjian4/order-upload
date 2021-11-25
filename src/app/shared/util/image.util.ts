@@ -1,4 +1,13 @@
-import { Log } from "../decorator/debug";
+import { Log } from '../decorator/debug';
+
+let canvasInstance: HTMLCanvasElement = null;
+
+const getCanvas = () => {
+  if (canvasInstance == null) {
+    canvasInstance = document.createElement('canvas');
+  }
+  return canvasInstance;
+};
 
 export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
   const canvas = document.createElement('canvas');
@@ -29,13 +38,17 @@ export const loadImage = (url: string) =>
     };
   });
 
-export const imageToImageData = (image: HTMLImageElement) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
+export const imageToImageData = (image: HTMLImageElement, scale = 1) => {
+  const canvas = getCanvas();
+  canvas.width = image.width * scale;
+  canvas.height = image.height * scale;
   const ctx = canvas.getContext('2d');
+  if (scale !== 1) {
+    ctx.scale(scale, scale);
+  }
   ctx.drawImage(image, 0, 0, image.width, image.height);
-  return ctx.getImageData(0, 0, image.width, image.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return imageData;
 };
 
 export const urlToBlob = async (url: string) => {
@@ -79,15 +92,12 @@ export const base64ToImageData = async (base64: string) => {
 };
 
 export const imageDataToBlob = async (imageData: ImageData) => {
-  // const start = new Date().getTime();
-  const canvas = document.createElement('canvas');
+  const canvas = getCanvas();
   canvas.width = imageData.width;
   canvas.height = imageData.height;
   const ctx = canvas.getContext('2d');
   ctx.putImageData(imageData, 0, 0);
   const blob = await canvasToBlob(canvas);
-  // const end = new Date().getTime();
-  // console.log('imageDataToBlob use ' + (end - start) + 'ms');
   return blob;
 };
 

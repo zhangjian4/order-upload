@@ -35,8 +35,7 @@ import {
   base64ToArrayBuffer,
   base64ToBlob,
   base64ToImageData,
-  canvasToBlob,
-  imageToCanvas,
+  imageToImageData,
   loadImage,
   urlToBlob,
 } from '../shared/util/image.util';
@@ -519,9 +518,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       } else if (image.height < image.width && image.height > 1080) {
         scale = 1080 / image.height;
       }
-      const canvas = imageToCanvas(image, scale);
-      const ctx = canvas.getContext('2d');
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const imageData = imageToImageData(image, scale);
       const imageId = await this.preuploadService.saveImageData(imageData);
       const item: IUploadFile = {
         name: file.name,

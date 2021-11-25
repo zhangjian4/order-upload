@@ -4,6 +4,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -12,9 +13,13 @@ import { Database } from 'src/app/core/service/database.service';
 @Directive({
   selector: 'canvas[imageData]',
 })
-export class ImageDataDirective implements OnChanges {
+export class ImageDataDirective implements OnChanges, OnDestroy {
   @Input()
   imageData: ImageData | number;
+  @Input()
+  maxHeight: number;
+  @Input()
+  maxWidth: number;
 
   @Output()
   imageLoad = new EventEmitter<HTMLCanvasElement>();
@@ -23,8 +28,15 @@ export class ImageDataDirective implements OnChanges {
     private elementRef: ElementRef<HTMLCanvasElement>,
     private database: Database
   ) {}
+
   ngOnChanges(changes: SimpleChanges): void {
     this.reload();
+  }
+
+  ngOnDestroy(): void {
+    const canvas = this.elementRef.nativeElement;
+    canvas.width = 0;
+    canvas.height = 0;
   }
 
   async reload() {

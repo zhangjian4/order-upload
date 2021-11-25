@@ -29,7 +29,7 @@
   <div class="operations">
     <div class="photo-list">
       <div *ngIf="!this.id && lastFile" class="thumb-container">
-        <canvas [imageData]="lastFile"></canvas>
+        <canvas [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50"></canvas>
         <ion-badge color="primary">{{ photoCount }}</ion-badge>
       </div>
     </div>
