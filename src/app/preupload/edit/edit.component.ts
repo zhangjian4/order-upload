@@ -72,16 +72,22 @@ export class EditComponent implements OnInit, OnDestroy {
     // this.data = this.preuploadService.data[this.index];
   }
 
-  onImageLoad(canvas: HTMLCanvasElement, item: IUploadFile, index: number) {
+  onImageLoad(canvas: HTMLImageElement, item: IUploadFile, index: number) {
     if (index === this.index) {
       this.data = item;
       this.updateImage(canvas);
     }
   }
 
-  updateImage(img: HTMLCanvasElement) {
-    const { offsetTop, offsetLeft, offsetHeight, offsetWidth, width, height } =
-      img;
+  updateImage(img: HTMLImageElement) {
+    const {
+      offsetTop,
+      offsetLeft,
+      offsetHeight,
+      offsetWidth,
+      naturalWidth: width,
+      naturalHeight: height,
+    } = img;
     if (height && width) {
       this.ratio = offsetWidth / width;
       this.magnifyWidth = width * this.magnifyRatio;
@@ -175,9 +181,10 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   onSlideChange(event: any) {
-    if (this.index !== event.activeIndex) {
+    const swiper=event[0]
+    if (this.index !== swiper.activeIndex) {
       this.zone.run(() => {
-        this.setIndex(event.activeIndex);
+        this.setIndex(swiper.activeIndex);
         // this.index = event.activeIndex;
         // this.data = this.preuploadService.data[this.index];
         // const img = document.getElementById(
@@ -194,9 +201,7 @@ export class EditComponent implements OnInit, OnDestroy {
     this.index = index;
     this.data = this.preuploadService.data[this.index];
     if (this.data) {
-      const img = document.getElementById(
-        'image-' + index
-      ) as HTMLCanvasElement;
+      const img = document.getElementById('image-' + index) as HTMLImageElement;
       if (img) {
         this.updateImage(img);
       }

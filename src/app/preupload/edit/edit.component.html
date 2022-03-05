@@ -23,11 +23,11 @@
     >
       <div *ngIf="item.origin" class="image-container">
         <div class="image-cotainer-inner">
-          <canvas
+          <img
             [imageData]="item.origin"
             (imageLoad)="onImageLoad($event, item, i)"
             id="image-{{ i }}"
-          ></canvas>
+          />
         </div>
         <ng-container *ngIf="index === i">
           <div
@@ -35,11 +35,11 @@
             [class.hidden]="!moving"
             [class.right]="magnifyPositionRight"
           >
-            <canvas
+            <img
               [imageData]="item.origin"
               [style.transform]="magnifyTransform"
               [style.width.px]="magnifyWidth"
-            ></canvas>
+            />
             <ion-icon name="add"></ion-icon>
           </div>
           <svg

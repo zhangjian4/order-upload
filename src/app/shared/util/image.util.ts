@@ -21,8 +21,8 @@ export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
   return canvas;
 };
 
-export const imageToBlob = (image: HTMLImageElement) => {
-  const canvas = imageToCanvas(image);
+export const imageToBlob = (image: HTMLImageElement, scale = 1) => {
+  const canvas = imageToCanvas(image,scale);
   return canvasToBlob(canvas);
 };
 
@@ -63,7 +63,7 @@ export const base64ToArrayBuffer = (base64: string) => {
   for (let i = 0; i < len; i++) {
     arr[i] = binStr.charCodeAt(i);
   }
-  return arr;
+  return arr.buffer;
 };
 
 export const canvasToBlob = (canvas: HTMLCanvasElement) =>
@@ -99,6 +99,10 @@ export const imageDataToBlob = async (imageData: ImageData) => {
   ctx.putImageData(imageData, 0, 0);
   const blob = await canvasToBlob(canvas);
   return blob;
+};
+
+export const blobToArrayBuffer = async (blob: Blob) => {
+  return blob.arrayBuffer();
 };
 
 export const blobToImageData = async (blob: Blob) => {

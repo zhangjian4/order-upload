@@ -8,6 +8,7 @@ import { OpenCVService } from './opencv.service';
 export class PreuploadService implements OnDestroy {
   data: IUploadFile[] = [];
   updateData = new Set<IUploadFile>();
+  id = 0;
   private readonly persistent = false;
 
   constructor(
@@ -29,6 +30,7 @@ export class PreuploadService implements OnDestroy {
   }
 
   async add(item: IUploadFile) {
+    item.id = this.id++;
     this.data.push(item);
     if (this.persistent) {
       await this.database.preuploadFile.add(item);
@@ -44,7 +46,7 @@ export class PreuploadService implements OnDestroy {
   //   }
   // }
 
-  async updateOrigin(id: number, imageData: ImageData) {
+  async updateOrigin(id: number, imageData: ArrayBuffer) {
     const item = this.data.find((i) => i.id === id);
     if (item) {
       this.database.imageData.delete(item.origin);
@@ -148,7 +150,7 @@ export class PreuploadService implements OnDestroy {
     console.log('destroy');
   }
 
-  async process(item: IUploadFile, imageData: ImageData) {
+  async process(item: IUploadFile, imageData: ArrayBuffer) {
     // const changes: any = {};
     await this.opencvService.init();
     const changes = await this.opencvService.process(imageData);
@@ -156,7 +158,7 @@ export class PreuploadService implements OnDestroy {
     if (keys.length) {
       for (const key of keys) {
         let value = changes[key];
-        if (value instanceof ImageData) {
+        if (value instanceof ArrayBuffer) {
           value = await this.saveImageData(value);
           changes[key] = value;
           const oldValue = item[key];
@@ -172,7 +174,7 @@ export class PreuploadService implements OnDestroy {
     }
   }
 
-  async saveImageData(data: ImageData) {
+  async saveImageData(data: ArrayBuffer) {
     const id = await this.database.imageData.add({ data });
     return id;
   }

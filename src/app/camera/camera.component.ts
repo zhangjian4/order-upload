@@ -35,6 +35,8 @@ import {
   base64ToArrayBuffer,
   base64ToBlob,
   base64ToImageData,
+  blobToArrayBuffer,
+  imageToBlob,
   imageToImageData,
   loadImage,
   urlToBlob,
@@ -72,6 +74,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   promises: Promise<any>[] = [];
   id: number;
   destroy$ = new Subject<void>();
+  startTouchDistance: number;
+  zoom = 1;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -148,9 +152,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     if (this.platform.is('cordova')) {
       const cameraPreviewOpts: CameraPreviewOptions = {
         x: 0,
-        y: 0,
+        y: 100,
         width: window.screen.width,
-        height: window.screen.height,
+        height: (window.screen.width * 4) / 3,
         camera: 'rear',
         tapPhoto: true,
         previewDrag: true,
@@ -159,6 +163,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       };
       // start camera
       await this.cameraPreview.startCamera(cameraPreviewOpts);
+      // this.cameraPreview.setZoom(0.5);
       this.zone.run(() => {
         this.cameraStarted = true;
       });
@@ -176,7 +181,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async takePicture() {
     const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
-    const imageData = await base64ToImageData(base64);
+    // const buffer = Buffer.from(base64, 'base64');
+    const imageData = base64ToArrayBuffer(base64);
     await this.add(imageData);
     // if (this.platform.is('cordova')) {
     //   const input = document.createElement('input');
@@ -224,7 +230,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // });
   }
 
-  async add(imageData: ImageData, name?: string) {
+  async add(imageData: ArrayBuffer, name?: string) {
     if (this.id) {
       this.preuploadService.updateOrigin(this.id, imageData);
       this.back();
@@ -243,10 +249,11 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       this.preuploadService.add(item);
       // item.id = await this.database.preuploadFile.add(item);
       this.process(item, imageData);
+      return item;
     }
   }
 
-  async process(item: IUploadFile, imageData: ImageData) {
+  async process(item: IUploadFile, imageData: ArrayBuffer) {
     const promise = this.preuploadService.process(item, imageData);
     this.promises.push(promise);
     await promise;
@@ -496,20 +503,23 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       );
     }
     const result = await Promise.all(promises);
-    result.forEach((item) => {
-      if (item) {
-        this.photoCount++;
-        this.lastFile = item.origin;
-        this.preuploadService.add(item);
-      }
-    });
+    // result.forEach((item) => {
+    //   if (item) {
+    //     this.photoCount++;
+    //     this.lastFile = item.origin;
+    //     this.preuploadService.add(item);
+    //   }
+    // });
     progress.complete();
     // progress.close();
     input.value = null;
   }
 
   async addFile(file: File) {
+    // const buffer = await file.arrayBuffer();
+    // const rawImageData = jpeg.decode(buffer, { useTArray: true });
     const url = URL.createObjectURL(file);
+    // console.log(rawImageData);
     try {
       const image = await loadImage(url);
       let scale: number;
@@ -518,16 +528,46 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       } else if (image.height < image.width && image.height > 1080) {
         scale = 1080 / image.height;
       }
-      const imageData = imageToImageData(image, scale);
-      const imageId = await this.preuploadService.saveImageData(imageData);
-      const item: IUploadFile = {
-        name: file.name,
-        origin: imageId,
-      };
-      this.process(item, imageData);
+      const imageData = await imageToBlob(image, scale);
+      const buffer = await blobToArrayBuffer(imageData);
+      const item = await this.add(buffer, file.name);
+      // const imageId = await this.preuploadService.saveImageData(buffer);
+      // const item: IUploadFile = {
+      //   name: file.name,
+      //   origin: imageId,
+      // };
+      // this.process(item, buffer);
       return item;
     } finally {
       URL.revokeObjectURL(url);
+    }
+  }
+
+  onTouchStart(event: TouchEvent) {
+    if (event.touches.length === 2) {
+      this.startTouchDistance = this.getTouchDistance(event);
+    }
+  }
+
+  getTouchDistance(event: TouchEvent) {
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+    return Math.sqrt(
+      Math.pow(touch1.pageX - touch2.pageX, 2) +
+        Math.pow(touch1.pageY - touch2.pageY, 2)
+    );
+  }
+
+  onTouchMove(event) {
+    if (event.touches.length === 2) {
+      const distance = this.getTouchDistance(event);
+      let change = (distance - this.startTouchDistance) / 10;
+      change = change > 0 ? Math.floor(change) : Math.ceil(change);
+      if (change != 0) {
+        this.zoom += change;
+        this.cameraPreview.setZoom(this.zoom);
+        this.startTouchDistance = distance;
+      }
     }
   }
 }

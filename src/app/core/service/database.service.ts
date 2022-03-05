@@ -28,6 +28,7 @@ export class Database extends Dexie {
 }
 
 export interface IUploadFile {
+  size?: number;
   destUrl?: string;
   url?: string;
   rect?: any;
@@ -42,5 +43,5 @@ export interface IUploadFile {
 
 export interface MyImageData {
   id?: number;
-  data?: ImageData;
+  data?: ArrayBuffer;
 }

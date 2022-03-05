@@ -1,4 +1,4 @@
-<ion-content>
+<ion-content (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)">
   <div class="safe-top">
     <!-- <ion-back-button>
       <ion-icon
@@ -29,7 +29,7 @@
   <div class="operations">
     <div class="photo-list">
       <div *ngIf="!this.id && lastFile" class="thumb-container">
-        <canvas [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50"></canvas>
+        <img [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50"/>
         <ion-badge color="primary">{{ photoCount }}</ion-badge>
       </div>
     </div>

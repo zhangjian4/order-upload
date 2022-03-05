@@ -49,7 +49,6 @@ export class OpenCVService {
     return this.initPromise;
   }
 
-
   // /**
   //  * 旋转
   //  *
@@ -272,25 +271,25 @@ export class OpenCVService {
   //   }
   // }
 
-  async transform(imageData: ImageData, points: { x: number; y: number }[]) {
-    const dst: ImageData = await this.execute('warpImage', imageData, points);
+  async transform(imageData: ArrayBuffer, points: { x: number; y: number }[]) {
+    const dst: ArrayBuffer = await this.execute('warpImage', imageData, points);
     return dst;
   }
 
-  toCanvas(imageData: ImageData) {
-    const canvas = document.createElement('canvas');
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    const ctx = canvas.getContext('2d');
-    ctx.putImageData(imageData, 0, 0);
-    return canvas;
-  }
+  // toCanvas(imageData: ImageData) {
+  //   const canvas = document.createElement('canvas');
+  //   canvas.width = imageData.width;
+  //   canvas.height = imageData.height;
+  //   const ctx = canvas.getContext('2d');
+  //   ctx.putImageData(imageData, 0, 0);
+  //   return canvas;
+  // }
 
-  async toBlob(src: ImageData) {
-    const canvas = this.toCanvas(src);
-    const result = await canvasToBlob(canvas);
-    return result;
-  }
+  // async toBlob(src: ImageData) {
+  //   const canvas = this.toCanvas(src);
+  //   const result = await canvasToBlob(canvas);
+  //   return result;
+  // }
 
   // /**
   //  * 提取红色
@@ -438,20 +437,20 @@ export class OpenCVService {
   //   }
   // }
 
-  async process(imageData: ImageData) {
+  async process(imageData: ArrayBuffer) {
     // const imageData = await this.fromBlob(blob);
     const result = await this.execute('process', imageData);
     return result;
   }
-  async debug(imageData: ImageData) {
+  async debug(imageData: ArrayBuffer): Promise<ArrayBuffer[]> {
     return this.execute('debug', imageData);
   }
   private execute(method: string, ...args: any[]): Promise<any> {
     const messageId = this.messageId++;
     const transfer = [];
     args.forEach((arg) => {
-      if (arg instanceof ImageData) {
-        transfer.push(arg.data.buffer);
+      if (arg instanceof ArrayBuffer) {
+        transfer.push(arg);
       }
     });
     this.worker.postMessage({ messageId, method, args }, transfer);

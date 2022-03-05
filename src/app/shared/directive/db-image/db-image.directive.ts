@@ -19,7 +19,7 @@ export class DbImageDirective implements OnChanges, OnInit, OnDestroy {
   table: string;
   @Input()
   index: number | string;
-  destroy$ = new Subject();
+  destroy$ = new Subject<void>();
   objectUrl: string;
   constructor(private database: Database, private elementRef: ElementRef) {}
 

@@ -192,8 +192,13 @@ export class PreuploadComponent implements OnInit, OnDestroy {
         // await this.sleep(3000);
         const imageId = item.dest || item.origin;
         const imageData = await this.preuploadService.getImageData(imageId);
-        const blob = await imageDataToBlob(imageData);
-        await this.baiduAPIService.upload(this.dir, item.name + '.jpg', blob);
+        // const blob = await imageDataToBlob(imageData);
+        const blob = new Blob([imageData]);
+        await this.baiduAPIService.upload(
+          this.dir,
+          item.name + '.jpg',
+          blob
+        );
         this.preuploadService.remove(item);
         uploaded++;
         progress.next(uploaded / this.preuploadService.data.length);

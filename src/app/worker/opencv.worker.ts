@@ -2,6 +2,7 @@
 /// <reference lib="webworker" />
 
 import cv, { Mat, Point, Rect, Size } from 'opencv-ts';
+import * as jpeg from 'jpeg-js';
 import { Log } from '../shared/decorator/debug';
 // declare let cv;
 const initPromise = new Promise<void>((resolve) => {
@@ -9,6 +10,11 @@ const initPromise = new Promise<void>((resolve) => {
 });
 self.importScripts('/assets/js/ocrad.js');
 declare const OCRAD;
+(self as any).Buffer = {
+  from(bytes: any[]) {
+    return new Uint8Array(bytes);
+  },
+};
 
 class OpenCVService {
   init() {
@@ -39,14 +45,15 @@ class OpenCVService {
           'Bad number of channels (Source image must have 1, 3 or 4 channels)'
         );
     }
-    const clampedArray = new ImageData(
+    const imageData = new ImageData(
       new Uint8ClampedArray(img.data),
       img.cols,
       img.rows
     );
     // mat.delete();
     img.delete();
-    return clampedArray;
+    const jpegData = jpeg.encode(imageData, 100);
+    return jpegData.data.buffer;
   }
 
   @Log()
@@ -447,10 +454,10 @@ class OpenCVService {
 
   async process(mat: Mat) {
     const result: any = {};
-    if (mat.rows > mat.cols) {
-      this.rotate(mat, 90);
-      result.origin = mat;
-    }
+    // if (mat.rows > mat.cols) {
+    //   this.rotate(mat, 90);
+    //   result.origin = mat;
+    // }
     const ratio = 900 / mat.cols;
     const resize = this.resizeImg(mat, ratio);
     try {
@@ -605,9 +612,10 @@ self.addEventListener(
     try {
       await openCVService.init();
       const start = new Date().getTime();
-      const params = args.map((arg) => {
-        if (arg instanceof ImageData) {
-          const mat = cv.matFromImageData(arg);
+      const params = args.map((arg: any) => {
+        if (arg instanceof ArrayBuffer) {
+          const data: any = jpeg.decode(arg, { useTArray: true });
+          const mat = cv.matFromImageData(data);
           mats.push(mat);
           return mat;
         } else {
@@ -619,14 +627,14 @@ self.addEventListener(
         if (data instanceof cv.Mat) {
           const imageData = openCVService.imageDataFromMat(data);
           data.delete();
-          transfer.push(imageData.data.buffer);
+          transfer.push(imageData);
           data = imageData;
         } else if (Array.isArray(data)) {
           data.forEach((item, i) => {
             if (item instanceof cv.Mat) {
               const imageData = openCVService.imageDataFromMat(item);
               item.delete();
-              transfer.push(imageData.data.buffer);
+              transfer.push(imageData);
               data[i] = imageData;
             }
           });
@@ -636,7 +644,7 @@ self.addEventListener(
             if (item instanceof cv.Mat) {
               const imageData = openCVService.imageDataFromMat(item);
               item.delete();
-              transfer.push(imageData.data.buffer);
+              transfer.push(imageData);
               data[key] = imageData;
             }
           });

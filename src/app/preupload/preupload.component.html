@@ -31,7 +31,7 @@
           routerLink="/opencv-test"
           [queryParams]="{ id: item.id }"
         > -->
-        <canvas [imageData]="item.dest || item.origin"></canvas>
+        <img [imageData]="item.dest || item.origin"/>
         <!-- <img
           *ngIf="item.destUrl || item.url as url"
           [src]="url | sanitizer: 'url'"
