@@ -76,6 +76,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   destroy$ = new Subject<void>();
   startTouchDistance: number;
   zoom = 1;
+  previewStyle: any;
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -103,6 +104,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.previewStyle = {
+      width: window.screen.width + 'px',
+      height: (window.screen.width * 4) / 3 + 'px',
+    };
     this.opencvService.init();
     // this.startCamera();
     // this.clear();

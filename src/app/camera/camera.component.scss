@@ -32,8 +32,9 @@
 .operations {
   width: 100%;
   display: flex;
-  position: absolute;
   bottom: 60px;
+  background-color: #000;
+  flex: 1;
 }
 .photo-list {
   flex: 1;
@@ -80,6 +81,10 @@
 }
 ion-content {
   --overflow: hidden;
+  // --background: #000;
+}
+ion-toolbar {
+  --min-height: 100px;
   --background: #000;
 }
 ion-footer {
