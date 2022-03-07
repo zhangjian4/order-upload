@@ -8,7 +8,7 @@ import { OpenCVService } from './opencv.service';
 export class PreuploadService implements OnDestroy {
   data: IUploadFile[] = [];
   updateData = new Set<IUploadFile>();
-  id = 0;
+  id = 1;
   private readonly persistent = false;
 
   constructor(

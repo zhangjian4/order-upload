@@ -52,6 +52,11 @@ class OpenCVService {
     );
     // mat.delete();
     img.delete();
+    return imageData;
+  }
+
+  jpegFromMat(mat: Mat) {
+    const imageData = this.imageDataFromMat(mat);
     const jpegData = jpeg.encode(imageData, 100);
     return jpegData.data.buffer;
   }
@@ -514,9 +519,6 @@ class OpenCVService {
     const result = [];
 
     try {
-      if (src.rows > src.cols) {
-        this.rotate(src, 90);
-      }
       const ratio = 900 / src.cols;
       const resize = this.resizeImg(src, ratio);
       const sharpen = this.sharpen(resize);
@@ -540,23 +542,28 @@ class OpenCVService {
       result.push(this.showPoints(src, points));
       const dst = this.warpImage(src, points);
       result.push(dst);
-      const dst2 = this.extractColor(src);
-      result.push(dst2);
-      const rect = this.getCenterRect(dst2);
-      if (rect) {
-        const rectangleColor = new cv.Scalar(255, 0, 0);
-        const dst3 = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
-        const point1 = new cv.Point(rect.x, rect.y);
-        const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
-        cv.rectangle(dst3, point1, point2, rectangleColor, -1);
-        result.push(dst3);
-        const dst4 = this.crop(dst2, rect);
-        this.resizeTo(dst4, { minHeight: 50 });
-        cv.bitwise_not(dst4, dst4);
-        result.push(dst4);
-        const text = this.ocr(dst4);
-        console.log(text);
-      }
+      const dst1 = new cv.Mat();
+      cv.cvtColor(dst, dst1, cv.COLOR_RGBA2GRAY, 0);
+      result.push(dst1);
+      const text = this.ocr(dst1);
+      console.log(text);
+      // const dst2 = this.extractColor(src);
+      // result.push(dst2);
+      // const rect = this.getCenterRect(dst2);
+      // if (rect) {
+      //   const rectangleColor = new cv.Scalar(255, 0, 0);
+      //   const dst3 = new cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+      //   const point1 = new cv.Point(rect.x, rect.y);
+      //   const point2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+      //   cv.rectangle(dst3, point1, point2, rectangleColor, -1);
+      //   result.push(dst3);
+      //   const dst4 = this.crop(dst2, rect);
+      //   this.resizeTo(dst4, { minHeight: 50 });
+      //   cv.bitwise_not(dst4, dst4);
+      //   result.push(dst4);
+      //   const text = this.ocr(dst);
+      //   console.log(text);
+      // }
 
       resize.delete();
       src.delete();
@@ -625,14 +632,14 @@ self.addEventListener(
       let data = await openCVService[m](...params);
       if (data) {
         if (data instanceof cv.Mat) {
-          const imageData = openCVService.imageDataFromMat(data);
+          const imageData = openCVService.jpegFromMat(data);
           data.delete();
           transfer.push(imageData);
           data = imageData;
         } else if (Array.isArray(data)) {
           data.forEach((item, i) => {
             if (item instanceof cv.Mat) {
-              const imageData = openCVService.imageDataFromMat(item);
+              const imageData = openCVService.jpegFromMat(item);
               item.delete();
               transfer.push(imageData);
               data[i] = imageData;
@@ -642,7 +649,7 @@ self.addEventListener(
           Object.keys(data).forEach((key) => {
             const item = data[key];
             if (item instanceof cv.Mat) {
-              const imageData = openCVService.imageDataFromMat(item);
+              const imageData = openCVService.jpegFromMat(item);
               item.delete();
               transfer.push(imageData);
               data[key] = imageData;

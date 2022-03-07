@@ -55,8 +55,8 @@ import { Subject, takeUntil } from 'rxjs';
 export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   @ViewChild('fileInput')
   fileInput: ElementRef;
-  @ViewChild('canvas')
-  canvas: HTMLCanvasElement;
+  @ViewChild('previewContainer')
+  previewContainer: ElementRef<HTMLDivElement>;
   preview: boolean;
   file: string;
   imageSrc: string;
@@ -98,7 +98,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     });
   }
 
-  @HostBinding('class.hide-background')
+  // @HostBinding('class.hide-background')
   get hideBackground(): boolean {
     return this.viewEntered && this.cameraStarted;
   }
@@ -154,12 +154,14 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async startCamera() {
     // this.image = await this.urlToBase64('/assets/img/lake.jpg');
+    const container = this.previewContainer.nativeElement;
+    const rect = container.getBoundingClientRect();
     if (this.platform.is('cordova')) {
       const cameraPreviewOpts: CameraPreviewOptions = {
-        x: 0,
-        y: 100,
-        width: window.screen.width,
-        height: (window.screen.width * 4) / 3,
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
         camera: 'rear',
         tapPhoto: true,
         previewDrag: true,

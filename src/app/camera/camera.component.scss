@@ -23,6 +23,24 @@
   }
 }
 
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.camera-preview {
+  background-color: #000;
+  &.hide-background {
+    ion-content {
+      --background: transparent;
+    }
+    ion-footer {
+      background-color: transparent;
+    }
+  }
+}
+
 // .exit {
 //   position: absolute;
 //   bottom: 60px;
@@ -32,9 +50,9 @@
 .operations {
   width: 100%;
   display: flex;
-  bottom: 60px;
   background-color: #000;
   flex: 1;
+  align-items: center;
 }
 .photo-list {
   flex: 1;
@@ -50,10 +68,10 @@
       top: -10px;
       left: 35px;
     }
-    canvas {
-      max-width: 50px;
-      max-height: 50px;
-    }
+    // canvas {
+    //   max-width: 50px;
+    //   max-height: 50px;
+    // }
   }
 }
 
@@ -87,9 +105,9 @@ ion-toolbar {
   --min-height: 100px;
   --background: #000;
 }
-ion-footer {
-  background-color: #000;
-}
+// ion-footer {
+//   background-color: #000;
+// }
 
 // .footer {
 //   position: fixed;

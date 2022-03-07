@@ -1,6 +1,6 @@
-<ion-content (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)">
+<ion-header>
   <ion-toolbar>
-    <ion-buttons slot="secondary">
+    <ion-buttons slot="start">
       <ion-button (click)="back()" fill="clear">
         <ion-icon
           style="color: #fff"
@@ -10,12 +10,26 @@
       </ion-button>
     </ion-buttons>
     <ion-title></ion-title>
-    <ion-buttons slot="primary">
+    <ion-buttons slot="end">
       <ion-button class="upload" fill="clear" (click)="selectFile()"
-      >相册</ion-button
-    >
+        >相册</ion-button
+      >
     </ion-buttons>
   </ion-toolbar>
+</ion-header>
+
+<ion-content
+  (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
+>
+  <input
+    style="display: none"
+    #fileInput
+    type="file"
+    [multiple]="!id"
+    accept="image/*"
+    (change)="fileChange($event)"
+  />
   <!-- <div class="safe-top">
     <ion-button (click)="back()" fill="clear">
       <ion-icon
@@ -36,29 +50,37 @@
       (change)="fileChange($event)"
     />
   </div> -->
-  <div class="camera-preview" [ngStyle]="previewStyle">
-
-  </div>
-  <div class="operations">
-    <div class="photo-list">
-      <div *ngIf="!this.id && lastFile" class="thumb-container">
-        <img [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50"/>
-        <ion-badge color="primary">{{ photoCount }}</ion-badge>
+  <div class="content">
+    <div
+      #previewContainer
+      class="camera-preview"
+      [class.hide-background]="hideBackground"
+      [ngStyle]="previewStyle"
+    ></div>
+    <div class="operations">
+      <div class="photo-list">
+        <div *ngIf="!this.id && lastFile" class="thumb-container">
+          <ion-thumbnail>
+            <img [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50" />
+          </ion-thumbnail>
+          <ion-badge color="primary">{{ photoCount }}</ion-badge>
+        </div>
       </div>
-    </div>
-    <div class="camera-touch" (click)="takePicture()">
-      <div class="camera-touch-inner"></div>
-    </div>
-    <div class="submit">
-      <ion-button
-        *ngIf="!this.id && photoCount"
-        color="primary"
-        (click)="submit()"
-        >完成</ion-button
-      >
+      <div class="camera-touch" (click)="takePicture()">
+        <div class="camera-touch-inner"></div>
+      </div>
+      <div class="submit">
+        <ion-button
+          *ngIf="!this.id && photoCount"
+          color="primary"
+          (click)="submit()"
+          >完成</ion-button
+        >
+      </div>
     </div>
   </div>
 </ion-content>
+
 <!-- <ng-container *ngIf="preview">
   <ion-content>
     <div class="img-container safe-top">
