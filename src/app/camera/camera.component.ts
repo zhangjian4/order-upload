@@ -171,19 +171,19 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       // start camera
       await this.cameraPreview.startCamera(cameraPreviewOpts);
       // this.cameraPreview.setZoom(0.5);
-      this.zone.run(() => {
-        this.cameraStarted = true;
-      });
     }
+    this.zone.run(() => {
+      this.cameraStarted = true;
+    });
   }
 
   async stopCamera() {
     if (this.platform.is('cordova')) {
       await this.cameraPreview.stopCamera();
-      this.zone.run(() => {
-        this.cameraStarted = false;
-      });
     }
+    this.zone.run(() => {
+      this.cameraStarted = false;
+    });
   }
 
   async takePicture() {

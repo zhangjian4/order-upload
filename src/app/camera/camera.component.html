@@ -1,4 +1,4 @@
-<ion-header>
+<!-- <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button (click)="back()" fill="clear">
@@ -11,12 +11,12 @@
     </ion-buttons>
     <ion-title></ion-title>
     <ion-buttons slot="end">
-      <ion-button class="upload" fill="clear" (click)="selectFile()"
+      <ion-button color="primary" fill="clear" (click)="selectFile()"
         >相册</ion-button
       >
     </ion-buttons>
   </ion-toolbar>
-</ion-header>
+</ion-header> -->
 
 <ion-content
   (touchstart)="onTouchStart($event)"
@@ -30,27 +30,24 @@
     accept="image/*"
     (change)="fileChange($event)"
   />
-  <!-- <div class="safe-top">
-    <ion-button (click)="back()" fill="clear">
-      <ion-icon
-        style="color: #fff"
-        slot="icon-only"
-        name="close-circle"
-      ></ion-icon>
-    </ion-button>
-    <ion-button class="upload" fill="clear" (click)="selectFile()"
-      >相册</ion-button
-    >
-    <input
-      style="display: none"
-      #fileInput
-      type="file"
-      [multiple]="!id"
-      accept="image/*"
-      (change)="fileChange($event)"
-    />
-  </div> -->
+
   <div class="content">
+    <div class="safe-top header">
+      <ion-button (click)="back()" fill="clear">
+        <ion-icon
+          style="color: #fff"
+          slot="icon-only"
+          name="close-circle"
+        ></ion-icon>
+      </ion-button>
+      <ion-button
+        color="primary"
+        class="upload"
+        fill="clear"
+        (click)="selectFile()"
+        >相册</ion-button
+      >
+    </div>
     <div
       #previewContainer
       class="camera-preview"

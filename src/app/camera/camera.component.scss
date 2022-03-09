@@ -4,24 +4,24 @@
 //     background-color: transparent;
 //   }
 // }
-:host.hide-background {
-  ion-content {
-    --background: transparent;
-  }
-  ion-footer {
-    background-color: transparent;
-  }
-}
+// :host.hide-background {
+//   ion-content {
+//     --background: transparent;
+//   }
+//   ion-footer {
+//     background-color: transparent;
+//   }
+// }
 
-.img-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  img {
-    max-height: 100%;
-  }
-}
+// .img-container {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   height: 100%;
+//   img {
+//     max-height: 100%;
+//   }
+// }
 
 .content {
   display: flex;
@@ -32,12 +32,7 @@
 .camera-preview {
   background-color: #000;
   &.hide-background {
-    ion-content {
-      --background: transparent;
-    }
-    ion-footer {
-      background-color: transparent;
-    }
+    background: transparent;
   }
 }
 
@@ -51,7 +46,7 @@
   width: 100%;
   display: flex;
   background-color: #000;
-  flex: 1;
+  flex: 3;
   align-items: center;
 }
 .photo-list {
@@ -97,14 +92,19 @@
     left: 0.2rem;
   }
 }
+.header{
+  background-color: #000;
+  flex: 1;
+}
 ion-content {
-  --overflow: hidden;
+  // --overflow: hidden;
+  --background: transparent;
   // --background: #000;
 }
-ion-toolbar {
-  --min-height: 100px;
-  --background: #000;
-}
+// ion-toolbar {
+//   --min-height: 100px;
+//   --background: #000;
+// }
 // ion-footer {
 //   background-color: #000;
 // }
@@ -118,30 +118,30 @@ ion-toolbar {
 //   padding: 10px;
 //   z-index: 100;
 // }
-.buttons {
-  text-align: center;
-}
+// .buttons {
+//   text-align: center;
+// }
 
-.filename-editor {
-  display: flex;
-  padding: 10px;
-  background-color: #000;
-  ion-button {
-    height: 30px;
-    font-size: 18px;
-    --padding-end: 0;
-  }
-}
+// .filename-editor {
+//   display: flex;
+//   padding: 10px;
+//   background-color: #000;
+//   ion-button {
+//     height: 30px;
+//     font-size: 18px;
+//     --padding-end: 0;
+//   }
+// }
 
-.file-name {
-  border-radius: 10px;
-  background: #dde9f7;
-  --padding-start: 10px;
-}
+// .file-name {
+//   border-radius: 10px;
+//   background: #dde9f7;
+//   --padding-start: 10px;
+// }
 
-.footer-inner {
-  height: 60.8px;
-}
+// .footer-inner {
+//   height: 60.8px;
+// }
 .upload {
   float: right;
 }

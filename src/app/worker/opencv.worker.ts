@@ -98,9 +98,12 @@ class OpenCVService {
    */
   @Log()
   blur(image: Mat) {
+    const dst1 = new cv.Mat();
+    cv.cvtColor(image, dst1, cv.COLOR_RGBA2GRAY, 0);
     const dst = new cv.Mat();
     // 高斯模糊
-    cv.GaussianBlur(image, dst, new cv.Size(3, 3), 2, 2, cv.BORDER_DEFAULT);
+    cv.GaussianBlur(dst1, dst, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+    dst1.delete();
     // 中值滤波
     // cv.medianBlur(image, dst, 1);
     // 双边滤波
@@ -143,7 +146,7 @@ class OpenCVService {
     // dst1.delete();
     const dst = new cv.Mat();
     // 边缘检测
-    cv.Canny(image, dst, 50, 200);
+    cv.Canny(image, dst, 25, 100);
     // dst2.delete();
     // const dst4 = new cv.Mat();
     const kernel = new cv.Mat.ones(3, 3, cv.CV_8U);
@@ -159,7 +162,6 @@ class OpenCVService {
       cv.morphologyDefaultBorderValue()
     );
     kernel.delete();
-    // dst3.delete();
     return dst;
   }
 
@@ -180,21 +182,27 @@ class OpenCVService {
       cv.RETR_CCOMP,
       cv.CHAIN_APPROX_SIMPLE
     );
-    let maxArea = 0.0;
-    let maxContour: Mat = null;
+    // let maxContour: Mat = null;
+    const counterArray = [];
+    const areaMap = new WeakMap<Mat, number>();
     for (let i = 0; i < contours.size(); i++) {
       const contour = contours.get(i);
       const rect = cv.boundingRect(contour);
-      const currentArea = rect.width * rect.height;
-      // const currentArea = cv.contourArea(contour);
-      if (currentArea > maxArea) {
-        maxArea = currentArea;
-        maxContour = contour;
-      }
+      // const area = cv.contourArea(contour);
+      const area = rect.width * rect.height;
+      // areas.push(area);
+      counterArray.push(contour);
+      areaMap.set(contour, area);
+      // if (area > maxArea) {
+      //   maxArea = area;
+      //   maxContour = contour;
+      // }
     }
+    counterArray.sort((c1, c2) => areaMap.get(c2) - areaMap.get(c1));
     contours.delete();
     hierarchy.delete();
-    return maxContour;
+    counterArray.slice(3).forEach((counter) => counter.delete());
+    return counterArray.slice(0, 3);
   }
 
   /**
@@ -204,27 +212,33 @@ class OpenCVService {
    * @returns
    */
   @Log()
-  getBoxPoint(contour: Mat, ratio: number) {
-    const hull = new cv.Mat();
-    // 多边形拟合凸包
-    cv.convexHull(contour, hull);
-    // 输出的精度，就是另个轮廓点之间最大距离数，根据周长来计算
-    const epsilon = 0.03 * cv.arcLength(contour, true);
-    const approx = new cv.Mat();
-    // 多边形拟合
-    cv.approxPolyDP(hull, approx, epsilon, true);
-    hull.delete();
-    // return approx;
-    const points: Point[] = [];
-    for (let i = 0; i < approx.rows; ++i) {
-      const point = new cv.Point(
-        approx.data32S[i * 2] / ratio,
-        approx.data32S[i * 2 + 1] / ratio
-      );
-      points.push(point);
+  getBoxPoint(contours: Mat[], ratio: number) {
+    for (const contour of contours) {
+      const hull = new cv.Mat();
+      // 多边形拟合凸包
+      cv.convexHull(contour, hull);
+      // 输出的精度，就是另个轮廓点之间最大距离数，根据周长来计算
+      const epsilon = 0.03 * cv.arcLength(contour, true);
+      const approx = new cv.Mat();
+      // 多边形拟合
+      try {
+        cv.approxPolyDP(hull, approx, epsilon, true);
+        if (approx.rows == 4) {
+          const points: Point[] = [];
+          for (let i = 0; i < approx.rows; ++i) {
+            const point = new cv.Point(
+              approx.data32S[i * 2] / ratio,
+              approx.data32S[i * 2 + 1] / ratio
+            );
+            points.push(point);
+          }
+          return points;
+        }
+      } finally {
+        hull.delete();
+        approx.delete();
+      }
     }
-    approx.delete();
-    return points;
   }
   @Log()
   warpImage(src: Mat, points: Point[]) {
@@ -466,16 +480,16 @@ class OpenCVService {
     const ratio = 900 / mat.cols;
     const resize = this.resizeImg(mat, ratio);
     try {
-      const sharpen = this.sharpen(resize);
-      const blur = this.blur(sharpen);
-      sharpen.delete();
+      // const sharpen = this.sharpen(resize);
+      const blur = this.blur(resize);
+      // sharpen.delete();
       const canny = this.getCanny(blur);
       blur.delete();
-      const maxContour = this.findMaxContour(canny);
+      const contours = this.findMaxContour(canny);
       canny.delete();
-      const points = this.getBoxPoint(maxContour, ratio);
-      maxContour.delete();
-      if (points.length === 4) {
+      const points = this.getBoxPoint(contours, ratio);
+      contours.forEach((contour) => contour.delete());
+      if (points != null) {
         const dest = this.warpImage(mat, points);
         // const dest = await this.opencvService.transform(mat, points);
         result.rect = points;
@@ -484,10 +498,11 @@ class OpenCVService {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      resize.delete();
     }
     // mat.delete();
     const dst1 = this.extractColor(mat);
-    resize.delete();
     try {
       const rect = this.getCenterRect(dst1);
       if (rect) {
@@ -521,17 +536,17 @@ class OpenCVService {
     try {
       const ratio = 900 / src.cols;
       const resize = this.resizeImg(src, ratio);
-      const sharpen = this.sharpen(resize);
-      result.push(sharpen);
-      const blur = this.blur(sharpen);
+      // const sharpen = this.sharpen(resize);
+      // result.push(sharpen);
+      const blur = this.blur(resize);
       result.push(blur);
       const canny = this.getCanny(blur);
       result.push(canny);
-      const maxContour = this.findMaxContour(canny);
-      result.push(this.showMaxContour(resize, maxContour));
-      let points = this.getBoxPoint(maxContour, ratio);
-      maxContour.delete();
-      if (points.length !== 4) {
+      const contours = this.findMaxContour(canny);
+      result.push(this.showMaxContour(resize, contours));
+      let points = this.getBoxPoint(contours, ratio);
+      contours.forEach((contour) => contour.delete());
+      if (points == null) {
         points = [
           new cv.Point(0, 0),
           new cv.Point(src.cols, 0),
@@ -573,15 +588,26 @@ class OpenCVService {
     return result;
   }
 
-  showMaxContour(src: Mat, maxContour: Mat) {
-    const contours = new cv.MatVector();
-    contours.push_back(maxContour);
-    const color = new cv.Scalar(255, 0, 0);
+  showMaxContour(src: Mat, contours: Mat[]) {
     const dst = src.clone();
-    const hierarchy = new cv.Mat();
-    cv.drawContours(dst, contours, 0, color, 1, cv.LINE_8, hierarchy, 100);
-    hierarchy.delete();
-    contours.delete();
+    contours.forEach((contour) => {
+      const contourVector = new cv.MatVector();
+      contourVector.push_back(contour);
+      const color = new cv.Scalar(255, 0, 0);
+      const hierarchy = new cv.Mat();
+      cv.drawContours(
+        dst,
+        contourVector,
+        0,
+        color,
+        1,
+        cv.LINE_8,
+        hierarchy,
+        100
+      );
+      hierarchy.delete();
+      contourVector.delete();
+    });
     return dst;
   }
 
