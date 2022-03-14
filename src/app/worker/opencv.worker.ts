@@ -462,13 +462,23 @@ class OpenCVService {
   // }
   @Log()
   ocr(src: Mat) {
-    const imageData = this.imageDataFromMat(src);
+    const dst1 = new cv.Mat();
+    cv.cvtColor(src, dst1, cv.COLOR_RGBA2GRAY, 0);
+    const imageData = this.imageDataFromMat(dst1);
+    dst1.delete();
     let text = OCRAD(imageData, {
       numeric: true,
     });
-    text = text.trim();
     console.log(text);
-    return text;
+    const pattern = /\d{4,}/g;
+    let match: any;
+    let result: string;
+    while ((match = pattern.exec(text)) != null) {
+      if (match != null) {
+        result = match[0];
+      }
+    }
+    return result;
   }
 
   async process(mat: Mat) {
@@ -494,6 +504,12 @@ class OpenCVService {
         // const dest = await this.opencvService.transform(mat, points);
         result.rect = points;
         result.dest = dest;
+        const roi = this.roiOrderNo(dest);
+        const text = this.ocr(roi);
+        roi.delete();
+        if (text.length >= 4) {
+          result.name = text.substring(text.length - 4);
+        }
         // dest.delete();
       }
     } catch (e) {
@@ -502,24 +518,24 @@ class OpenCVService {
       resize.delete();
     }
     // mat.delete();
-    const dst1 = this.extractColor(mat);
-    try {
-      const rect = this.getCenterRect(dst1);
-      if (rect) {
-        const dst2 = this.crop(dst1, rect);
-        this.resizeTo(dst2, { minHeight: 50 });
-        cv.bitwise_not(dst2, dst2);
-        const text = this.ocr(dst2);
-        if (text && text.length === 7) {
-          result.name = text.substr(3, 7);
-        }
-        dst2.delete();
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      dst1.delete();
-    }
+    // const dst1 = this.extractColor(mat);
+    // try {
+    //   const rect = this.getCenterRect(dst1);
+    //   if (rect) {
+    //     const dst2 = this.crop(dst1, rect);
+    //     this.resizeTo(dst2, { minHeight: 50 });
+    //     cv.bitwise_not(dst2, dst2);
+    //     const text = this.ocr(dst2);
+    //     if (text && text.length === 7) {
+    //       result.name = text.substr(3, 7);
+    //     }
+    //     dst2.delete();
+    //   }
+    // } catch (e) {
+    //   console.error(e);
+    // } finally {
+    //   dst1.delete();
+    // }
     return result;
     // const keys = Object.keys(changes);
     // if (keys.length) {
@@ -546,22 +562,16 @@ class OpenCVService {
       result.push(this.showMaxContour(resize, contours));
       let points = this.getBoxPoint(contours, ratio);
       contours.forEach((contour) => contour.delete());
-      if (points == null) {
-        points = [
-          new cv.Point(0, 0),
-          new cv.Point(src.cols, 0),
-          new cv.Point(src.cols, src.rows),
-          new cv.Point(0, src.rows),
-        ];
+      if (points != null) {
+        result.push(this.showPoints(src, points));
+        const dst = this.warpImage(src, points);
+        result.push(dst);
+        const roi = this.roiOrderNo(dst);
+        result.push(roi);
+        const text = this.ocr(roi);
+        console.log(text);
       }
-      result.push(this.showPoints(src, points));
-      const dst = this.warpImage(src, points);
-      result.push(dst);
-      const dst1 = new cv.Mat();
-      cv.cvtColor(dst, dst1, cv.COLOR_RGBA2GRAY, 0);
-      result.push(dst1);
-      const text = this.ocr(dst1);
-      console.log(text);
+
       // const dst2 = this.extractColor(src);
       // result.push(dst2);
       // const rect = this.getCenterRect(dst2);
@@ -586,6 +596,19 @@ class OpenCVService {
       console.error(e);
     }
     return result;
+  }
+
+  roiOrderNo(src: Mat) {
+    // You can try more different parameters
+    const rows = src.rows;
+    const cols = src.cols;
+    const x = Math.floor(cols * 0.75);
+    const y = Math.floor(rows * 0.18);
+    const width = cols - x;
+    const height = Math.floor(rows * 0.12);
+    let rect = new cv.Rect(x, y, width, height);
+    const dst = src.roi(rect);
+    return dst;
   }
 
   showMaxContour(src: Mat, contours: Mat[]) {

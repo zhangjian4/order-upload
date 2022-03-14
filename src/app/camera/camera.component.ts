@@ -537,7 +537,12 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       }
       const imageData = await imageToBlob(image, scale);
       const buffer = await blobToArrayBuffer(imageData);
-      const item = await this.add(buffer, file.name);
+      let name = file.name;
+      const index = name.lastIndexOf('.');
+      if (index !== -1) {
+        name = name.substring(0, index);
+      }
+      const item = await this.add(buffer, name);
       // const imageId = await this.preuploadService.saveImageData(buffer);
       // const item: IUploadFile = {
       //   name: file.name,
