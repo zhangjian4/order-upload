@@ -462,10 +462,10 @@ class OpenCVService {
   // }
   @Log()
   ocr(src: Mat) {
-    const dst1 = new cv.Mat();
-    cv.cvtColor(src, dst1, cv.COLOR_RGBA2GRAY, 0);
-    const imageData = this.imageDataFromMat(dst1);
-    dst1.delete();
+    // const dst1 = new cv.Mat();
+    // cv.cvtColor(src, dst1, cv.COLOR_RGBA2GRAY, 0);
+    const imageData = this.imageDataFromMat(src);
+    // dst1.delete();
     let text = OCRAD(imageData, {
       numeric: true,
     });
@@ -479,6 +479,49 @@ class OpenCVService {
       }
     }
     return result;
+  }
+
+  /**
+   * 二值化：将订单号转为黑白，方便ocr识别
+   * @param src
+   * @returns
+   */
+  threshold(src: Mat) {
+    let dst = new cv.Mat();
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    // You can try more different parameters
+    cv.adaptiveThreshold(
+      src,
+      dst,
+      255,
+      cv.ADAPTIVE_THRESH_MEAN_C,
+      cv.THRESH_BINARY,
+      21,
+      17
+    );
+    return dst;
+  }
+
+  /**
+   * 侵蚀：去掉订单号因为墨水不足断掉的部分
+   * @param src
+   * @returns
+   */
+  erode(src: Mat) {
+    let dst = new cv.Mat();
+    let M = (cv.Mat as any).ones(2, 2, cv.CV_8U);
+    let anchor = new cv.Point(-1, -1);
+    // You can try more different parameters
+    cv.erode(
+      src,
+      dst,
+      M,
+      anchor,
+      1,
+      cv.BORDER_CONSTANT,
+      cv.morphologyDefaultBorderValue()
+    );
+    return dst;
   }
 
   async process(mat: Mat) {
@@ -505,9 +548,11 @@ class OpenCVService {
         result.rect = points;
         result.dest = dest;
         const roi = this.roiOrderNo(dest);
-        const text = this.ocr(roi);
+        const threshold = this.threshold(roi);
         roi.delete();
-        if (text.length >= 4) {
+        const text = this.ocr(threshold);
+        threshold.delete();
+        if (text != null && text.length >= 4) {
           result.name = text.substring(text.length - 4);
         }
         // dest.delete();
@@ -568,7 +613,11 @@ class OpenCVService {
         result.push(dst);
         const roi = this.roiOrderNo(dst);
         result.push(roi);
-        const text = this.ocr(roi);
+        const threshold = this.threshold(roi);
+        result.push(threshold);
+        const erode = this.erode(threshold);
+        result.push(erode);
+        const text = this.ocr(erode);
         console.log(text);
       }
 
@@ -604,8 +653,8 @@ class OpenCVService {
     const cols = src.cols;
     const x = Math.floor(cols * 0.75);
     const y = Math.floor(rows * 0.18);
-    const width = cols - x;
-    const height = Math.floor(rows * 0.12);
+    const width = Math.floor(cols * 0.98) - x;
+    const height = Math.floor(rows * 0.13);
     let rect = new cv.Rect(x, y, width, height);
     const dst = src.roi(rect);
     return dst;

@@ -68,7 +68,7 @@ export class ImageDataDirective implements OnChanges, OnDestroy {
       }
       if (imageData) {
         // const image = this.elementRef.nativeElement;
-        const blob = new Blob([imageData]);
+        const blob = new Blob([imageData], { type: 'image/jpeg' });
         this.objectUrl = URL.createObjectURL(blob);
         this.element.src = this.objectUrl;
         // canvas.width = imageData.width;
