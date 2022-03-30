@@ -32,11 +32,10 @@ import { CanConfirm } from '../shared/router-guard/can-confirm.interface';
 import { ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import * as SparkMD5 from 'spark-md5';
 import {
-  base64ToArrayBuffer,
-  base64ToBlob,
-  base64ToImageData,
-  blobToArrayBuffer,
+  canvasToBase64,
+  canvasToBlob,
   imageToBlob,
+  imageToCanvas,
   imageToImageData,
   loadImage,
   urlToBlob,
@@ -46,6 +45,16 @@ import { PreuploadService } from '../core/service/preupload.service';
 import { CommonService } from '../core/service/common.service';
 import { ProgressService } from '../shared/component/progress/progress.service';
 import { Subject, takeUntil } from 'rxjs';
+import {
+  base64ToArrayBuffer,
+  blobToArrayBuffer,
+} from '../shared/util/buffer.util';
+import { sleep, withTimeout } from '../shared/util/system.util';
+import {
+  DomSanitizer,
+  SafeResourceUrl,
+  SafeUrl,
+} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-camera',
@@ -57,7 +66,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   fileInput: ElementRef;
   @ViewChild('previewContainer')
   previewContainer: ElementRef<HTMLDivElement>;
-  preview: boolean;
+  @ViewChild('thumbContainer')
+  thumbContainer: ElementRef<HTMLDivElement>;
+  // preview: boolean;
   file: string;
   imageSrc: string;
   base64: string;
@@ -66,9 +77,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   footerStyle: any = {};
   photoCount = 0;
   last: any;
-  db: any;
-  objectStore: any;
-  lastFile: number;
+  // db: any;
+  // objectStore: any;
+  // lastFile: number;
   viewEntered: boolean;
   cameraStarted: boolean;
   promises: Promise<any>[] = [];
@@ -77,6 +88,14 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   startTouchDistance: number;
   zoom = 1;
   previewStyle: any;
+  hasCamera: boolean;
+  points: any[];
+  polygon: string;
+  snapshotIndex = 0;
+  snapshots: (SafeUrl | string)[] = [];
+  snapshotStyles: any[] = [];
+  takeSnapshotPromise: Promise<any>;
+  private previewProcess: { stop?: boolean };
   constructor(
     private cameraPreview: CameraPreview,
     private zone: NgZone,
@@ -89,18 +108,20 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private route: ActivatedRoute,
     private preuploadService: PreuploadService,
     private commonService: CommonService,
-    private progressService: ProgressService
+    private progressService: ProgressService,
+    private domSanitizer: DomSanitizer
   ) {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       if (params.id) {
         this.id = +params.id;
       }
     });
+    this.hasCamera = this.platform.is('cordova');
   }
 
   // @HostBinding('class.hide-background')
   get hideBackground(): boolean {
-    return this.viewEntered && this.cameraStarted;
+    return this.viewEntered && (!this.hasCamera || this.cameraStarted);
   }
 
   async ngOnInit() {
@@ -109,32 +130,17 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       height: (window.screen.width * 4) / 3 + 'px',
     };
     this.opencvService.init();
-    // this.startCamera();
-    // this.clear();
-    // this.db = await this.indexedDBService.open();
-    // console.log(this.db);
-    // if (!this.db.objectStoreNames.contains('preupload-photo')) {
-    //   this.objectStore = this.db.createObjectStore('preupload-photo', { autoIncrement: true });
-    // }
-    // window.removeEventListener('')
-    // window.addEventListener('ionKeyboardDidShow', ev => {
-    //   const { keyboardHeight } = ev;
-    //   // Do something with the keyboard height such as translating an input above the keyboard.
-    // });
-    // window.addEventListener('ionKeyboardDidHide', () => {
-    //   // Move input back to original location
-    // });
   }
 
   async ionViewWillEnter() {
     this.startCamera();
-    this.photoCount = this.preuploadService.data.length;
-    if (this.photoCount > 0) {
-      const last = this.preuploadService.data[this.photoCount - 1];
-      this.lastFile = last.origin;
-    } else {
-      this.lastFile = null;
-    }
+    // this.photoCount = this.preuploadService.data.length;
+    // if (this.photoCount > 0) {
+    //   const last = this.preuploadService.data[this.photoCount - 1];
+    //   this.lastFile = last.origin;
+    // } else {
+    //   this.lastFile = null;
+    // }
   }
 
   ionViewDidEnter() {
@@ -156,7 +162,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     // this.image = await this.urlToBase64('/assets/img/lake.jpg');
     const container = this.previewContainer.nativeElement;
     const rect = container.getBoundingClientRect();
-    if (this.platform.is('cordova')) {
+    if (this.hasCamera) {
       const cameraPreviewOpts: CameraPreviewOptions = {
         x: rect.left,
         y: rect.top,
@@ -170,15 +176,14 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       };
       // start camera
       await this.cameraPreview.startCamera(cameraPreviewOpts);
+      this.cameraStarted = true;
+      this.startPreview();
       // this.cameraPreview.setZoom(0.5);
     }
-    this.zone.run(() => {
-      this.cameraStarted = true;
-    });
   }
 
   async stopCamera() {
-    if (this.platform.is('cordova')) {
+    if (this.hasCamera) {
       await this.cameraPreview.stopCamera();
     }
     this.zone.run(() => {
@@ -186,58 +191,67 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     });
   }
 
-  async takePicture() {
-    const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
-    // const buffer = Buffer.from(base64, 'base64');
-    const imageData = base64ToArrayBuffer(base64);
-    await this.add(imageData);
-    // if (this.platform.is('cordova')) {
-    //   const input = document.createElement('input');
-    //   input.type = 'file';
-    //   const base64 = await this.cameraPreview.takeSnapshot({ quality: 100 });
-    //   blob = base64ToBlob(base64);
-    // } else {
-    //   blob = await urlToBlob(`/assets/img/test${this.photoCount % 5}.jpg`);
-    // }
-    // if (this.id) {
-    //   this.preuploadService.updateBlob(this.id, blob);
-    //   // await this.database.preuploadFile.update(this.id, { blob });
-    //   this.back();
-    // } else {
-    //   const name = format(new Date(), 'yyyyMMddHHmmssSSS');
-    //   this.photoCount++;
-    //   this.lastFile = blob;
-    //   const item: IUploadFile = {
-    //     name,
-    //     blob,
-    //   };
-    //   item.id = await this.database.preuploadFile.add(item);
-    //   this.promises.push(this.preuploadService.process(item));
-    // }
-    // const buffer = base64ToArrayBuffer(base64);
-    // const blob = new Blob([buffer], {
-    //   type: 'image/jpeg',
-    // });
-    // const blob = base64ToBlob(base64);
-    // const spark = new SparkMD5.ArrayBuffer();
-    // spark.append(blob);
-    // const md5 = spark.end();
-
-    // this.lastFileId = id;
-    // this.zone.run(() => {
-    //   const fileName = format(new Date(), 'yyyyMMddHHmmssSSS');
-    //   this.last = { base64, fileName };
-    //   this.photoCount++;
-    //   // this.photoList.push(this.last);
-    //   this.database.preuploadFile.add({ name: fileName });
-    //   // this.indexedDBService.add('preupload-photo', this.last);
-    //   // this.imageSrc = 'data:image/jpeg;base64,' + this.base64;
-    //   // this.preview = true;
-    //   // this.hideBackground = false;
-    // });
+  async startPreview() {
+    this.stopPreview();
+    const process: { stop?: boolean } = {};
+    this.previewProcess = process;
+    while (this.cameraStarted && !process.stop) {
+      try {
+        const base64 = await this.takeSnapshot(50);
+        if (!this.cameraStarted || process.stop) {
+          break;
+        }
+        await this.preview(base64);
+      } catch (e) {
+        console.error(e);
+        await sleep(100);
+      }
+    }
   }
 
-  async add(imageData: ArrayBuffer, name?: string) {
+  stopPreview() {
+    if (this.previewProcess) {
+      this.previewProcess.stop = true;
+      this.previewProcess = null;
+    }
+  }
+
+  /**
+   * 等待上一次快照结束再执行
+   */
+  async takeSnapshot(quality: number): Promise<string> {
+    if (this.takeSnapshotPromise) {
+      try {
+        await this.takeSnapshotPromise;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    try {
+      //takeSnapshot有时候会不返回导致一直等待，这里加上超时时间
+      this.takeSnapshotPromise = withTimeout(
+        this.cameraPreview.takeSnapshot({ quality }),
+        1000
+      );
+      const result = await this.takeSnapshotPromise;
+      return result[0];
+    } finally {
+      this.takeSnapshotPromise = null;
+    }
+  }
+
+  async takePicture() {
+    const points = this.points;
+    const base64 = await this.takeSnapshot(100);
+    // const buffer = Buffer.from(base64, 'base64');
+    const src = 'data:image/jpeg;base64,' + base64;
+    this.stopPreview();
+    this.showSnapshot(src, true).then(() => this.startPreview());
+    const imageData = base64ToArrayBuffer(base64);
+    await this.add(imageData, null, points);
+  }
+
+  async add(imageData: ArrayBuffer, name?: string, rect?: any[]) {
     if (this.id) {
       this.preuploadService.updateOrigin(this.id, imageData);
       this.back();
@@ -251,8 +265,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       const item: IUploadFile = {
         name,
         origin: imageId,
+        rect,
       };
-      this.lastFile = imageId;
+      // this.lastFile = imageId;
       this.preuploadService.add(item);
       // item.id = await this.database.preuploadFile.add(item);
       this.process(item, imageData);
@@ -267,56 +282,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     this.promises = this.promises.filter((p) => p !== promise);
   }
 
-  // async handlePhoto(id: number, blob: Blob) {
-  //   const src = await this.opencvService.fromBlob(blob);
-  //   try {
-  //     const changes: any = {};
-  //     const rect = await this.opencvService.getPagerRect(src);
-  //     if (rect.length === 4) {
-  //       const dest = await this.opencvService.transform(src, rect);
-  //       changes.rect = rect;
-  //       changes.dest = dest;
-  //     }
-  //     const orderNo = await this.opencvService.getOrderNo(src);
-  //     if (orderNo && orderNo.length >= 7) {
-  //       changes.name = orderNo;
-  //     }
-  //     if (Object.keys(changes).length) {
-  //       await this.database.preuploadFile.update(id, changes);
-  //     }
-  //     // await this.sleep();
-  //   } catch (e) {
-  //     console.error(e);
-  //   } finally {
-  //     src.delete();
-  //   }
-  // }
-
   async back() {
     this.navController.pop();
-    // if (this.photoCount) {
-    //   const alert = await this.alertController.create({
-    //     cssClass: 'my-custom-class',
-    //     message: '放弃拍摄的' + this.photoCount + '张图片?',
-    //     buttons: [
-    //       {
-    //         text: '取消',
-    //         role: 'cancel',
-    //         cssClass: 'secondary',
-    //       },
-    //       {
-    //         text: '放弃',
-    //         handler: () => {
-    //           this.clear();
-    //           this.navController.back();
-    //         },
-    //       },
-    //     ],
-    //   });
-    //   await alert.present();
-    // } else {
-    //   this.navController.back();
-    // }
   }
 
   async submit() {
@@ -330,109 +297,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   clear() {
     this.photoCount = 0;
-    this.lastFile = null;
+    // this.lastFile = null;
     this.preuploadService.clear();
   }
-
-  continue() {
-    this.base64 = null;
-    this.imageSrc = null;
-    this.preview = false;
-    // this.hideBackground = true;
-  }
-
-  // async uploadAndContinue() {
-  //   if (!this.uploading) {
-  //     this.uploading = 1;
-  //     try {
-  //       await this.upload();
-  //       this.continue();
-  //     } finally {
-  //       this.uploading = 0;
-  //     }
-  //   }
-  // }
-
-  // async uploadAndExit() {
-  //   if (!this.uploading) {
-  //     this.uploading = 2;
-  //     try {
-  //       await this.upload();
-  //       this.back();
-  //     } finally {
-  //       this.uploading = 0;
-  //     }
-  //   }
-  // }
-
-  // async upload() {
-  //   if (!this.fileName) {
-  //     const toast = await this.toastController.create({
-  //       message: '文件名不能为空',
-  //       position: 'top',
-  //       duration: 2000,
-  //     });
-  //     toast.present();
-  //     throw '文件名不能为空';
-  //   }
-  //   const blob = this.base64ToBlob(this.base64);
-  //   const fileName = this.fileName + '.jpg';
-  //   await this.baiduAPIService.upload(fileName, blob);
-  // }
-
-  // urlToBase64(url: string): Promise<string> {
-  //   return new Promise((resolve, reject) => {
-  //     const image = new Image();
-  //     image.src = url;
-  //     image.onload = () => {
-  //       const canvas = document.createElement('canvas');
-  //       canvas.width = image.width;
-  //       canvas.height = image.height;
-  //       const ctx = canvas.getContext('2d');
-  //       ctx.drawImage(image, 0, 0, image.width, image.height);
-  //       const ext = image.src
-  //         .substring(image.src.lastIndexOf('.') + 1)
-  //         .toLowerCase();
-  //       let base64 = canvas.toDataURL('image/jpeg');
-  //       base64 = base64.substr(base64.indexOf(',') + 1);
-  //       resolve(base64);
-  //     };
-  //     image.onerror = (e) => {
-  //       reject(e);
-  //     };
-  //   });
-  // }
-
-  // base64ToArrayBuffer(base64: string) {
-  //   const bstr = atob(base64);
-  //   let n = bstr.length;
-  //   const buffer: ArrayBuffer = new Uint8Array(n);
-  //   while (n--) {
-  //     buffer[n] = bstr.charCodeAt(n);
-  //   }
-  //   return buffer;
-  // }
-
-  // base64ToBlob(dataurl) {
-  //   const mime = 'image/jpeg';
-  //   const bstr = atob(dataurl);
-  //   let n = bstr.length;
-  //   const u8arr: ArrayBuffer = new Uint8Array(n);
-  //   while (n--) {
-  //     u8arr[n] = bstr.charCodeAt(n);
-  //   }
-  //   return new Blob([u8arr], {
-  //     type: mime,
-  //   });
-  // }
-
-  // onInputFocus(event: Event) {
-  //   console.log(event);
-  //   const input = (event.target as HTMLElement).querySelector('input');
-  //   if (input) {
-  //     input.select();
-  //   }
-  // }
 
   async deactivateConfirm(nextState: RouterStateSnapshot) {
     if (nextState.url === '/preupload' || this.id != null) {
@@ -465,25 +332,6 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       await alert.present();
     });
   }
-
-  // @HostListener('window:ionKeyboardDidShow', ['$event'])
-  // keyboardDidShow(event: any) {
-  //   this.zone.run(() => {
-  //     this.footerStyle = {
-  //       position: 'absolute',
-  //       bottom: event.detail.keyboardHeight + 'px',
-  //       paddingBottom: '60px',
-  //       width: '100%',
-  //     };
-  //   });
-  // }
-
-  // @HostListener('window:ionKeyboardDidHide', ['$event'])
-  // keyboardDidHide(event: any) {
-  //   this.zone.run(() => {
-  //     this.footerStyle = {};
-  //   });
-  // }
 
   selectFile() {
     this.fileInput.nativeElement.click();
@@ -535,8 +383,20 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       } else if (image.height < image.width && image.height > 1080) {
         scale = 1080 / image.height;
       }
-      const imageData = await imageToBlob(image, scale);
+      const canvas = imageToCanvas(image, scale);
+      const imageData = await canvasToBlob(canvas);
+
       const buffer = await blobToArrayBuffer(imageData);
+      const src = this.domSanitizer.bypassSecurityTrustUrl(url);
+      if (!this.hasCamera) {
+        this.previewStyle.background = `url(${url}) no-repeat top/100%`;
+        const base64 = canvasToBase64(canvas);
+        this.showSnapshot(src, true);
+        this.preview(base64);
+      } else {
+        this.showSnapshot(src, false);
+      }
+
       let name = file.name;
       const index = name.lastIndexOf('.');
       if (index !== -1) {
@@ -552,6 +412,18 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       return item;
     } finally {
       URL.revokeObjectURL(url);
+    }
+  }
+
+  async preview(imageData: string | ArrayBuffer) {
+    this.points = await this.opencvService.preview(imageData);
+    if (this.points) {
+      const width = this.previewContainer.nativeElement.clientWidth;
+      this.polygon = this.points
+        .map((point) => point.x * width + ',' + point.y * width)
+        .join(' ');
+    } else {
+      this.polygon = null;
     }
   }
 
@@ -575,11 +447,46 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       const distance = this.getTouchDistance(event);
       let change = (distance - this.startTouchDistance) / 10;
       change = change > 0 ? Math.floor(change) : Math.ceil(change);
-      if (change != 0) {
+      if (change !== 0) {
         this.zoom += change;
+        if (this.zoom < 1) {
+          this.zoom = 1;
+        } else if (this.zoom > 10) {
+          this.zoom = 10;
+        }
         this.cameraPreview.setZoom(this.zoom);
         this.startTouchDistance = distance;
       }
+    }
+  }
+
+  async showSnapshot(src: string | SafeUrl, animation: boolean) {
+    const lastIndex = this.snapshotIndex;
+    if (animation) {
+      this.snapshotIndex = 1 - this.snapshotIndex;
+    }
+    const currentIndex = this.snapshotIndex;
+    const container = this.previewContainer.nativeElement;
+    const rect = container.getBoundingClientRect();
+    this.snapshots[currentIndex] = src;
+    if (animation) {
+      this.snapshotStyles[currentIndex] = {};
+      await sleep(1000);
+      this.polygon = null;
+    }
+    const thumbContainer = this.thumbContainer.nativeElement;
+    const thumbRect = thumbContainer.getBoundingClientRect();
+    const scale = thumbRect.width / rect.width;
+    const translateX = thumbRect.left;
+    const translateY = thumbRect.top - rect.top;
+    this.snapshotStyles[currentIndex] = {
+      transform: `translate(${translateX}px,${translateY}px) scale(${scale})`,
+      zIndex: 1,
+    };
+    if (animation) {
+      await sleep(500);
+      this.snapshotStyles[currentIndex].zIndex = 0;
+      this.snapshots[lastIndex] = null;
     }
   }
 }

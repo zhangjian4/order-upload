@@ -12,12 +12,11 @@ import { LazyService } from '../core/service/lazy.service';
 import { OpenCVService } from '../core/service/opencv.service';
 import { OcradService } from '../core/service/ocrad.service';
 import {
-  blobToArrayBuffer,
-  blobToImageData,
   canvasToBlob,
   imageToCanvas,
   loadImage,
 } from '../shared/util/image.util';
+import { blobToArrayBuffer } from '../shared/util/buffer.util';
 // import * as OCRAD from 'ocrad.js';
 
 // declare const cv: any;
@@ -104,8 +103,8 @@ export class OpencvTestComponent implements OnInit {
     const container = this.container.nativeElement as HTMLDivElement;
     for (const buffer of result) {
       const image = document.createElement('img');
-      const blob = new Blob([buffer]);
-      const url=URL.createObjectURL(blob);
+      const blob2 = new Blob([buffer]);
+      const url=URL.createObjectURL(blob2);
       image.src=url;
       container.appendChild(image);
     }

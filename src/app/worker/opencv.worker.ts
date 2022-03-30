@@ -4,6 +4,8 @@
 import cv, { Mat, Point, Rect, Size } from 'opencv-ts';
 import * as jpeg from 'jpeg-js';
 import { Log } from '../shared/decorator/debug';
+import { base64ToArrayBuffer } from '../shared/util/buffer.util';
+import { Point as MyPoint } from '../core/model';
 // declare let cv;
 const initPromise = new Promise<void>((resolve) => {
   cv.onRuntimeInitialized = resolve;
@@ -11,9 +13,7 @@ const initPromise = new Promise<void>((resolve) => {
 self.importScripts('/assets/js/ocrad.js');
 declare const OCRAD;
 (self as any).Buffer = {
-  from(bytes: any[]) {
-    return new Uint8Array(bytes);
-  },
+  from: (bytes: any[]) => new Uint8Array(bytes),
 };
 
 class OpenCVService {
@@ -223,7 +223,7 @@ class OpenCVService {
       // 多边形拟合
       try {
         cv.approxPolyDP(hull, approx, epsilon, true);
-        if (approx.rows == 4) {
+        if (approx.rows === 4) {
           const points: Point[] = [];
           for (let i = 0; i < approx.rows; ++i) {
             const point = new cv.Point(
@@ -241,7 +241,7 @@ class OpenCVService {
     }
   }
   @Log()
-  warpImage(src: Mat, points: Point[]) {
+  warpImage(src: Mat, points: MyPoint[]) {
     points = this.orderPoints(points);
     const [p0, p1, p2, p3] = points;
     const width = Math.round(
@@ -267,7 +267,7 @@ class OpenCVService {
     return dst;
   }
   @Log()
-  orderPoints(points: Point[]): Point[] {
+  orderPoints(points: MyPoint[]): MyPoint[] {
     // 找出离左上角最近的点作为第一个点
     let firstIndex: number;
     let min: number;
@@ -287,7 +287,7 @@ class OpenCVService {
     }
   }
 
-  getDistance(point1: Point, point2: Point) {
+  getDistance(point1: MyPoint, point2: MyPoint) {
     return Math.sqrt(
       Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
     );
@@ -466,7 +466,7 @@ class OpenCVService {
     // cv.cvtColor(src, dst1, cv.COLOR_RGBA2GRAY, 0);
     const imageData = this.imageDataFromMat(src);
     // dst1.delete();
-    let text = OCRAD(imageData, {
+    const text = OCRAD(imageData, {
       numeric: true,
     });
     console.log(text);
@@ -483,11 +483,12 @@ class OpenCVService {
 
   /**
    * 二值化：将订单号转为黑白，方便ocr识别
+   *
    * @param src
    * @returns
    */
   threshold(src: Mat) {
-    let dst = new cv.Mat();
+    const dst = new cv.Mat();
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
     // You can try more different parameters
     cv.adaptiveThreshold(
@@ -504,13 +505,14 @@ class OpenCVService {
 
   /**
    * 侵蚀：去掉订单号因为墨水不足断掉的部分
+   *
    * @param src
    * @returns
    */
   erode(src: Mat) {
-    let dst = new cv.Mat();
-    let M = (cv.Mat as any).ones(2, 2, cv.CV_8U);
-    let anchor = new cv.Point(-1, -1);
+    const dst = new cv.Mat();
+    const M = (cv.Mat as any).ones(2, 2, cv.CV_8U);
+    const anchor = new cv.Point(-1, -1);
     // You can try more different parameters
     cv.erode(
       src,
@@ -524,13 +526,45 @@ class OpenCVService {
     return dst;
   }
 
-  async process(mat: Mat) {
+  preview(src: string | Mat) {
+    let mat: Mat;
+    if (typeof src === 'string') {
+      const buffer = base64ToArrayBuffer(src);
+      const imageData: any = jpeg.decode(buffer, { useTArray: true });
+      mat = cv.matFromImageData(imageData);
+    } else {
+      mat = src;
+    }
+    const width = mat.cols;
+    const ratio = 800 / mat.cols;
+    const resize = this.resizeImg(mat, ratio);
+    mat.delete();
+    const blur = this.blur(resize);
+    resize.delete();
+    // sharpen.delete();
+    const canny = this.getCanny(blur);
+    blur.delete();
+    const contours = this.findMaxContour(canny);
+    canny.delete();
+    const points = this.getBoxPoint(contours, ratio);
+    contours.forEach((contour) => contour.delete());
+    if (points != null) {
+      points.forEach((point) => {
+        point.x = point.x / width;
+        point.y = point.y / width;
+      });
+    }
+
+    return points;
+  }
+
+  async process(mat: Mat, points: MyPoint[]) {
     const result: any = {};
     // if (mat.rows > mat.cols) {
     //   this.rotate(mat, 90);
     //   result.origin = mat;
     // }
-    const ratio = 900 / mat.cols;
+    const ratio = 800 / mat.cols;
     const resize = this.resizeImg(mat, ratio);
     try {
       // const sharpen = this.sharpen(resize);
@@ -540,7 +574,7 @@ class OpenCVService {
       blur.delete();
       const contours = this.findMaxContour(canny);
       canny.delete();
-      const points = this.getBoxPoint(contours, ratio);
+      points = this.getBoxPoint(contours, ratio);
       contours.forEach((contour) => contour.delete());
       if (points != null) {
         const dest = this.warpImage(mat, points);
@@ -595,7 +629,7 @@ class OpenCVService {
     const result = [];
 
     try {
-      const ratio = 900 / src.cols;
+      const ratio = 800 / src.cols;
       const resize = this.resizeImg(src, ratio);
       // const sharpen = this.sharpen(resize);
       // result.push(sharpen);
@@ -605,7 +639,7 @@ class OpenCVService {
       result.push(canny);
       const contours = this.findMaxContour(canny);
       result.push(this.showMaxContour(resize, contours));
-      let points = this.getBoxPoint(contours, ratio);
+      const points = this.getBoxPoint(contours, ratio);
       contours.forEach((contour) => contour.delete());
       if (points != null) {
         result.push(this.showPoints(src, points));
@@ -655,7 +689,7 @@ class OpenCVService {
     const y = Math.floor(rows * 0.18);
     const width = Math.floor(cols * 0.98) - x;
     const height = Math.floor(rows * 0.13);
-    let rect = new cv.Rect(x, y, width, height);
+    const rect = new cv.Rect(x, y, width, height);
     const dst = src.roi(rect);
     return dst;
   }
@@ -719,15 +753,16 @@ self.addEventListener(
       const start = new Date().getTime();
       const params = args.map((arg: any) => {
         if (arg instanceof ArrayBuffer) {
-          const data: any = jpeg.decode(arg, { useTArray: true });
-          const mat = cv.matFromImageData(data);
+          const decode: any = jpeg.decode(arg, { useTArray: true });
+          const mat = cv.matFromImageData(decode);
           mats.push(mat);
           return mat;
         } else {
           return arg;
         }
       });
-      let data = await openCVService[m](...params);
+      let data = await openCVService[m].apply(openCVService, params);
+      // let data = await openCVService[m](...params);
       if (data) {
         if (data instanceof cv.Mat) {
           const imageData = openCVService.jpegFromMat(data);

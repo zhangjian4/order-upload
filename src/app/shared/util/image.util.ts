@@ -1,5 +1,3 @@
-import { Log } from '../decorator/debug';
-
 let canvasInstance: HTMLCanvasElement = null;
 
 const getCanvas = () => {
@@ -22,7 +20,12 @@ export const imageToCanvas = (image: HTMLImageElement, scale = 1) => {
 };
 
 export const imageToBlob = (image: HTMLImageElement, scale = 1) => {
-  const canvas = imageToCanvas(image,scale);
+  const canvas = imageToCanvas(image, scale);
+  return canvasToBlob(canvas);
+};
+
+export const imageToBase64 = (image: HTMLImageElement, scale = 1) => {
+  const canvas = imageToCanvas(image, scale);
   return canvasToBlob(canvas);
 };
 
@@ -56,16 +59,6 @@ export const urlToBlob = async (url: string) => {
   return imageToBlob(image);
 };
 
-export const base64ToArrayBuffer = (base64: string) => {
-  const binStr = atob(base64);
-  const len = binStr.length;
-  const arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    arr[i] = binStr.charCodeAt(i);
-  }
-  return arr.buffer;
-};
-
 export const canvasToBlob = (canvas: HTMLCanvasElement) =>
   new Promise<Blob>((resolve) => {
     canvas.toBlob(
@@ -77,12 +70,10 @@ export const canvasToBlob = (canvas: HTMLCanvasElement) =>
     );
   });
 
-export const base64ToBlob = (base64: string) => {
-  const buffer = base64ToArrayBuffer(base64);
-  const blob = new Blob([buffer], {
-    type: 'image/jpeg',
-  });
-  return blob;
+export const canvasToBase64 = (canvas: HTMLCanvasElement) => {
+  const dataURL = canvas.toDataURL('image/jpeg');
+  console.log(dataURL);
+  return dataURL.substring(dataURL.indexOf(',') + 1);
 };
 
 export const base64ToImageData = async (base64: string) => {
@@ -99,10 +90,6 @@ export const imageDataToBlob = async (imageData: ImageData) => {
   ctx.putImageData(imageData, 0, 0);
   const blob = await canvasToBlob(canvas);
   return blob;
-};
-
-export const blobToArrayBuffer = async (blob: Blob) => {
-  return blob.arrayBuffer();
 };
 
 export const blobToImageData = async (blob: Blob) => {

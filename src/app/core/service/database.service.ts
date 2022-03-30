@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import Dexie from 'dexie';
+import { Point } from '../model';
 (Dexie as any).debug = false;
 @Injectable({ providedIn: 'root' })
 export class Database extends Dexie {
@@ -31,7 +32,7 @@ export interface IUploadFile {
   size?: number;
   destUrl?: string;
   url?: string;
-  rect?: any;
+  rect?: Point[];
   id?: number;
   name?: string;
   md5?: string;

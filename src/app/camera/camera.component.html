@@ -53,14 +53,43 @@
       class="camera-preview"
       [class.hide-background]="hideBackground"
       [ngStyle]="previewStyle"
-    ></div>
+    >
+      <svg
+        *ngIf="polygon"
+        class="preview-rect"
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <polygon
+          [attr.points]="polygon"
+          style="fill: none; stroke: #f00; stroke-width: 2"
+        />
+      </svg>
+      <img
+        class="snapshot"
+        *ngIf="snapshots[0]"
+        [src]="snapshots[0]"
+        [ngStyle]="snapshotStyles[0]"
+      />
+      <img
+        class="snapshot"
+        *ngIf="snapshots[1]"
+        [src]="snapshots[1]"
+        [ngStyle]="snapshotStyles[1]"
+      />
+    </div>
     <div class="operations">
       <div class="photo-list">
-        <div *ngIf="!this.id && lastFile" class="thumb-container">
-          <ion-thumbnail>
-            <img [imageData]="lastFile" [maxHeight]="50" [maxWidth]="50" />
-          </ion-thumbnail>
-          <ion-badge color="primary">{{ photoCount }}</ion-badge>
+        <div *ngIf="!this.id" #thumbContainer class="thumb-container">
+          <!-- <img
+            *ngIf="lastFile"
+            [imageData]="lastFile"
+            [maxHeight]="50"
+            [maxWidth]="50"
+          /> -->
+          <ion-badge *ngIf="photoCount" color="primary">{{
+            photoCount
+          }}</ion-badge>
         </div>
       </div>
       <div class="camera-touch" (click)="takePicture()">

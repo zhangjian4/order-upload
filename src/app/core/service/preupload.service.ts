@@ -153,7 +153,7 @@ export class PreuploadService implements OnDestroy {
   async process(item: IUploadFile, imageData: ArrayBuffer) {
     // const changes: any = {};
     await this.opencvService.init();
-    const changes = await this.opencvService.process(imageData);
+    const changes = await this.opencvService.process(imageData, item.rect);
     const keys = Object.keys(changes);
     if (keys.length) {
       for (const key of keys) {
