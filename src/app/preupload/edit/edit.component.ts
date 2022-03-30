@@ -41,6 +41,7 @@ export class EditComponent implements OnInit, OnDestroy {
   magnifyWidth: number;
   magnifyPositionRight: boolean;
   inited: boolean;
+  imageWidth: number;
 
   constructor(
     public preuploadService: PreuploadService,
@@ -89,6 +90,7 @@ export class EditComponent implements OnInit, OnDestroy {
       naturalHeight: height,
     } = img;
     if (height && width) {
+      this.imageWidth=offsetWidth;
       this.ratio = offsetWidth / width;
       this.magnifyWidth = width * this.magnifyRatio;
       this.top = offsetTop;
@@ -104,8 +106,8 @@ export class EditComponent implements OnInit, OnDestroy {
         ];
       }
       this.points = this.data.rect.map((p) => ({
-        x: p.x * this.ratio + this.left,
-        y: p.y * this.ratio + this.top,
+        x: p.x * offsetWidth + this.left,
+        y: p.y * offsetWidth + this.top,
       }));
       this.updatePolygon();
     }
@@ -145,8 +147,8 @@ export class EditComponent implements OnInit, OnDestroy {
       mouseup.subscribe(() => {
         this.moving = false;
         const points = this.points.map((p) => ({
-          x: (p.x - this.left) / this.ratio,
-          y: (p.y - this.top) / this.ratio,
+          x: (p.x - this.left) / this.imageWidth,
+          y: (p.y - this.top) / this.imageWidth,
         }));
         this.preuploadService.updateRect(this.data, points);
       });

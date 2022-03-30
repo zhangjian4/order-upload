@@ -201,8 +201,8 @@ class OpenCVService {
     counterArray.sort((c1, c2) => areaMap.get(c2) - areaMap.get(c1));
     contours.delete();
     hierarchy.delete();
-    counterArray.slice(3).forEach((counter) => counter.delete());
-    return counterArray.slice(0, 3);
+    counterArray.slice(5).forEach((counter) => counter.delete());
+    return counterArray.slice(0, 5);
   }
 
   /**
@@ -212,7 +212,8 @@ class OpenCVService {
    * @returns
    */
   @Log()
-  getBoxPoint(contours: Mat[], ratio: number) {
+  getBoxPoint(contours: Mat[], center: MyPoint) {
+    let matchPoints: Point[];
     for (const contour of contours) {
       const hull = new cv.Mat();
       // 多边形拟合凸包
@@ -227,28 +228,54 @@ class OpenCVService {
           const points: Point[] = [];
           for (let i = 0; i < approx.rows; ++i) {
             const point = new cv.Point(
-              approx.data32S[i * 2] / ratio,
-              approx.data32S[i * 2 + 1] / ratio
+              approx.data32S[i * 2],
+              approx.data32S[i * 2 + 1]
             );
             points.push(point);
           }
-          return points;
+          // 图片中心如果在四边形内部直接返回,如果不在内部先待定
+          if (this.isPointInRect(points, center)) {
+            return points;
+          } else if (matchPoints == null) {
+            matchPoints = points;
+          }
         }
       } finally {
         hull.delete();
         approx.delete();
       }
     }
+    return matchPoints;
   }
+
+  isPointInRect(points: MyPoint[], center: MyPoint) {
+    const [A, B, C, D] = points;
+    const { x, y } = center;
+    const a = (B.x - A.x) * (y - A.y) - (B.y - A.y) * (x - A.x);
+    const b = (C.x - B.x) * (y - B.y) - (C.y - B.y) * (x - B.x);
+    const c = (D.x - C.x) * (y - C.y) - (D.y - C.y) * (x - C.x);
+    const d = (A.x - D.x) * (y - D.y) - (A.y - D.y) * (x - D.x);
+    return (
+      (a > 0 && b > 0 && c > 0 && d > 0) || (a < 0 && b < 0 && c < 0 && d < 0)
+    );
+  }
+
   @Log()
   warpImage(src: Mat, points: MyPoint[]) {
+    const cols = src.cols;
+    points = points.map((point) => ({
+      x: Math.round(point.x * cols),
+      y: Math.round(point.y * cols),
+    }));
     points = this.orderPoints(points);
     const [p0, p1, p2, p3] = points;
-    const width = Math.round(
-      Math.max(this.getDistance(p0, p1), this.getDistance(p2, p3))
-    );
+    const width1 = this.getDistance(p0, p1);
+    const width2 = this.getDistance(p2, p3);
+    const height1 = this.getDistance(p1, p2);
+    const height2 = this.getDistance(p3, p0);
+    const width = Math.round(Math.max(width1, width2));
     const height = Math.round(
-      Math.max(this.getDistance(p1, p2), this.getDistance(p3, p0))
+      Math.max(height1, height2) + Math.abs(width1 - width2)/2
     );
     const srcArray = [];
     points.forEach((point) => {
@@ -497,33 +524,101 @@ class OpenCVService {
       255,
       cv.ADAPTIVE_THRESH_MEAN_C,
       cv.THRESH_BINARY,
-      21,
+      49,
       17
     );
     return dst;
   }
 
   /**
-   * 侵蚀：去掉订单号因为墨水不足断掉的部分
+   * 腐蚀后膨胀：去掉订单号因为墨水不足断掉的部分
    *
    * @param src
    * @returns
    */
-  erode(src: Mat) {
-    const dst = new cv.Mat();
-    const M = (cv.Mat as any).ones(2, 2, cv.CV_8U);
-    const anchor = new cv.Point(-1, -1);
+  morphology(src: Mat) {
+    let dst = new cv.Mat();
+    let M = (cv.Mat as any).ones(2, 2, cv.CV_8U);
+    let anchor = new cv.Point(-1, -1);
     // You can try more different parameters
-    cv.erode(
+    cv.morphologyEx(
       src,
       dst,
+      (cv as any).MORPH_OPEN,
       M,
       anchor,
       1,
       cv.BORDER_CONSTANT,
       cv.morphologyDefaultBorderValue()
     );
+    M.delete();
     return dst;
+  }
+
+  /**
+   * 腐蚀后膨胀：去掉订单号因为墨水不足断掉的部分
+   *
+   * @param src
+   * @returns
+   */
+  // erode(src: Mat) {
+  //   const dst = new cv.Mat();
+  //   const M = (cv.Mat as any).ones(3, 3, cv.CV_8U);
+  //   const anchor = new cv.Point(-1, -1);
+  //   // You can try more different parameters
+  //   cv.erode(
+  //     src,
+  //     dst,
+  //     M,
+  //     anchor,
+  //     1,
+  //     cv.BORDER_CONSTANT,
+  //     cv.morphologyDefaultBorderValue()
+  //   );
+  //   return dst;
+  // }
+
+  // dilate(src: Mat) {
+  //   let dst = new cv.Mat();
+  //   let M = (cv.Mat as any).ones(3, 3, cv.CV_8U);
+  //   let anchor = new cv.Point(-1, -1);
+  //   cv.dilate(
+  //     src,
+  //     dst,
+  //     M,
+  //     anchor,
+  //     1,
+  //     cv.BORDER_CONSTANT,
+  //     cv.morphologyDefaultBorderValue()
+  //   );
+  //   M.delete();
+  //   return dst;
+  // }
+
+  getPaperRect(mat: Mat) {
+    const fixedWidth = 800;
+    const ratio = fixedWidth / mat.cols;
+    const resize = this.resizeImg(mat, ratio);
+    const blur = this.blur(resize);
+    resize.delete();
+    // sharpen.delete();
+    const canny = this.getCanny(blur);
+    blur.delete();
+    const contours = this.findMaxContour(canny);
+    canny.delete();
+    const points = this.getBoxPoint(contours, {
+      x: fixedWidth / 2,
+      y: (mat.rows * ratio) / 2,
+    });
+    contours.forEach((contour) => contour.delete());
+    if (points != null) {
+      points.forEach((point) => {
+        point.x = point.x / fixedWidth;
+        point.y = point.y / fixedWidth;
+      });
+    }
+
+    return points;
   }
 
   preview(src: string | Mat) {
@@ -535,27 +630,11 @@ class OpenCVService {
     } else {
       mat = src;
     }
-    const width = mat.cols;
-    const ratio = 800 / mat.cols;
-    const resize = this.resizeImg(mat, ratio);
-    mat.delete();
-    const blur = this.blur(resize);
-    resize.delete();
-    // sharpen.delete();
-    const canny = this.getCanny(blur);
-    blur.delete();
-    const contours = this.findMaxContour(canny);
-    canny.delete();
-    const points = this.getBoxPoint(contours, ratio);
-    contours.forEach((contour) => contour.delete());
-    if (points != null) {
-      points.forEach((point) => {
-        point.x = point.x / width;
-        point.y = point.y / width;
-      });
+    try {
+      return this.getPaperRect(mat);
+    } finally {
+      mat.delete();
     }
-
-    return points;
   }
 
   async process(mat: Mat, points: MyPoint[]) {
@@ -564,38 +643,63 @@ class OpenCVService {
     //   this.rotate(mat, 90);
     //   result.origin = mat;
     // }
-    const ratio = 800 / mat.cols;
-    const resize = this.resizeImg(mat, ratio);
     try {
-      // const sharpen = this.sharpen(resize);
-      const blur = this.blur(resize);
-      // sharpen.delete();
-      const canny = this.getCanny(blur);
-      blur.delete();
-      const contours = this.findMaxContour(canny);
-      canny.delete();
-      points = this.getBoxPoint(contours, ratio);
-      contours.forEach((contour) => contour.delete());
+      if (points == null) {
+        points = this.getPaperRect(mat);
+      }
       if (points != null) {
+        result.rect = points;
         const dest = this.warpImage(mat, points);
         // const dest = await this.opencvService.transform(mat, points);
-        result.rect = points;
         result.dest = dest;
         const roi = this.roiOrderNo(dest);
         const threshold = this.threshold(roi);
         roi.delete();
-        const text = this.ocr(threshold);
+        const morphology = this.morphology(threshold);
         threshold.delete();
+        const text = this.ocr(morphology);
+        morphology.delete();
         if (text != null && text.length >= 4) {
           result.name = text.substring(text.length - 4);
         }
         // dest.delete();
       }
-    } catch (e) {
-      console.error(e);
     } finally {
-      resize.delete();
+      mat.delete();
     }
+
+    // const ratio = 800 / mat.cols;
+    // const resize = this.resizeImg(mat, ratio);
+    // try {
+    //   // const sharpen = this.sharpen(resize);
+    //   const blur = this.blur(resize);
+    //   // sharpen.delete();
+    //   const canny = this.getCanny(blur);
+    //   blur.delete();
+    //   const contours = this.findMaxContour(canny);
+    //   canny.delete();
+    //   points = this.getBoxPoint(contours, ratio);
+    //   contours.forEach((contour) => contour.delete());
+    //   if (points != null) {
+    //     const dest = this.warpImage(mat, points);
+    //     // const dest = await this.opencvService.transform(mat, points);
+    //     result.rect = points;
+    //     result.dest = dest;
+    //     const roi = this.roiOrderNo(dest);
+    //     const threshold = this.threshold(roi);
+    //     roi.delete();
+    //     const text = this.ocr(threshold);
+    //     threshold.delete();
+    //     if (text != null && text.length >= 4) {
+    //       result.name = text.substring(text.length - 4);
+    //     }
+    //     // dest.delete();
+    //   }
+    // } catch (e) {
+    //   console.error(e);
+    // } finally {
+    //   resize.delete();
+    // }
     // mat.delete();
     // const dst1 = this.extractColor(mat);
     // try {
@@ -629,7 +733,8 @@ class OpenCVService {
     const result = [];
 
     try {
-      const ratio = 800 / src.cols;
+      const fixedWidth = 800;
+      const ratio = fixedWidth / src.cols;
       const resize = this.resizeImg(src, ratio);
       // const sharpen = this.sharpen(resize);
       // result.push(sharpen);
@@ -639,9 +744,18 @@ class OpenCVService {
       result.push(canny);
       const contours = this.findMaxContour(canny);
       result.push(this.showMaxContour(resize, contours));
-      const points = this.getBoxPoint(contours, ratio);
+      const points = this.getBoxPoint(contours, {
+        x: fixedWidth / 2,
+        y: (src.rows * ratio) / 2,
+      });
       contours.forEach((contour) => contour.delete());
       if (points != null) {
+        if (points != null) {
+          points.forEach((point) => {
+            point.x = point.x / fixedWidth;
+            point.y = point.y / fixedWidth;
+          });
+        }
         result.push(this.showPoints(src, points));
         const dst = this.warpImage(src, points);
         result.push(dst);
@@ -649,9 +763,13 @@ class OpenCVService {
         result.push(roi);
         const threshold = this.threshold(roi);
         result.push(threshold);
-        const erode = this.erode(threshold);
-        result.push(erode);
-        const text = this.ocr(erode);
+        const morphology = this.morphology(threshold);
+        result.push(morphology);
+        // const erode = this.erode(threshold);
+        // result.push(erode);
+        // const dilate = this.dilate(erode);
+        // result.push(dilate);
+        const text = this.ocr(morphology);
         console.log(text);
       }
 
@@ -719,9 +837,10 @@ class OpenCVService {
 
   showPoints(src: Mat, points: Point[]) {
     const dst = src.clone();
+    const cols = src.cols;
     const color = new cv.Scalar(255, 0, 0);
     points.forEach((point) => {
-      cv.circle(dst, point, 5, color, 2);
+      cv.circle(dst, new cv.Point(point.x * cols, point.y * cols), 5, color, 2);
     });
     // for (let i = 0; i < approx.rows; ++i) {
     //   const point = new cv.Point(

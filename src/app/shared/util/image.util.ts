@@ -72,7 +72,6 @@ export const canvasToBlob = (canvas: HTMLCanvasElement) =>
 
 export const canvasToBase64 = (canvas: HTMLCanvasElement) => {
   const dataURL = canvas.toDataURL('image/jpeg');
-  console.log(dataURL);
   return dataURL.substring(dataURL.indexOf(',') + 1);
 };
 
