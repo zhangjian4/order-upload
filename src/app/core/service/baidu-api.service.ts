@@ -90,8 +90,13 @@ export class BaiduAPIService {
   ) {}
 
   get redirectUri() {
-    const redirectUrl = encodeURIComponent(location.origin + '/oauth');
-    return `https://zhangj1992.gitee.io/order-upload?redirectUrl=${redirectUrl}`;
+    let redirectUrl = location.origin + '/oauth';
+    // 安卓直接跳回来会加载失败，需要通过外部的链接跳转回来
+    if (this.platform.is('android')) {
+      redirectUrl = encodeURIComponent(redirectUrl);
+      redirectUrl = `https://zhangj1992.gitee.io/order-upload/redirect?redirectUrl=${redirectUrl}`;
+    }
+    return redirectUrl;
   }
 
   async logout() {

@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   server: {
     iosScheme: 'ionic',
-    allowNavigation: ['baidu.com', 'openapi.baidu.com'],
+    allowNavigation: ['baidu.com', 'openapi.baidu.com', 'zhangj1992.gitee.io'],
   },
   cordova: {
     preferences: {
