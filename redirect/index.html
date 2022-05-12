@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>页面跳转</title>
+  </head>
+  <body>
+    登录成功，页面即将跳转
+    <script>
+      var url = new URL(location.href);
+      var params = url.searchParams;
+      var code = params.get("code");
+      var redirectUrl = params.get("redirectUrl");
+      console.log(redirectUrl);
+      console.log(code);
+    </script>
+  </body>
+</html>
