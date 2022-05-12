@@ -46,6 +46,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./ocr-test/ocr-test.module').then((m) => m.OcrTestModule),
   },
+  {
+    path: 'webgl-test',
+    loadChildren: () =>
+      import('./webgl-test/webgl-test.module').then((m) => m.WebglTestModule),
+  },
 ];
 @NgModule({
   imports: [

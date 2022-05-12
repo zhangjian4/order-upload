@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { HTTP } from '@ionic-native/http/ngx';
+import { HTTP } from '@awesome-cordova-plugins/http/ngx';
 import { environment } from 'src/environments/environment';
 import { HttpService } from './http.service';
 

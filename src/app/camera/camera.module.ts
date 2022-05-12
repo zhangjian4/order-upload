@@ -2,13 +2,12 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CameraComponent } from './camera.component';
-import { CameraPreview } from '@ionic-native/camera-preview/ngx';
-import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { ConfirmGuard } from '../shared/router-guard/confirm.guard';
 import { ImageDataModule } from '../shared/directive/image-data/image-data.module';
 import { ProgressModule } from '../shared/component/progress/progress.module';
+// import { CameraPreview } from '@awesome-cordova-plugins/camera-preview/ngx';
 
 @NgModule({
   declarations: [CameraComponent],
@@ -31,6 +30,6 @@ import { ProgressModule } from '../shared/component/progress/progress.module';
     ImageDataModule,
     ProgressModule
   ],
-  providers: [CameraPreview, WebView, ConfirmGuard],
+  providers: [ConfirmGuard],
 })
 export class CameraModule {}

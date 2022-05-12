@@ -31,3 +31,5 @@ package-lock.json
 /platforms
 /plugins
 /www
+android/
+*.zip

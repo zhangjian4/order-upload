@@ -1,5 +1,4 @@
 import { Injectable, NgZone } from '@angular/core';
-import { HTTP } from '@ionic-native/http/ngx';
 import { Platform, ToastController } from '@ionic/angular';
 import { Storage } from '@ionic/storage-angular';
 import { HttpService } from './http.service';
@@ -322,7 +321,7 @@ export class BaiduAPIService {
     );
   }
 
-  superfile(path: string, uploadid: string, file: Blob) {
+  async superfile(path: string, uploadid: string, file: Blob) {
     path = encodeURIComponent('path');
     const form = new FormData();
     form.append('file', file);

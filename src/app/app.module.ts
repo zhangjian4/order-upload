@@ -1,7 +1,6 @@
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
-import { HTTP } from '@ionic-native/http/ngx';
 
 import { IonicModule, IonicRouteStrategy, Platform } from '@ionic/angular';
 
@@ -13,9 +12,7 @@ import { HttpService } from './core/service/http.service';
 import { BrowserHttpService } from './core/service/browser-http.service';
 import { HttpClientModule } from '@angular/common/http';
 import { CordovaHttpService } from './core/service/cordova-http.service';
-import { CodePush } from '@ionic-native/code-push/ngx';
-import { StatusBar } from '@ionic-native/status-bar/ngx';
-import { SplashScreen } from '@ionic-native/splash-screen/ngx';
+import { HTTP } from '@awesome-cordova-plugins/http/ngx';
 
 const startupServiceFactory = (startupService: StartupService) => () =>
   startupService.load();
@@ -25,7 +22,7 @@ const httpServiceFactory = (
   browserHttpService: BrowserHttpService,
   cordovaHttpService: CordovaHttpService
 ) => {
-  if (platform.is('cordova')) {
+  if (platform.is('capacitor')) {
     return cordovaHttpService;
   } else {
     return browserHttpService;
@@ -45,9 +42,6 @@ const httpServiceFactory = (
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     HTTP,
-    CodePush,
-    StatusBar,
-    SplashScreen,
     {
       provide: APP_INITIALIZER,
       useFactory: startupServiceFactory,

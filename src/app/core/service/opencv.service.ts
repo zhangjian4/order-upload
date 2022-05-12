@@ -49,7 +49,7 @@ export class OpenCVService {
     return dst;
   }
 
-  async preview(base64: string | ArrayBuffer) {
+  async preview(base64: ImageData) {
     const result = await this.execute('preview', base64);
     return result;
   }
@@ -67,6 +67,8 @@ export class OpenCVService {
     args.forEach((arg) => {
       if (arg instanceof ArrayBuffer) {
         transfer.push(arg);
+      } else if (arg instanceof ImageData) {
+        transfer.push(arg.data.buffer);
       }
     });
     this.worker.postMessage({ messageId, method, args }, transfer);

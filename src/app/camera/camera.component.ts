@@ -8,19 +8,22 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+// import {
+//   CameraPreview,
+//   CameraPreviewPictureOptions,
+//   CameraPreviewOptions,
+//   CameraPreviewDimensions,
+// } from '@awesome-cordova-plugins/camera-preview/ngx';
 import {
   CameraPreview,
-  CameraPreviewPictureOptions,
   CameraPreviewOptions,
-  CameraPreviewDimensions,
-} from '@ionic-native/camera-preview/ngx';
+} from '@capacitor-community/camera-preview';
 import {
   AlertController,
   NavController,
   Platform,
   ToastController,
 } from '@ionic/angular';
-import { WebView } from '@ionic-native/ionic-webview/ngx';
 import { format } from 'date-fns';
 import { BaiduAPIService } from '../core/service/baidu-api.service';
 import {
@@ -55,6 +58,7 @@ import {
   SafeResourceUrl,
   SafeUrl,
 } from '@angular/platform-browser';
+import { WebGLService } from '../core/service/webgl.service';
 
 @Component({
   selector: 'app-camera',
@@ -95,9 +99,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   snapshots: (SafeUrl | string)[] = [];
   snapshotStyles: any[] = [];
   takeSnapshotPromise: Promise<any>;
+  loading: boolean;
+  cameraPreview = CameraPreview;
   private previewProcess: { stop?: boolean };
   constructor(
-    private cameraPreview: CameraPreview,
     private zone: NgZone,
     private navController: NavController,
     private platform: Platform,
@@ -109,7 +114,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private preuploadService: PreuploadService,
     private commonService: CommonService,
     private progressService: ProgressService,
-    private domSanitizer: DomSanitizer
+    private domSanitizer: DomSanitizer,
+    private webGLService: WebGLService
   ) {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       if (params.id) {
@@ -164,18 +170,20 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     const rect = container.getBoundingClientRect();
     if (this.hasCamera) {
       const cameraPreviewOpts: CameraPreviewOptions = {
-        x: rect.left,
-        y: rect.top,
+        x: Math.round(rect.left),
+        y: Math.round(rect.top),
         width: rect.width,
         height: rect.height,
-        camera: 'rear',
-        tapPhoto: true,
-        previewDrag: true,
+        position: 'rear',
+        // tapPhoto: true,
+        // previewDrag: true,
         toBack: true,
-        alpha: 1,
+        // alpha: 1,
+        enableZoom: true,
+        storeToFile: false,
       };
       // start camera
-      await this.cameraPreview.startCamera(cameraPreviewOpts);
+      await this.cameraPreview.start(cameraPreviewOpts);
       this.cameraStarted = true;
       this.startPreview();
       // this.cameraPreview.setZoom(0.5);
@@ -184,7 +192,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async stopCamera() {
     if (this.hasCamera) {
-      await this.cameraPreview.stopCamera();
+      await this.cameraPreview.stop();
     }
     this.zone.run(() => {
       this.cameraStarted = false;
@@ -230,25 +238,32 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     try {
       //takeSnapshot有时候会不返回导致一直等待，这里加上超时时间
       this.takeSnapshotPromise = withTimeout(
-        this.cameraPreview.takeSnapshot({ quality }),
+        this.cameraPreview.captureSample({ quality }),
         1000
       );
       const result = await this.takeSnapshotPromise;
-      return result[0];
+      return result.value;
     } finally {
       this.takeSnapshotPromise = null;
     }
   }
 
   async takePicture() {
-    const points = this.points;
-    const base64 = await this.takeSnapshot(100);
-    // const buffer = Buffer.from(base64, 'base64');
-    const src = 'data:image/jpeg;base64,' + base64;
-    this.stopPreview();
-    this.showSnapshot(src, true).then(() => this.startPreview());
-    const imageData = base64ToArrayBuffer(base64);
-    await this.add(imageData, null, points);
+    if (!this.loading) {
+      this.loading = true;
+      try {
+        const points = this.points;
+        this.stopPreview();
+        const base64 = await this.takeSnapshot(100);
+        // const buffer = Buffer.from(base64, 'base64');
+        const imageData = base64ToArrayBuffer(base64);
+        this.add(imageData, null, points);
+        await this.showSnapshot('data:image/jpeg;base64,' + base64, true);
+      } finally {
+        this.loading = false;
+        this.startPreview();
+      }
+    }
   }
 
   async add(imageData: ArrayBuffer, name?: string, rect?: any[]) {
@@ -384,13 +399,12 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         scale = 1080 / image.height;
       }
       const canvas = imageToCanvas(image, scale);
-      const imageData = await canvasToBlob(canvas);
-
-      const buffer = await blobToArrayBuffer(imageData);
+      const base64 = canvasToBase64(canvas);
+      const buffer = base64ToArrayBuffer(base64);
+      // const buffer = await blobToArrayBuffer(imageData);
       const src = this.domSanitizer.bypassSecurityTrustUrl(url);
       if (!this.hasCamera) {
         this.previewStyle.background = `url(${url}) no-repeat top/100%`;
-        const base64 = canvasToBase64(canvas);
         this.showSnapshot(src, true);
         this.preview(base64);
       } else {
@@ -416,7 +430,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async preview(imageData: string | ArrayBuffer) {
-    this.points = await this.opencvService.preview(imageData);
+    const data = await this.webGLService.loadImage(
+      'data:image/jpg;base64,' + imageData
+    );
+    this.points = await this.opencvService.preview(data);
     if (this.points) {
       const width = this.previewContainer.nativeElement.clientWidth;
       this.polygon = this.points
@@ -443,21 +460,21 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   onTouchMove(event) {
-    if (event.touches.length === 2) {
-      const distance = this.getTouchDistance(event);
-      let change = (distance - this.startTouchDistance) / 10;
-      change = change > 0 ? Math.floor(change) : Math.ceil(change);
-      if (change !== 0) {
-        this.zoom += change;
-        if (this.zoom < 1) {
-          this.zoom = 1;
-        } else if (this.zoom > 10) {
-          this.zoom = 10;
-        }
-        this.cameraPreview.setZoom(this.zoom);
-        this.startTouchDistance = distance;
-      }
-    }
+    // if (event.touches.length === 2) {
+    //   const distance = this.getTouchDistance(event);
+    //   let change = (distance - this.startTouchDistance) / 10;
+    //   change = change > 0 ? Math.floor(change) : Math.ceil(change);
+    //   if (change !== 0) {
+    //     this.zoom += change;
+    //     if (this.zoom < 1) {
+    //       this.zoom = 1;
+    //     } else if (this.zoom > 10) {
+    //       this.zoom = 10;
+    //     }
+    //     this.cameraPreview.setZoom(this.zoom);
+    //     this.startTouchDistance = distance;
+    //   }
+    // }
   }
 
   async showSnapshot(src: string | SafeUrl, animation: boolean) {
@@ -484,9 +501,10 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       zIndex: 1,
     };
     if (animation) {
-      await sleep(500);
-      this.snapshotStyles[currentIndex].zIndex = 0;
-      this.snapshots[lastIndex] = null;
+      setTimeout(() => {
+        this.snapshotStyles[currentIndex].zIndex = 0;
+        this.snapshots[lastIndex] = null;
+      }, 500);
     }
   }
 }
