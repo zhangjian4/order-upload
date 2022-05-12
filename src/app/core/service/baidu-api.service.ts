@@ -90,7 +90,8 @@ export class BaiduAPIService {
   ) {}
 
   get redirectUri() {
-    return location.origin + '/oauth';
+    const redirectUrl = encodeURIComponent(location.origin + '/oauth');
+    return `https://zhangj1992.gitee.io/order-upload?redirectUrl=${redirectUrl}`;
   }
 
   async logout() {

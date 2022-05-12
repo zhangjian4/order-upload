@@ -12,6 +12,9 @@
       var redirectUrl = params.get("redirectUrl");
       console.log(redirectUrl);
       console.log(code);
+      if (redirectUrl && code) {
+        location.href = redirectUrl + "?code=" + code;
+      }
     </script>
   </body>
 </html>
