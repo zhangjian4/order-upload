@@ -1,26 +1,13 @@
-替换`node_modules\@ionic\core\dist\esm\index-7a8b7a1c.js`
-```javascript
-const getHostRef = (ref) => ref.__hostRef__;
-const registerInstance = (lazyInstance, hostRef) => {
-    hostRef.$lazyInstance$ = lazyInstance;
-    lazyInstance.__hostRef__ = hostRef;
-};
-const registerHost = (elm, cmpMeta) => {
-    const hostRef = {
-        $flags$: 0,
-        $hostElement$: elm,
-        $cmpMeta$: cmpMeta,
-        $instanceValues$: new Map(),
-    };
-    {
-        hostRef.$onInstancePromise$ = new Promise(r => (hostRef.$onInstanceResolve$ = r));
-    }
-    {
-        hostRef.$onReadyPromise$ = new Promise(r => (hostRef.$onReadyResolve$ = r));
-        elm['s-p'] = [];
-        elm['s-rc'] = [];
-    }
-    addHostEventListeners(elm, hostRef, cmpMeta.$listeners$);
-    elm.__hostRef__ = hostRef;
-};
+## Extra Android installation steps
+
+Open `android/app/src/main/AndroidManifest.xml` and above the closing `</manifest>` tag add this line to request the CAMERA permission:
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
 ```
+For more help consult the [Capacitor docs](https://capacitorjs.com/docs/android/configuration#configuring-androidmanifestxml).
+
+## Extra iOS installation steps
+You will need to add two permissions to `Info.plist`. Follow the [Capacitor docs](https://capacitorjs.com/docs/ios/configuration#configuring-infoplist) and add permissions with the raw keys `NSCameraUsageDescription` and `NSMicrophoneUsageDescription`.
+
+## Extra Web installation steps
+Add `import '@capacitor-community/camera-preview'` to you entry script in ionic on `app.module.ts`, so capacitor can register the web platform from the plugin

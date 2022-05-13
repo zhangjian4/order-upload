@@ -48,10 +48,7 @@ import { PreuploadService } from '../core/service/preupload.service';
 import { CommonService } from '../core/service/common.service';
 import { ProgressService } from '../shared/component/progress/progress.service';
 import { Subject, takeUntil } from 'rxjs';
-import {
-  base64ToArrayBuffer,
-  blobToArrayBuffer,
-} from '../shared/util/buffer.util';
+import { base64ToArrayBuffer } from '../shared/util/buffer.util';
 import { sleep, withTimeout } from '../shared/util/system.util';
 import {
   DomSanitizer,
@@ -98,9 +95,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   snapshotIndex = 0;
   snapshots: (SafeUrl | string)[] = [];
   snapshotStyles: any[] = [];
-  takeSnapshotPromise: Promise<any>;
+  takeSnapshotPromise: Promise<{ value: string }>;
   loading: boolean;
-  cameraPreview = CameraPreview;
   private previewProcess: { stop?: boolean };
   constructor(
     private zone: NgZone,
@@ -122,7 +118,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         this.id = +params.id;
       }
     });
-    this.hasCamera = this.platform.is('cordova');
+    this.hasCamera = true;
   }
 
   // @HostBinding('class.hide-background')
@@ -170,6 +166,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     const rect = container.getBoundingClientRect();
     if (this.hasCamera) {
       const cameraPreviewOpts: CameraPreviewOptions = {
+        parent: 'camera-preview',
         x: Math.round(rect.left),
         y: Math.round(rect.top),
         width: rect.width,
@@ -183,7 +180,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         storeToFile: false,
       };
       // start camera
-      await this.cameraPreview.start(cameraPreviewOpts);
+      await CameraPreview.start(cameraPreviewOpts);
       this.cameraStarted = true;
       this.startPreview();
       // this.cameraPreview.setZoom(0.5);
@@ -192,7 +189,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async stopCamera() {
     if (this.hasCamera) {
-      await this.cameraPreview.stop();
+      await CameraPreview.stop();
     }
     this.zone.run(() => {
       this.cameraStarted = false;
@@ -238,7 +235,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     try {
       //takeSnapshot有时候会不返回导致一直等待，这里加上超时时间
       this.takeSnapshotPromise = withTimeout(
-        this.cameraPreview.captureSample({ quality }),
+        CameraPreview.captureSample({ quality }),
         1000
       );
       const result = await this.takeSnapshotPromise;

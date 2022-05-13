@@ -90,7 +90,7 @@ export class EditComponent implements OnInit, OnDestroy {
       naturalHeight: height,
     } = img;
     if (height && width) {
-      this.imageWidth=offsetWidth;
+      this.imageWidth = offsetWidth;
       this.ratio = offsetWidth / width;
       this.magnifyWidth = width * this.magnifyRatio;
       this.top = offsetTop;
@@ -100,9 +100,9 @@ export class EditComponent implements OnInit, OnDestroy {
       if (!this.data.rect) {
         this.data.rect = [
           { x: 0, y: 0 },
-          { x: width, y: 0 },
-          { x: width, y: height },
-          { x: 0, y: height },
+          { x: 1, y: 0 },
+          { x: 1, y: (1 / width) * height },
+          { x: 0, y: (1 / width) * height },
         ];
       }
       this.points = this.data.rect.map((p) => ({
@@ -113,38 +113,30 @@ export class EditComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPointClick(event) {
-    console.log(event);
-  }
-
   onPointMousedown(event: TouchEvent, point: any) {
+    event.stopPropagation();
+    const touchStart = event.touches.item(0);
+    const startX = point.x - touchStart.clientX;
+    const startY = point.y - touchStart.clientY;
+    const mouseup = fromEvent(document, 'touchend').pipe(take(1));
     this.zone.run(() => {
-      event.stopPropagation();
-      const touchStart = event.touches.item(0);
-      const startX = point.x - touchStart.clientX;
-      const startY = point.y - touchStart.clientY;
-      const mouseup = fromEvent(document, 'touchend').pipe(take(1));
       this.moving = true;
       this.updateMagnify(point);
-      fromEvent(document, 'touchmove')
-        .pipe(takeUntil(mouseup))
-        .subscribe((e: TouchEvent) => {
-          // console.log(e);
-          const touchMove = e.touches.item(0);
-          point.x = this.limit(
-            startX + touchMove.clientX,
-            this.left,
-            this.right
-          );
-          point.y = this.limit(
-            startY + touchMove.clientY,
-            this.top,
-            this.bottom
-          );
+    });
+    fromEvent(document, 'touchmove')
+      .pipe(takeUntil(mouseup))
+      .subscribe((e: TouchEvent) => {
+        // console.log(e);
+        const touchMove = e.touches.item(0);
+        point.x = this.limit(startX + touchMove.clientX, this.left, this.right);
+        point.y = this.limit(startY + touchMove.clientY, this.top, this.bottom);
+        this.zone.run(() => {
           this.updatePolygon();
           this.updateMagnify(point);
         });
-      mouseup.subscribe(() => {
+      });
+    mouseup.subscribe(() => {
+      this.zone.run(() => {
         this.moving = false;
         const points = this.points.map((p) => ({
           x: (p.x - this.left) / this.imageWidth,
@@ -183,7 +175,7 @@ export class EditComponent implements OnInit, OnDestroy {
   }
 
   onSlideChange(event: any) {
-    const swiper=event[0]
+    const swiper = event[0];
     if (this.index !== swiper.activeIndex) {
       this.zone.run(() => {
         this.setIndex(swiper.activeIndex);
