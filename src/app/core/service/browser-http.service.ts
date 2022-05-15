@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from './http.service';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class BrowserHttpService extends HttpService {
@@ -17,10 +18,10 @@ export class BrowserHttpService extends HttpService {
 
   get(url: string, params: any): Promise<any> {
     url = this.getUrl(url);
-    return this.http.get(url, { params }).toPromise();
+    return firstValueFrom(this.http.get(url, { params }));
   }
   post(url: string, body: any): Promise<any> {
     url = this.getUrl(url);
-    return this.http.post(url, body).toPromise();
+    return firstValueFrom(this.http.post(url, body));
   }
 }

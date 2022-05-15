@@ -24,6 +24,7 @@ import { formatFileSize } from '../shared/util/unit.util';
 import { CommonService } from '../core/service/common.service';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { HttpService } from '../core/service/http.service';
+import { OpenCVService } from '../core/service/opencv.service';
 
 @Component({
   selector: 'app-main',
@@ -45,7 +46,7 @@ export class MainComponent implements OnInit {
   progress: number;
   // dir = '/';
   backSub: any;
-  token='41ba9dc7a1b570cfdd40bcb22d9c6997'
+  token = '41ba9dc7a1b570cfdd40bcb22d9c6997';
   constructor(
     private baiduAPIService: BaiduAPIService,
     public fileService: FileService,
@@ -56,7 +57,8 @@ export class MainComponent implements OnInit {
     private platform: Platform,
     private commonService: CommonService,
     public loadingController: LoadingController,
-    private httpService: HttpService
+    private httpService: HttpService,
+    private opencvService: OpenCVService
   ) {
     // route.queryParams.subscribe((params) => {
     //   const dir = params.dir || '/';
@@ -72,6 +74,7 @@ export class MainComponent implements OnInit {
     this.reloadUserInfo();
     this.initLoading();
     this.checkForUpdate();
+    this.opencvService.init();
     // this.codePush.notifyApplicationReady();
   }
 

@@ -4,6 +4,8 @@ import * as jpeg from 'jpeg-js';
 import { Log } from '../../shared/decorator/debug';
 import { base64ToArrayBuffer } from '../../shared/util/buffer.util';
 import { Point as MyPoint } from '../model';
+import writeFile from 'capacitor-blob-writer';
+import { Directory } from '@capacitor/filesystem';
 // declare let cv;
 const initPromise = new Promise<void>((resolve) => {
   cv.onRuntimeInitialized = resolve;
@@ -642,6 +644,15 @@ export class OpenCVServiceImpl {
     } finally {
       mat.delete();
     }
+  }
+
+  async process2(url: string, points: MyPoint[]) {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const decode: any = jpeg.decode(buffer, { useTArray: true });
+    const mat = this.matFromImageData(decode);
+    return await this.process(mat, points);
+    // console.log(mat);
   }
 
   async process(mat: Mat, points: MyPoint[]) {

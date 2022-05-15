@@ -56,6 +56,8 @@ import {
   SafeUrl,
 } from '@angular/platform-browser';
 import { WebGLService } from '../core/service/webgl.service';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 
 @Component({
   selector: 'app-camera',
@@ -176,7 +178,7 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
         // previewDrag: true,
         toBack: true,
         // alpha: 1,
-        enableZoom: true,
+        enableZoom: false,
         storeToFile: false,
       };
       // start camera
@@ -250,12 +252,15 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       this.loading = true;
       try {
         const points = this.points;
-        this.stopPreview();
+        // this.stopPreview();
+        // const { value } = await CameraPreview.capture({ quality: 100 });
+        // await this.showSnapshot(Capacitor.convertFileSrc(value), true);
+        // this.add2(value, null, points);
         const base64 = await this.takeSnapshot(100);
-        // const buffer = Buffer.from(base64, 'base64');
+        // const { value: base64 } = await CameraPreview.capture({ quality: 100 });
         const imageData = base64ToArrayBuffer(base64);
         this.add(imageData, null, points);
-        await this.showSnapshot('data:image/jpeg;base64,' + base64, true);
+        await this.showSnapshot('data:image/jpeg;base64,' + base64, false);
       } finally {
         this.loading = false;
         this.startPreview();
@@ -265,7 +270,9 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async add(imageData: ArrayBuffer, name?: string, rect?: any[]) {
     if (this.id) {
-      this.preuploadService.updateOrigin(this.id, imageData);
+      // await this.commonService.loading('正在处理图像', () =>
+      this.preuploadService.updateOrigin(this.id, rect, imageData);
+      // );
       this.back();
     } else {
       if (!name) {
@@ -284,6 +291,32 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
       // item.id = await this.database.preuploadFile.add(item);
       this.process(item, imageData);
       return item;
+    }
+  }
+
+  async add2(filePath: string, name?: string, rect?: any[]) {
+    if (this.id) {
+      //TODO
+      // this.preuploadService.updateOrigin(this.id, imageData);
+      this.back();
+    } else {
+      if (!name) {
+        name = format(new Date(), 'yyyyMMddHHmmssSSS');
+      }
+      // this.photoCount++;
+      // // const origin = await this.opencvService.fromBlob(blob);
+      // const imageId = await this.preuploadService.saveImageData(imageData);
+      const item: IUploadFile = {
+        name,
+        origin: filePath as any,
+        rect,
+      };
+      // // this.lastFile = imageId;
+      // this.preuploadService.add(item);
+      // item.id = await this.database.preuploadFile.add(item);
+      const result = await this.preuploadService.process2(item);
+      console.log(result);
+      // return item;
     }
   }
 
@@ -475,33 +508,35 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   async showSnapshot(src: string | SafeUrl, animation: boolean) {
-    const lastIndex = this.snapshotIndex;
-    if (animation) {
-      this.snapshotIndex = 1 - this.snapshotIndex;
-    }
-    const currentIndex = this.snapshotIndex;
-    const container = this.previewContainer.nativeElement;
-    const rect = container.getBoundingClientRect();
-    this.snapshots[currentIndex] = src;
-    if (animation) {
-      this.snapshotStyles[currentIndex] = {};
-      await sleep(1000);
-      this.polygon = null;
-    }
-    const thumbContainer = this.thumbContainer.nativeElement;
-    const thumbRect = thumbContainer.getBoundingClientRect();
-    const scale = thumbRect.width / rect.width;
-    const translateX = thumbRect.left;
-    const translateY = thumbRect.top - rect.top;
-    this.snapshotStyles[currentIndex] = {
-      transform: `translate(${translateX}px,${translateY}px) scale(${scale})`,
-      zIndex: 1,
-    };
-    if (animation) {
-      setTimeout(() => {
-        this.snapshotStyles[currentIndex].zIndex = 0;
-        this.snapshots[lastIndex] = null;
-      }, 500);
+    if (this.thumbContainer) {
+      const lastIndex = this.snapshotIndex;
+      if (animation) {
+        this.snapshotIndex = 1 - this.snapshotIndex;
+      }
+      const currentIndex = this.snapshotIndex;
+      const container = this.previewContainer.nativeElement;
+      const rect = container.getBoundingClientRect();
+      this.snapshots[currentIndex] = src;
+      if (animation) {
+        this.snapshotStyles[currentIndex] = {};
+        await sleep(1000);
+        this.polygon = null;
+      }
+      const thumbContainer = this.thumbContainer.nativeElement;
+      const thumbRect = thumbContainer.getBoundingClientRect();
+      const scale = thumbRect.width / rect.width;
+      const translateX = thumbRect.left;
+      const translateY = thumbRect.top - rect.top;
+      this.snapshotStyles[currentIndex] = {
+        transform: `translate(${translateX}px,${translateY}px) scale(${scale})`,
+        zIndex: 1,
+      };
+      if (animation) {
+        setTimeout(() => {
+          this.snapshotStyles[currentIndex].zIndex = 0;
+          this.snapshots[lastIndex] = null;
+        }, 500);
+      }
     }
   }
 }

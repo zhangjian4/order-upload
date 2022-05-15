@@ -6,10 +6,15 @@ const config: CapacitorConfig = {
   appName: 'pjgl',
   webDir: 'www',
   bundledWebRuntime: false,
-  loggingBehavior: 'none',
   server: {
     iosScheme: 'ionic',
-    allowNavigation: ['baidu.com', 'openapi.baidu.com', 'zhangj1992.gitee.io'],
+    allowNavigation: [
+      'orderupload.baidu.com',
+      'baidu.com',
+      'openapi.baidu.com',
+      'zhangj1992.gitee.io',
+    ],
+    cleartext: true,
   },
   cordova: {
     preferences: {

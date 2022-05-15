@@ -93,7 +93,10 @@
           }}</ion-badge>
         </div>
       </div>
-      <div class="camera-touch" (click)="takePicture()">
+      <div
+        class="camera-touch"
+        (click)="$event.stopPropagation(); takePicture()"
+      >
         <div class="camera-touch-inner"></div>
       </div>
       <div class="submit">

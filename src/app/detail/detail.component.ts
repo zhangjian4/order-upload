@@ -36,7 +36,7 @@ export class DetailComponent implements OnInit {
   ) {
     route.queryParams.subscribe((params) => {
       this.id = +params.id;
-      this.index = this.initIndex = +params.index;
+      // this.index = this.initIndex = +params.index;
       // this.reload();
     });
   }
@@ -48,7 +48,7 @@ export class DetailComponent implements OnInit {
       if (item.thumbs) {
         this.items.push(item);
         if (item.fs_id === this.id) {
-          this.initIndex = this.items.length - 1;
+          this.index = this.initIndex = this.items.length - 1;
         }
       }
     });
@@ -72,7 +72,7 @@ export class DetailComponent implements OnInit {
 
   onSlideChange(event: any) {
     this.zone.run(() => {
-      this.index = event.activeIndex;
+      this.index = event[0].activeIndex;
       // if (
       //   this.fileService.fileList.length < this.index + 3 &&
       //   this.fileService.hasMore

@@ -1,8 +1,11 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Database, IUploadFile } from './database.service';
 import { OcradService } from './ocrad.service';
 import { OpenCVService } from './opencv.service';
+import writeFile from 'capacitor-blob-writer';
 
 @Injectable({ providedIn: 'root' })
 export class PreuploadService implements OnDestroy {
@@ -46,13 +49,14 @@ export class PreuploadService implements OnDestroy {
   //   }
   // }
 
-  async updateOrigin(id: number, imageData: ArrayBuffer) {
+  async updateOrigin(id: number, rect: any[], imageData: ArrayBuffer) {
     const item = this.data.find((i) => i.id === id);
     if (item) {
       this.database.imageData.delete(item.origin);
       const imageId = await this.saveImageData(imageData);
       item.origin = imageId;
       item.dest = null;
+      item.rect = rect;
       // this.revokeUrl(item);
       await this.process(item, imageData);
       if (this.persistent && item.origin === imageId) {
@@ -115,9 +119,19 @@ export class PreuploadService implements OnDestroy {
   //   this.updateData.delete(item);
   // }
 
-  clear() {
+  async clear() {
     this.data = [];
     this.database.imageData.clear();
+    // 删除所有图片文件
+    const readdir = await Filesystem.readdir({
+      directory: Directory.Cache,
+      path: '',
+    });
+    readdir.files.forEach((file) => {
+      if (file.endsWith('.jpg')) {
+        Filesystem.deleteFile({ directory: Directory.Cache, path: file });
+      }
+    });
     if (this.persistent) {
       if (this.persistent) {
         this.database.preuploadFile.clear();
@@ -172,6 +186,25 @@ export class PreuploadService implements OnDestroy {
         await this.database.preuploadFile.update(item.id, changes);
       }
     }
+  }
+
+  async process2(item: IUploadFile) {
+    await this.opencvService.init();
+    const origin: string = item.origin as any;
+    const src = Capacitor.convertFileSrc(item.origin as any);
+    const changes = await this.opencvService.process2(src, item.rect);
+    if (changes.dest) {
+      const path = origin.substring(0, origin.lastIndexOf('.')) + '_dest.jpg';
+      const blob = new Blob([changes.dest], { type: 'image/jpeg' });
+      const result = await writeFile({
+        directory: Directory.Cache,
+        path,
+        blob,
+        recursive: true,
+      });
+      changes.dest = path;
+    }
+    console.log(changes);
   }
 
   async saveImageData(data: ArrayBuffer) {

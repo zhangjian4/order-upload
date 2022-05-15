@@ -58,6 +58,12 @@ export class OpenCVService {
     const result = await this.execute('process', imageData, points);
     return result;
   }
+
+  async process2(src: string, points: Point[]) {
+    // const imageData = await this.fromBlob(blob);
+    const result = await this.execute('process2', src, points);
+    return result;
+  }
   async debug(imageData: ArrayBuffer): Promise<ArrayBuffer[]> {
     return this.execute('debug', imageData);
   }
