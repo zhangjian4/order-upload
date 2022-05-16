@@ -31,7 +31,6 @@ package-lock.json
 /platforms
 /plugins
 /www
-/example
 android/
 *.zip
 ios/

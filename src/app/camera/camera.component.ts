@@ -8,16 +8,16 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-// import {
-//   CameraPreview,
-//   CameraPreviewPictureOptions,
-//   CameraPreviewOptions,
-//   CameraPreviewDimensions,
-// } from '@awesome-cordova-plugins/camera-preview/ngx';
 import {
   CameraPreview,
+  CameraPreviewPictureOptions,
   CameraPreviewOptions,
-} from '@capacitor-community/camera-preview';
+  CameraPreviewDimensions,
+} from '@awesome-cordova-plugins/camera-preview/ngx';
+// import {
+//   CameraPreview,
+//   CameraPreviewOptions,
+// } from '@capacitor-community/camera-preview';
 import {
   AlertController,
   NavController,
@@ -113,14 +113,15 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     private commonService: CommonService,
     private progressService: ProgressService,
     private domSanitizer: DomSanitizer,
-    private webGLService: WebGLService
+    private webGLService: WebGLService,
+    private cameraPreview: CameraPreview
   ) {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       if (params.id) {
         this.id = +params.id;
       }
     });
-    this.hasCamera = true;
+    this.hasCamera = this.platform.is('capacitor');
   }
 
   // @HostBinding('class.hide-background')
@@ -168,21 +169,27 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     const rect = container.getBoundingClientRect();
     if (this.hasCamera) {
       const cameraPreviewOpts: CameraPreviewOptions = {
-        parent: 'camera-preview',
-        x: Math.round(rect.left),
-        y: Math.round(rect.top),
+        x: rect.left,
+        y: rect.top,
         width: rect.width,
         height: rect.height,
-        position: 'rear',
-        // tapPhoto: true,
-        // previewDrag: true,
+        camera: 'rear',
         toBack: true,
-        // alpha: 1,
-        enableZoom: false,
         storeToFile: false,
       };
-      // start camera
-      await CameraPreview.start(cameraPreviewOpts);
+      this.cameraPreview.startCamera(cameraPreviewOpts);
+      // const cameraPreviewOpts: CameraPreviewOptions = {
+      //   parent: 'camera-preview',
+      //   x: Math.round(rect.left),
+      //   y: Math.round(rect.top),
+      //   width: rect.width,
+      //   height: rect.height,
+      //   position: 'rear',
+      //   toBack: true,
+      //   enableZoom: false,
+      //   storeToFile: false,
+      // };
+      // await CameraPreview.start(cameraPreviewOpts);
       this.cameraStarted = true;
       this.startPreview();
       // this.cameraPreview.setZoom(0.5);
@@ -191,7 +198,8 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
 
   async stopCamera() {
     if (this.hasCamera) {
-      await CameraPreview.stop();
+      // await CameraPreview.stop();
+      this.cameraPreview.stopCamera();
     }
     this.zone.run(() => {
       this.cameraStarted = false;
@@ -236,12 +244,18 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
     }
     try {
       //takeSnapshot有时候会不返回导致一直等待，这里加上超时时间
+      // this.takeSnapshotPromise = withTimeout(
+      //   CameraPreview.captureSample({ quality }),
+      //   1000
+      // );
+      // const result = await this.takeSnapshotPromise;
+      // return result.value;
       this.takeSnapshotPromise = withTimeout(
-        CameraPreview.captureSample({ quality }),
+        this.cameraPreview.takeSnapshot({ quality }),
         1000
       );
       const result = await this.takeSnapshotPromise;
-      return result.value;
+      return result[0];
     } finally {
       this.takeSnapshotPromise = null;
     }
@@ -490,21 +504,21 @@ export class CameraComponent implements CanConfirm, OnInit, OnDestroy {
   }
 
   onTouchMove(event) {
-    // if (event.touches.length === 2) {
-    //   const distance = this.getTouchDistance(event);
-    //   let change = (distance - this.startTouchDistance) / 10;
-    //   change = change > 0 ? Math.floor(change) : Math.ceil(change);
-    //   if (change !== 0) {
-    //     this.zoom += change;
-    //     if (this.zoom < 1) {
-    //       this.zoom = 1;
-    //     } else if (this.zoom > 10) {
-    //       this.zoom = 10;
-    //     }
-    //     this.cameraPreview.setZoom(this.zoom);
-    //     this.startTouchDistance = distance;
-    //   }
-    // }
+    if (event.touches.length === 2) {
+      const distance = this.getTouchDistance(event);
+      let change = (distance - this.startTouchDistance) / 10;
+      change = change > 0 ? Math.floor(change) : Math.ceil(change);
+      if (change !== 0) {
+        this.zoom += change;
+        if (this.zoom < 1) {
+          this.zoom = 1;
+        } else if (this.zoom > 10) {
+          this.zoom = 10;
+        }
+        this.cameraPreview.setZoom(this.zoom);
+        this.startTouchDistance = distance;
+      }
+    }
   }
 
   async showSnapshot(src: string | SafeUrl, animation: boolean) {
